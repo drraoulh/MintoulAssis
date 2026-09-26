@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 
 import { AppShell } from '@/components/layout/AppShell';
 import { LocaleProvider } from '@/lib/i18n';
@@ -167,6 +168,7 @@ export default function RootLayout({
         <LocaleProvider>
           <AppShell>{children}</AppShell>
         </LocaleProvider>
+        <Analytics />
       </body>
     </html>
   );

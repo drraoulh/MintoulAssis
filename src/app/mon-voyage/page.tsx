@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MessageCircle, Pencil, Compass } from 'lucide-react';
+import { MessageCircle, Pencil, Compass, Heart } from 'lucide-react';
 
 import { TourismMap } from '@/components/maps/TourismMap';
 import { PageTransition } from '@/components/motion';
@@ -9,6 +9,7 @@ import { Button, EmptyState } from '@/components/ui';
 import { useLocale } from '@/lib/i18n';
 import { loadTrip } from '@/lib/trip-store';
 import type { TripState } from '@/lib/types';
+import { useWishlist } from '@/lib/use-wishlist';
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
@@ -26,6 +27,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 export default function MonVoyagePage() {
   const { t } = useLocale();
   const [trip, setTrip] = useState<TripState | null>(null);
+  const { count: wishlistCount } = useWishlist();
 
   useEffect(() => {
     setTrip(loadTrip());
@@ -84,6 +86,11 @@ export default function MonVoyagePage() {
               <Button href="/planifier" variant="secondary" className="w-full sm:w-auto">
                 {t('nav.planifier')}
               </Button>
+              <Button href="/wishlist" variant="outline" className="w-full sm:w-auto">
+                <Heart className="h-4 w-4" aria-hidden />
+                {t('trip.wishlist')}
+                {wishlistCount > 0 ? ` (${wishlistCount})` : ''}
+              </Button>
               <Button href="/assistant" variant="outline" className="w-full sm:w-auto">
                 <MessageCircle className="h-4 w-4" aria-hidden />
                 {t('trip.ask')}
@@ -96,6 +103,16 @@ export default function MonVoyagePage() {
               <Button href="/assistant" size="sm" className="w-full justify-center sm:w-auto">
                 <MessageCircle className="h-4 w-4 shrink-0" aria-hidden />
                 {t('trip.ask')}
+              </Button>
+              <Button
+                href="/wishlist"
+                size="sm"
+                variant="outline"
+                className="w-full justify-center sm:w-auto"
+              >
+                <Heart className="h-4 w-4 shrink-0" aria-hidden />
+                {t('trip.wishlist')}
+                {wishlistCount > 0 ? ` (${wishlistCount})` : ''}
               </Button>
               <Button
                 href="/planifier"

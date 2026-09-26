@@ -344,6 +344,20 @@ export interface TripPlace {
   longitude?: number | null;
 }
 
+/** Liked place persisted in localStorage (wishlist / favorites). */
+export interface WishlistPlace {
+  id: string;
+  name: string;
+  slug?: string | null;
+  city?: string;
+  region?: string;
+  category?: string;
+  imageUrl?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  likedAt?: string;
+}
+
 export interface DemoBooking {
   reference: string;
   hotelName: string;

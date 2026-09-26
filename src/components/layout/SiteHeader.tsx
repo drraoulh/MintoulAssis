@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   Compass,
+  Heart,
   Hotel,
   Map,
   Menu,
@@ -25,6 +26,7 @@ const LINKS = [
   { href: '/explorer', key: 'nav.explorer', icon: Compass },
   { href: '/planifier', key: 'nav.planifier', icon: Map },
   { href: '/hotels', key: 'nav.hotels', icon: Hotel },
+  { href: '/wishlist', key: 'nav.wishlist', icon: Heart },
   { href: '/mon-voyage', key: 'nav.trip', icon: Plane },
   { href: '/groupe', key: 'nav.group', icon: Users },
 ] as const;
@@ -283,6 +285,7 @@ export function SiteFooter() {
             {[
               ['/planifier', t('nav.planifier')],
               ['/assistant', t('nav.assistantAi')],
+              ['/wishlist', t('nav.wishlist')],
               ['/mon-voyage', t('nav.trip')],
               ['/groupe', t('nav.group')],
             ].map(([href, label]) => (

@@ -22,7 +22,7 @@ export async function getPlaces(filters: PlaceFilters = {}): Promise<PlaceWithIm
     .order("likes_count", { ascending: false, nullsFirst: false })
     .limit(limit);
 
-  if (filters.city) query = query.ilike("city", filters.city);
+  if (filters.city) query = query.ilike("city", `%${filters.city}%`);
   if (filters.category) query = query.eq("category", filters.category);
   if (filters.withCoordsOnly) {
     query = query.not("lat", "is", null).not("lng", "is", null);
@@ -77,7 +77,7 @@ export async function searchPlacesForGuide(query: string, limit = 12) {
   let builder = supabase
     .from("places")
     .select(
-      "id, name, slug, city, neighborhood, short_description, description, lat, lng, price_from, rating, likes_count, cuisines, tags, source_url, kb_text",
+      "id, name, slug, category, city, neighborhood, short_description, description, lat, lng, price_from, rating, likes_count, cuisines, tags, source_url, kb_text",
     )
     .limit(limit);
 

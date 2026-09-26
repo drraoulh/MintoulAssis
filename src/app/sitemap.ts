@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/planifier', priority: 0.85, changeFrequency: 'weekly' },
     { path: '/vision', priority: 0.8, changeFrequency: 'weekly' },
     { path: '/mon-voyage', priority: 0.75, changeFrequency: 'weekly' },
+    { path: '/wishlist', priority: 0.7, changeFrequency: 'weekly' },
     { path: '/culture', priority: 0.7, changeFrequency: 'monthly' },
     { path: '/hotels', priority: 0.7, changeFrequency: 'weekly' },
     { path: '/decouvrir', priority: 0.7, changeFrequency: 'weekly' },

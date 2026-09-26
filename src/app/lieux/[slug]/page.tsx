@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PlaceFavoriteActions } from "@/components/places/PlaceFavoriteActions";
 import { createServerClient } from "@/lib/supabase/server";
 import { safeImageUrl } from "@/lib/images";
 
@@ -59,6 +60,18 @@ export default async function PlacePage({ params }: Props) {
             </span>
           ) : null}
           {place.phone ? <span>{place.phone}</span> : null}
+        </div>
+        <div className="pt-2">
+          <PlaceFavoriteActions
+            id={place.id}
+            name={place.name}
+            slug={place.slug}
+            city={place.city}
+            neighborhood={place.neighborhood}
+            imageUrl={hero}
+            lat={place.lat}
+            lng={place.lng}
+          />
         </div>
       </header>
 

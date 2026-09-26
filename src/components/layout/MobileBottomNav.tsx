@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import {
   Camera,
   Compass,
+  Heart,
   Home,
   Hotel,
   Landmark,
@@ -47,6 +48,7 @@ export function MobileBottomNav() {
   const moreLinks = useMemo(
     () =>
       [
+        { href: '/wishlist', label: t('nav.wishlist'), icon: Heart },
         { href: '/culture', label: t('nav.culture'), icon: Landmark },
         { href: '/vision', label: t('nav.vision'), icon: Camera },
         { href: '/hotels', label: t('nav.hotels'), icon: Hotel },

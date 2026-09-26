@@ -2,8 +2,15 @@ import { randomUUID } from "node:crypto";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 import { NextResponse } from "next/server";
-import { searchPlacesForGuide } from "@/lib/places";
+import { getPlaces, searchPlacesForGuide } from "@/lib/places";
 import { prepareAiMarkdown } from "@/lib/markdown/sanitize-ai-markdown";
+import {
+  buildTourismWebQuery,
+  formatWebHitsForPrompt,
+  searchWeb,
+  webHitsToCitations,
+  webSearchEnvEnabled,
+} from "@/lib/web-search";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -77,11 +84,11 @@ function looksLikeGreetingOrChitchat(text: string): boolean {
 
 function greetingReply(locale: string): string {
   if (locale === "en") {
-    return `Hello! I’m the **SmartMboa** travel guide for Cameroon.
+    return `Hello! I'm the **SmartMboa** travel guide for Cameroon.
 
 I can help with destinations, national parks, beaches, city tips, and trip outlines.
 
-Tell me a city (Kribi, Limbe, Yaoundé…) or what you like (nature, beach, culture), and we’ll start.`;
+Tell me a city (Kribi, Limbe, Yaoundé…) or what you like (nature, beach, culture), and we'll start.`;
   }
   return `Bonjour ! Je suis le guide **SmartMboa** pour le Cameroun.
 
@@ -95,7 +102,19 @@ Dites-moi une ville (Kribi, Limbé, Yaoundé…) ou ce que vous aimez (nature, p
  * or when the user asks for verifiable practical facts (prices, hours, access).
  */
 function looksLikeTourismWebTopic(text: string): boolean {
-  return /parc|parcs|r[eé]serve|r[eé]serves|national|naturel|naturels|wildlife|safari|site[s]?\s+touristique|tourist\s+site|monument|mus[eé]e|waterfall|chute[s]?|volcan|montagne|beach|plage|destination|visiter|visite[rz]?|que\s+faire|what\s+to\s+do|week[\s-]?end|activit[eé]|activit[eé]s|excursion|h[eé]bergement|h[oô]tel|lodging|transport|bus|taxi|ferry|horaires?|hours?|ouvert|opening|tarif|tarifs|prix|price|prices?|entr[eé]e|admission|fees?|acc[eè]s|access|comment\s+y\s+aller|how\s+to\s+get|limbe|limb[eé]|yaound[eé]|douala|kribi|bafoussam|maroua|garoua|b[eé]nou[eé]|waza|korup|campo|dja/i.test(
+  return /parc|parcs|r[eé]serve|r[eé]serves|national|naturel|naturels|wildlife|safari|site[s]?\s+touristique|tourist\s+site|monument|mus[eé]e|waterfall|chute[s]?|volcan|montagne|beach|plage|destination|visiter|visite[rz]?|que\s+faire|what\s+to\s+do|week[\s-]?end|activit[eé]|activit[eé]s|excursion|h[eé]bergement|h[oô]tel|auberge|lodge|appart|r[eé]sidence|lodging|restaurant|resto|gastronomie|cuisine|manger|o[uù]\s+manger|where\s+to\s+eat|march[eé]|shopping|bar|nightlife|transport|bus|taxi|ferry|horaires?|hours?|ouvert|opening|tarif|tarifs|prix|price|prices?|entr[eé]e|admission|fees?|acc[eè]s|access|comment\s+y\s+aller|how\s+to\s+get|trouve[rz]?|find\s+me|recommande|recommend|limbe|limb[eé]|yaound[eé]|douala|kribi|bafoussam|maroua|garoua|b[eé]nou[eé]|waza|korup|campo|dja/i.test(
+    text,
+  );
+}
+
+function looksLikeRestaurantQuery(text: string): boolean {
+  return /restaurant|resto|gastronomie|cuisine|manger|o[uù]\s+manger|where\s+to\s+eat|repas|food|street\s*food|maquis/i.test(
+    text,
+  );
+}
+
+function looksLikeActivityQuery(text: string): boolean {
+  return /que\s+faire|what\s+to\s+do|activit[eé]|excursion|visite[rz]?|visiter|week[\s-]?end|sortie|nightlife|bar\b|plage|beach|mus[eé]e|monument/i.test(
     text,
   );
 }
@@ -133,6 +152,7 @@ type GuidePlace = {
   id?: string;
   name?: string | null;
   slug?: string | null;
+  category?: string | null;
   city?: string | null;
   short_description?: string | null;
   description?: string | null;
@@ -177,10 +197,19 @@ function isNaturePlace(p: GuidePlace): boolean {
   return /parc\s+national|national\s+park|r[eé]serve\s+(naturelle|de\s+faune)/i.test(focus);
 }
 
+function isLodgingPlace(p: GuidePlace): boolean {
+  const cat = (p.category || "").toLowerCase();
+  if (/hotel|h[oô]tel|heberg|héberg|lodg|auberge|appart|resort/i.test(cat)) return true;
+  const focus = `${p.name || ""} ${placeFocusBlob(p)}`;
+  return /h[oô]tel|hotel|auberge|lodge|r[eé]sidence|appart|motel|\binn\b|guest\s*house|campement/i.test(
+    focus,
+  );
+}
+
 function isTouristInterestPlace(p: GuidePlace): boolean {
-  if (isNaturePlace(p)) return true;
+  if (isNaturePlace(p) || isLodgingPlace(p)) return true;
   const focus = placeFocusBlob(p);
-  return /mus[eé]e|monument|cath[eé]drale|basilique|plage|beach|lac\b|mont\b|volcan|cascade|chute\s+d|zoo|wildlife|jardin\s+botanique|site\s+tour|touristique|h[oô]tel|hotel|lodge|auberge|campement|falls|waterfall|palace|palais|ch[uû]teau/i.test(
+  return /mus[eé]e|monument|cath[eé]drale|basilique|plage|beach|lac\b|mont\b|volcan|cascade|chute\s+d|zoo|wildlife|jardin\s+botanique|site\s+tour|touristique|falls|waterfall|palace|palais|ch[uû]teau/i.test(
     focus,
   );
 }
@@ -216,7 +245,7 @@ const DESTINATION_NEARBY: Record<string, string[]> = {
     "edea",
   ],
   Douala: ["douala", "youpwe", "bonanjo", "akwa", "deido", "edéa", "edea", "limbe", "limbé"],
-  Limbé: ["limbé", "limbe", "buea", "douala", "idénau", "idenau", "bakingili"],
+  "Limbé": ["limbé", "limbe", "buea", "douala", "idénau", "idenau", "bakingili"],
   "Yaoundé": ["yaoundé", "yaounde", "mbalmayo", "soa", "nsimalen"],
   Bafoussam: ["bafoussam", "dschang", "foumban", "bana", "bangangté", "bangangte"],
   Maroua: ["maroua", "waza", "rhumsiki", "mokolo", "kousseri"],
@@ -279,9 +308,13 @@ function isDistantForDestination(p: GuidePlace, city: string): boolean {
 }
 
 function wantsLodgingHelp(text: string): boolean {
-  return /h[eé]bergement|lodging|h[oô]tel|auberge|r[eé]server?\s+un\s+h[eé]berg|book\s+lodg/i.test(
+  return /h[eé]bergement|lodging|h[oô]tel|auberge|lodge|r[eé]sidence|appart|où\s+dormir|ou\s+dormir|where\s+to\s+stay|accommodation|r[eé]server?\s+un\s+h[eé]berg|book\s+(a\s+)?(hotel|lodg)|trouve[rz]?\s+(moi\s+)?(un\s+)?h[oô]tel|find\s+(me\s+)?(a\s+)?hotel/i.test(
     text,
   );
+}
+
+function looksLikeLodgingQuery(text: string): boolean {
+  return wantsLodgingHelp(text);
 }
 
 function extractTripCalendarDays(text: string): number {
@@ -355,6 +388,23 @@ function placeRelevanceForTrip(
 
 function countRelevantKbHits(places: GuidePlace[], query: string): number {
   const city = extractCameroonCity(query);
+  if (looksLikeLodgingQuery(query)) {
+    const lodging = places.filter(isLodgingPlace);
+    if (city) {
+      return lodging.filter((p) => placeInDestinationArea(p, city)).length;
+    }
+    return lodging.length;
+  }
+  if (looksLikeRestaurantQuery(query)) {
+    const food = places.filter((p) => {
+      const blob = `${p.category || ""} ${placeFocusBlob(p)}`;
+      return /restaurant|resto|cuisine|gastronom|maquis|food|bar\b/i.test(blob);
+    });
+    if (city) {
+      return food.filter((p) => placeInDestinationArea(p, city)).length;
+    }
+    return food.length;
+  }
   if (city) {
     return places.filter(
       (p) => placeInDestinationArea(p, city) && isTouristInterestPlace(p),
@@ -366,13 +416,27 @@ function countRelevantKbHits(places: GuidePlace[], query: string): number {
   return places.filter(isTouristInterestPlace).length;
 }
 
+/**
+ * KB is "thin" for this ask â†’ enable web fill.
+ * City-scoped: count only hits in / near that city (hotel in Douala â‰  hotel in Yaoundé).
+ */
 function isKbInsufficientForQuery(places: GuidePlace[], query: string): boolean {
   if (!places.length) return true;
   // Factual questions (prices/hours/access) often need web even if a place is listed.
   if (looksLikeFactualTourismQuery(query)) return true;
   const relevant = countRelevantKbHits(places, query);
-  // Parks / city guides need several on-topic tourist hits; otherwise complement with web.
-  if (looksLikeParksOrNatureQuery(query) || extractCameroonCity(query)) {
+  // Nothing on-topic in the requested city / topic â†’ must search the web.
+  if (relevant === 0) return true;
+  // Lodging / restaurants: fewer than 2 verified options in area â†’ web complement.
+  if (looksLikeLodgingQuery(query) || looksLikeRestaurantQuery(query)) {
+    return relevant < 2;
+  }
+  // Parks / city guides / activities need several on-topic hits.
+  if (
+    looksLikeParksOrNatureQuery(query) ||
+    looksLikeActivityQuery(query) ||
+    extractCameroonCity(query)
+  ) {
     return relevant < 3;
   }
   return relevant < 2;
@@ -397,6 +461,16 @@ function mergePlacesById(
 
 function prioritizeRelevantPlaces(places: GuidePlace[], query: string): GuidePlace[] {
   const city = extractCameroonCity(query);
+  if (looksLikeLodgingQuery(query)) {
+    const lodging = places.filter(isLodgingPlace);
+    const other = places.filter((p) => !isLodgingPlace(p));
+    if (city) {
+      const inArea = lodging.filter((p) => placeInDestinationArea(p, city));
+      const restLodging = lodging.filter((p) => !placeInDestinationArea(p, city));
+      return [...inArea, ...restLodging, ...other];
+    }
+    return [...lodging, ...other];
+  }
   if (city) {
     const inArea = places.filter((p) => placeInDestinationArea(p, city));
     const other = places.filter(
@@ -412,10 +486,6 @@ function prioritizeRelevantPlaces(places: GuidePlace[], query: string): GuidePla
   return places;
 }
 
-function webSearchEnvEnabled(): boolean {
-  const v = process.env.OPENROUTER_WEB_SEARCH?.trim().toLowerCase();
-  return v !== "0" && v !== "false";
-}
 
 function sanitizeProviderError(raw: string): string {
   return raw
@@ -453,28 +523,62 @@ function buildSystemPrompt(
   locale: string,
   context: string,
   itinerary: boolean,
-  opts: { webEnabled: boolean; kbCount: number },
+  opts: {
+    webEnabled: boolean;
+    kbCount: number;
+    lodgingQuery?: boolean;
+    cityHint?: string | null;
+  },
 ): string {
   const fr = locale !== "en";
   const hasKb = opts.kbCount > 0;
+  const lodging = !!opts.lodgingQuery;
+  const city = opts.cityHint?.trim() || null;
   const webNoteFr = opts.webEnabled
-    ? `La recherche web OpenRouter est ACTIVÉE pour cette question : utilise-la pour compléter ou vérifier (existence, localisation, intérêt touristique, horaires/prix/accès si disponibles).`
+    ? hasKb
+      ? `La recherche web OpenRouter est ACTIVÉE : complète / vérifie la KB (existence, localisation, horaires/prix/accès si disponibles)${city ? ` — focus ${city}` : ""}.`
+      : `La recherche web OpenRouter est ACTIVÉE car la KB n'a pas (assez) d'options${city ? ` à ${city}` : ""}. UTILISE-LA pour proposer des options concrètes (hôtels, restos, sites…), marquées Â« à confirmer Â». INTERDIT de dire que tu n'as aucune information.`
     : `La recherche web n'est PAS activée pour ce message.`;
   const webNoteEn = opts.webEnabled
-    ? `OpenRouter web search is ENABLED for this question: use it to complement or verify (existence, location, tourist interest, hours/prices/access when available).`
+    ? hasKb
+      ? `OpenRouter web search is ENABLED: complement / verify the KB (existence, location, hours/prices/access when available)${city ? ` — focus ${city}` : ""}.`
+      : `OpenRouter web search is ENABLED because the KB has no (or too few) options${city ? ` in ${city}` : ""}. USE IT to propose concrete options (hotels, restaurants, sites…), marked "to confirm". FORBIDDEN to say you have no information.`
     : `Web search is NOT enabled for this message.`;
 
+  const lodgingFr = lodging
+    ? `
+Hébergement (prioritaire pour cette question) :
+- COMMENCE toujours par 2–5 options concrètes (nom, ville/quartier, prix KB s'il existe, pourquoi ça convient) — ne commence PAS par une liste de questions.
+- INTERDIT de dire Â« je n'ai pas d'informations sur les hôtels Â» quand le CONTEXTE contient des établissements OU que la recherche web est activée.
+- Si aucun hôtel KB${city ? ` à ${city}` : ""} : cherche sur le web des hébergements dans cette ville, marque Â« à confirmer Â».
+- Après les options, une courte phrase peut inviter à préciser budget / quartier pour affiner.
+- Ne prétends JAMAIS qu'une réservation est confirmée ; oriente vers la page Hébergements / réservation démo SmartMboa si utile.
+`
+    : "";
+  const lodgingEn = lodging
+    ? `
+Lodging (priority for this question):
+- ALWAYS lead with 2–5 concrete options (name, city/area, KB price if any, why it fits) — do NOT start with a preference questionnaire.
+- FORBIDDEN to say you have no hotel information when CONTEXT has stays OR web search is enabled.
+- If no KB hotel${city ? ` in ${city}` : ""}: web-search stays in that city, mark "to confirm".
+- After the options, one short line may invite budget / neighborhood to refine.
+- NEVER claim a booking is confirmed; point to SmartMboa Stays / demo booking when useful.
+`
+    : "";
+
   const commonFr = `Rédige une réponse naturelle, claire et utile en français (Markdown simple : titres, listes, gras).
-Ne mets PAS d'URL ni de liste « Sources » dans le corps du texte — l'application affiche les sources à part.
+Ne mets PAS d'URL ni de liste Â« Sources Â» dans le corps du texte — l'application affiche les sources à part.
 Ne prétends jamais qu'une réservation est confirmée : propose seulement des recommandations (le voyageur réserve auprès du prestataire).
 
 Règles de vérité (obligatoires) :
-- Priorise la base de connaissances (CONTEXTE) quand elle contient des lieux pertinents : ce sont des infos « vérifiées KB ».
+- Priorise la base de connaissances (CONTEXTE) quand elle contient des lieux pertinents : ce sont des infos Â« vérifiées KB Â».
 - ${webNoteFr}
+- Si la KB est vide pour la ville / le type demandé (hôtel, restaurant, parc, activité…) et que le web est activé : propose des options via le web, clairement marquées Â« à confirmer Â».
 - N'invente JAMAIS de faits précis (surtout tarifs, horaires, conditions d'accès). Si tu n'as pas l'info fiable, dis-le clairement et invite à confirmer sur place / auprès des autorités.
-- Marque clairement ce qui est à confirmer (ex. « à vérifier », « selon sources web »).
-- INTERDIT de refuser avec des phrases du type « je ne peux pas vous aider » ou « le contexte fourni ne contient aucune information ». Même si le CONTEXTE est vide ou insuffisant, aide le voyageur : partage ce qui est fiable, précise ce qui n'a pas pu être vérifié, et demande destination / préférences pour affiner.
-- Pour les parcs / réserves : pour chaque suggestion, indique si possible le nom, la localisation, ce qu'on y découvre, les activités, les infos pratiques disponibles, et les précautions d'accès ; distingue « vérifié (KB) » vs « à confirmer ».`;
+- Marque clairement ce qui est à confirmer (ex. Â« à vérifier Â», Â« selon sources web Â»).
+- INTERDIT de refuser avec des phrases du type Â« je ne peux pas vous aider Â» ou Â« le contexte fourni ne contient aucune information Â». Même si le CONTEXTE est vide ou insuffisant, aide le voyageur : partage ce qui est fiable, précise ce qui n'a pas pu être vérifié, et demande destination / préférences pour affiner.
+- Pour les parcs / réserves : pour chaque suggestion, indique si possible le nom, la localisation, ce qu'on y découvre, les activités, les infos pratiques disponibles, et les précautions d'accès ; distingue Â« vérifié (KB) Â» vs Â« à confirmer Â».
+${lodgingFr}`;
 
   const commonEn = `Write a natural, clear, useful answer in English (simple Markdown: headings, lists, bold).
 Do NOT put URLs or a "Sources" list in the body — the app shows sources separately.
@@ -483,17 +587,19 @@ Never claim a booking is confirmed: only recommend (the traveler books with the 
 Truthfulness rules (required):
 - Prefer the knowledge base (CONTEXT) when it has relevant places: treat those as "KB-verified".
 - ${webNoteEn}
+- If the KB is empty for the requested city / type (hotel, restaurant, park, activity…) and web is enabled: propose options via the web, clearly marked "to confirm".
 - NEVER invent precise facts (especially prices, hours, access conditions). If you lack reliable info, say so clearly and suggest confirming on site / with authorities.
 - Clearly mark uncertain info (e.g. "to confirm", "per web sources").
 - FORBIDDEN to refuse with lines like "I cannot help you" or "the provided context contains no information". Even if CONTEXT is empty or thin, help the traveler: share what is reliable, say what could not be verified, and ask for destination / preferences to refine.
-- For parks / reserves: for each suggestion, when possible give name, location, what to discover, activities, practical info if available, and access precautions; distinguish "KB-verified" vs "to confirm".`;
+- For parks / reserves: for each suggestion, when possible give name, location, what to discover, activities, practical info if available, and access precautions; distinguish "KB-verified" vs "to confirm".
+${lodgingEn}`;
 
   const kbBlockFr = hasKb
     ? `CONTEXTE (base de connaissances — lieux vérifiés SmartMboa) :\n${context}`
-    : `CONTEXTE (base de connaissances) : (aucun lieu pertinent trouvé — ne refuse pas ; complète via la recherche web si activée, sinon guide le voyageur et demande des précisions.)`;
+    : `CONTEXTE (base de connaissances) : (aucun lieu pertinent trouvé${city ? ` pour ${city}` : ""} — ne refuse pas ; complète via la recherche web si activée, sinon guide le voyageur et demande des précisions.)`;
   const kbBlockEn = hasKb
     ? `CONTEXT (knowledge base — SmartMboa verified places):\n${context}`
-    : `CONTEXT (knowledge base): (no relevant places found — do not refuse; complement via web search if enabled, otherwise guide the traveler and ask for details.)`;
+    : `CONTEXT (knowledge base): (no relevant places found${city ? ` for ${city}` : ""} — do not refuse; complement via web search if enabled, otherwise guide the traveler and ask for details.)`;
 
   if (itinerary) {
     return fr
@@ -508,7 +614,7 @@ Structure OBLIGATOIRE :
    - Matin / Après-midi / Soir : activités concrètes, suggestions de repas, temps de trajet si connu
    - Hébergement de la nuit si l'utilisateur a demandé une aide hébergement (recommandations seulement)
 3) Si aide hébergement demandée : propose 2–4 hébergements locaux adaptés au budget/voyageurs ; prix seulement s'ils sont fiables (KB/web) ; liens/infos de contact s'ils existent ; ne prétends JAMAIS qu'une réservation est confirmée
-4) Budget estimatif en FCFA : répartis hébergement / transport / activités / repas quand des données existent ; n'invente pas de tarifs précis ; estime seulement si raisonnable et marque « indicatif / à confirmer » ; si le budget est insuffisant, explique-le et propose des alternatives concrètes. Évite les formules vides du type « Information non disponible » pour tout.
+4) Budget estimatif en FCFA : répartis hébergement / transport / activités / repas quand des données existent ; n'invente pas de tarifs précis ; estime seulement si raisonnable et marque Â« indicatif / à confirmer Â» ; si le budget est insuffisant, explique-le et propose des alternatives concrètes. Évite les formules vides du type Â« Information non disponible Â» pour tout.
 
 Règles géographiques (critiques) :
 - Reste STRICTEMENT dans la destination demandée et ses environs réalistes (temps de trajet compatible avec la durée et le budget).
@@ -601,20 +707,23 @@ export async function POST(req: Request) {
   }
 
   const itineraryMode = looksLikeItineraryRequest(lastUser);
-  const limit = itineraryMode ? 12 : 8;
+  const lodgingQuery = looksLikeLodgingQuery(lastUser);
+  const limit = itineraryMode ? 12 : lodgingQuery ? 10 : 8;
   const cityHint = extractCameroonCity(lastUser);
   const parkHintEarly = extractSpecificParkHint(lastUser);
   // City-scoped trips must NOT pull nationwide parks just because "Nature" is an interest.
   const nationwideParksQuery =
     looksLikeParksOrNatureQuery(lastUser) && !cityHint && !itineraryMode;
-  // Help KB retrieval for nature questions without changing the search architecture.
+  // Help KB retrieval for nature / lodging without changing the search architecture.
   const kbQuery = parkHintEarly
     ? `parc national ${parkHintEarly} ${lastUser}`
-    : cityHint && (itineraryMode || looksLikeParksOrNatureQuery(lastUser))
-      ? `${cityHint} tourisme plage nature culture histoire gastronomie hébergement ${lastUser}`
-      : nationwideParksQuery
-        ? `${lastUser} parc national réserve Waza Bénoué Korup Campo Ma'an Dja Faro`
-        : lastUser;
+    : lodgingQuery && cityHint
+      ? `${cityHint} hôtel hotel auberge lodge résidence hébergement`
+      : cityHint && (itineraryMode || looksLikeParksOrNatureQuery(lastUser))
+        ? `${cityHint} tourisme plage nature culture histoire gastronomie hébergement ${lastUser}`
+        : nationwideParksQuery
+          ? `${lastUser} parc national réserve Waza Bénoué Korup Campo Ma'an Dja Faro`
+          : lastUser;
 
   let contextPlaces: GuidePlace[] = [];
   try {
@@ -628,17 +737,46 @@ export async function POST(req: Request) {
         limit,
       );
     }
-    // Lodging follow-up for itineraries that ask for hébergement.
-    if (itineraryMode && cityHint && wantsLodgingHelp(lastUser)) {
-      const lodgingPlaces = await searchPlacesForGuide(
-        `${cityHint} hôtel auberge lodge résidence`,
-        6,
+    // Lodging: always pull verified hotels from KB (standalone hotel ask OR itinerary lodging).
+    if (lodgingQuery || (itineraryMode && cityHint && wantsLodgingHelp(lastUser))) {
+      const lodgingSearch = await searchPlacesForGuide(
+        `${cityHint || ""} hôtel hotel auberge lodge résidence appart`.trim(),
+        12,
       );
-      contextPlaces = mergePlacesById(
-        contextPlaces,
-        lodgingPlaces.filter((p) => placeInDestinationArea(p, cityHint)),
+      let lodgingCatalog: GuidePlace[] = [];
+      try {
+        const rows = await getPlaces({
+          city: cityHint || undefined,
+          category: "hotels-et-hebergements",
+          limit: 12,
+        });
+        lodgingCatalog = rows.map((r) => ({
+          id: r.id,
+          name: r.name,
+          slug: r.slug,
+          category: r.category,
+          city: r.city,
+          short_description: r.short_description,
+          description: r.description,
+          source_url: r.source_url,
+          price_from: r.price_from,
+          lat: r.lat,
+          lng: r.lng,
+          kb_text: r.kb_text,
+        }));
+      } catch (err) {
+        console.warn("[chat] lodging catalog lookup failed", {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+      const lodgingMerged = mergePlacesById(
+        lodgingCatalog.filter((p) => !cityHint || placeInDestinationArea(p, cityHint)),
+        lodgingSearch.filter(
+          (p) => isLodgingPlace(p) && (!cityHint || placeInDestinationArea(p, cityHint)),
+        ),
         limit,
       );
+      contextPlaces = mergePlacesById(lodgingMerged, contextPlaces, limit);
     }
     // Nature follow-up ONLY when no city destination (avoid Bouba Ndjidda on a Kribi trip).
     if (
@@ -670,6 +808,26 @@ export async function POST(req: Request) {
   // Prefer on-topic places in the UI cards (avoid restaurants on a parks question).
   const parkHint = extractSpecificParkHint(lastUser);
   const placesForUi = (() => {
+    // Explicit hotel / lodging ask → only verified stays in the destination area.
+    if (lodgingQuery) {
+      const lodging = contextPlaces.filter(
+        (p) =>
+          isLodgingPlace(p) &&
+          (!cityHint || placeInDestinationArea(p, cityHint)) &&
+          (!cityHint || !isDistantForDestination(p, cityHint)),
+      );
+      return lodging;
+    }
+    // Restaurant / food ask → only food places (else empty → web fill).
+    if (looksLikeRestaurantQuery(lastUser)) {
+      return contextPlaces.filter((p) => {
+        const blob = `${p.category || ""} ${placeFocusBlob(p)}`;
+        if (!/restaurant|resto|cuisine|gastronom|maquis|food|bar\b/i.test(blob)) {
+          return false;
+        }
+        return !cityHint || placeInDestinationArea(p, cityHint);
+      });
+    }
     // Destination-scoped itinerary / city guide: local tourist places only.
     if (cityHint && (itineraryMode || !parkHint)) {
       const inArea = contextPlaces.filter(
@@ -711,7 +869,7 @@ export async function POST(req: Request) {
     return [];
   })();
 
-  // Prompt context: only on-topic KB hits (empty → model + web must not invent from junk restaurants).
+  // Prompt context: only on-topic KB hits (empty â†’ model + web must not invent from junk restaurants).
   const contextPlacesForPrompt =
     placesForUi.length > 0 ? placesForUi : [];
 
@@ -753,29 +911,83 @@ export async function POST(req: Request) {
 
   const kbInsufficient = isKbInsufficientForQuery(contextPlacesForPrompt, lastUser);
   const tourismTopic = looksLikeTourismWebTopic(lastUser);
-  const enableWeb =
-    webSearchEnvEnabled() &&
-    (itineraryMode || (tourismTopic && kbInsufficient));
+  // Rule: if KB has nothing useful for this city/topic (hotel, resto, sites…), search the web.
+  const needsWebFill =
+    kbInsufficient &&
+    (lodgingQuery ||
+      tourismTopic ||
+      looksLikeRestaurantQuery(lastUser) ||
+      looksLikeActivityQuery(lastUser) ||
+      looksLikeParksOrNatureQuery(lastUser) ||
+      !!cityHint);
+  const enableWeb = webSearchEnvEnabled() && (itineraryMode || needsWebFill);
+
+  // External web search (Tavily → Brave) when KB is thin for this city/topic.
+  let webHitsBlock = "";
+  let webCitations: { title: string; url: string; type: "WEB" }[] = [];
+  let webProvider: "tavily" | "brave" | "none" = "none";
+  if (enableWeb) {
+    const webQuery = buildTourismWebQuery({
+      userText: lastUser,
+      cityHint,
+      lodging: lodgingQuery,
+      restaurant: looksLikeRestaurantQuery(lastUser),
+      parks: looksLikeParksOrNatureQuery(lastUser),
+      activity: looksLikeActivityQuery(lastUser),
+    });
+    const web = await searchWeb({
+      query: webQuery,
+      maxResults: itineraryMode ? 6 : 5,
+    });
+    webProvider = web.provider;
+    webCitations = webHitsToCitations(web.hits);
+    webHitsBlock = formatWebHitsForPrompt(web.hits);
+    console.info("[chat] web-search", {
+      provider: web.provider,
+      hits: web.hits.length,
+      query: web.query.slice(0, 120),
+    });
+  }
+
+  const contextWithWeb = webHitsBlock
+    ? `${context}\n\nRÉSULTATS WEB (${webProvider}, à confirmer) :\n${webHitsBlock}`
+    : context;
 
   console.info("[chat] retrieval", {
     tourismTopic,
+    lodgingQuery,
+    cityHint,
     kbInsufficient,
+    needsWebFill,
     enableWeb,
+    webProvider,
+    webHits: webCitations.length,
     kbPromptCount: contextPlacesForPrompt.length,
     kbRawCount: contextPlaces.length,
     relevant: countRelevantKbHits(contextPlacesForPrompt, lastUser),
     uiNames: placesForUi.map((p) => p.name).slice(0, 8),
   });
 
-  const system = buildSystemPrompt(locale, context, itineraryMode, {
+  const system = buildSystemPrompt(locale, contextWithWeb, itineraryMode, {
     webEnabled: enableWeb,
     kbCount: countRelevantKbHits(contextPlacesForPrompt, lastUser),
+    lodgingQuery,
+    cityHint,
   });
   const modelId = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
 
   let message: string;
   let provider = "kb";
-  let webCitations: { title: string; url: string; type: "WEB" }[] = [];
+
+
+  const webFallbackLines =
+    webCitations.length > 0
+      ? webCitations
+          .slice(0, 5)
+          .map((s) => `• **${s.title}**`)
+          .join("\n")
+      : null;
+
 
   const kbFallbackMessage = (webFailed: boolean) => {
     const dayCount = extractTripCalendarDays(lastUser);
@@ -857,6 +1069,13 @@ export async function POST(req: Request) {
 
     if (locale === "en") {
       if (lines) {
+        if (lodgingQuery) {
+          return `Here are verified stays from our knowledge base for your request:\n\n${lines}\n\n${
+            webFailed
+              ? "Online verification was unavailable just now — confirm prices and availability with the property."
+              : "Tell me your budget or neighborhood and I can refine this list."
+          }\n\nSmartMboa does **not** confirm bookings; you reserve with the provider (or via the Stays demo page).`;
+        }
         return `Here are verified places from our knowledge base:\n\n${lines}\n\n${
           webFailed
             ? "Online verification was unavailable just now, so some details (prices, hours, access) could not be confirmed."
@@ -869,48 +1088,53 @@ export async function POST(req: Request) {
       return "I could not complete a fully verified answer right now. Tell me a city, region, or type of place (park, beach, museum…) and I will help.";
     }
     if (lines) {
+      if (lodgingQuery) {
+        return `Voici des hébergements vérifiés de notre base de connaissances pour votre demande :\n\n${lines}\n\n${
+          webFailed
+            ? "La vérification en ligne est indisponible pour le moment — confirmez tarifs et disponibilité auprès de l'établissement."
+            : "Précisez votre budget ou un quartier et j'affine la sélection."
+        }\n\nSmartMboa **ne confirme aucune** réservation ; vous réservez auprès du prestataire (ou via la page Hébergements démo).`;
+      }
+      if (webFallbackLines && (looksLikeRestaurantQuery(lastUser) || looksLikeActivityQuery(lastUser) || lodgingQuery)) {
+        return `Voici des pistes trouvées sur le web (à confirmer) :
+
+${webFallbackLines}
+
+${lines ? `Lieux KB proches :
+${lines}
+
+` : ""}Les sources web sont listées sous la réponse. Précisez budget / quartier pour affiner.`;
+      }
       return `Voici des lieux vérifiés de notre base de connaissances :\n\n${lines}\n\n${
         webFailed
-          ? "La vérification en ligne est indisponible pour le moment : certains détails (tarifs, horaires, accès) n’ont pas pu être confirmés."
-          : "Certaines informations n’ont pas pu être entièrement vérifiées."
+          ? "La vérification en ligne est indisponible pour le moment : certains détails (tarifs, horaires, accès) n'ont pas pu être confirmés."
+          : "Certaines informations n'ont pas pu être entièrement vérifiées."
       } Précisez une ville, une région ou vos préférences pour affiner.`;
     }
     if (park && looksLikeFactualTourismQuery(lastUser)) {
-      return `Je n’ai pas pu vérifier les tarifs / infos pratiques actuels pour le **parc ${park}** pour le moment (pas de tarif correspondant en base, et la vérification en ligne a échoué). Réessayez dans un instant, ou précisez une autre destination / préférence.`;
+      return `Je n'ai pas pu vérifier les tarifs / infos pratiques actuels pour le **parc ${park}** pour le moment (pas de tarif correspondant en base, et la vérification en ligne a échoué). Réessayez dans un instant, ou précisez une autre destination / préférence.`;
     }
-    return "Je n’ai pas pu produire une réponse entièrement vérifiée pour le moment. Indiquez une ville, une région ou un type de lieu (parc, plage, musée…) et je vous aide.";
+    return webFallbackLines
+      ? `Voici des pistes trouvées sur le web (à confirmer) :
+
+${webFallbackLines}
+
+Les sources sont listées sous la réponse. Précisez votre besoin pour affiner.`
+      : "Je n’ai pas pu produire une réponse entièrement vérifiée pour le moment. Indiquez une ville, une région ou un type de lieu (parc, plage, musée…) et je vous aide.";
   };
 
   if (process.env.OPENROUTER_API_KEY) {
-    const callOpenRouter = async (withWeb: boolean, maxTokens: number) => {
-      const sys = withWeb
-        ? system
-        : buildSystemPrompt(locale, context, itineraryMode, {
-            webEnabled: false,
-            kbCount: countRelevantKbHits(contextPlacesForPrompt, lastUser),
-          });
+    // Web search is done via Tavily/Brave above; OpenRouter is text-only (no web plugin).
+    const callOpenRouter = async (maxTokens: number) => {
       const payload: Record<string, unknown> = {
         model: modelId,
         temperature: 0.35,
         max_tokens: maxTokens,
         messages: [
-          { role: "system", content: sys },
+          { role: "system", content: system },
           { role: "user", content: lastUser },
         ],
       };
-      if (withWeb) {
-        const destFocus = cityHint
-          ? ` Focus STRICTLY on ${cityHint} and realistic nearby areas in Cameroon only. Do NOT suggest distant parks or cities (e.g. Bouba Ndjidda / Waza / Maroua for a Kribi trip).`
-          : ` Focus STRICTLY on Cameroon (Cameroun) tourism.`;
-        payload.plugins = [
-          {
-            id: "web",
-            max_results: itineraryMode ? 6 : 5,
-            search_prompt:
-              `${destFocus} Prefer official or reputable Cameroon sources. Use results to verify parks, sites, destinations, activities, lodging/transport, hours, prices, access. Ignore places outside Cameroon or outside the requested destination area when a city is specified. Do NOT put URLs or a Sources list in your answer — the client UI shows sources separately. Never invent prices or hours.`,
-          },
-        ];
-      }
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -934,15 +1158,9 @@ export async function POST(req: Request) {
     };
 
     // Prefer a credit-safe output budget; itineraries need room but must not 402 the key.
-    let maxTok = itineraryMode ? 4_000 : CHAT_MAX_OUTPUT_TOKENS;
-    let { res, data } = await callOpenRouter(enableWeb, maxTok);
-    // If web-augmented call fails (credits/plugin), retry once without web.
-    if (!res.ok && enableWeb) {
-      console.warn("[chat] OpenRouter web call failed — retrying without web", {
-        status: res.status,
-      });
-      ({ res, data } = await callOpenRouter(false, maxTok));
-    }
+    let maxTok = itineraryMode ? 4_000 : lodgingQuery ? 1_800 : Math.min(CHAT_MAX_OUTPUT_TOKENS, 2_500);
+    let { res, data } = await callOpenRouter(maxTok);
+
     // If still blocked by max_tokens affordability, retry once at the reported budget.
     if (!res.ok) {
       const rawMsg = sanitizeProviderError(
@@ -955,7 +1173,7 @@ export async function POST(req: Request) {
           to: affordable,
         });
         maxTok = affordable;
-        ({ res, data } = await callOpenRouter(false, maxTok));
+        ({ res, data } = await callOpenRouter(maxTok));
       }
     }
 
@@ -974,8 +1192,8 @@ export async function POST(req: Request) {
       });
 
       // Prefer a useful KB answer only for real tourism / itinerary asks.
-      if (itineraryMode || tourismTopic) {
-        message = kbFallbackMessage(true);
+      if (itineraryMode || tourismTopic || lodgingQuery) {
+        message = kbFallbackMessage(enableWeb && webCitations.length === 0);
         provider = "kb-fallback";
       } else if (isCreditOrTokenError(res.status, rawMsg)) {
         return NextResponse.json(
@@ -1000,14 +1218,20 @@ export async function POST(req: Request) {
       }
     } else {
       message = data?.choices?.[0]?.message?.content?.trim() || "";
-      webCitations = citationsFromAnnotations(data?.choices?.[0]?.message?.annotations);
+      const orCitations = citationsFromAnnotations(data?.choices?.[0]?.message?.annotations);
+      if (orCitations.length) {
+        const seen = new Set(webCitations.map((c) => c.url));
+        for (const c of orCitations) {
+          if (!seen.has(c.url)) webCitations.push(c);
+        }
+      }
       if (!message) {
         console.error("[chat] OpenRouter empty content", {
           model: modelId,
           web: enableWeb,
           kb_count: contextPlacesForPrompt.length,
         });
-        message = kbFallbackMessage(enableWeb);
+        message = kbFallbackMessage(enableWeb && webCitations.length === 0);
         provider = "kb-fallback";
       } else {
         provider = "openrouter";

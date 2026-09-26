@@ -16,6 +16,7 @@
   "dependencies": {
     "@ai-sdk/google": "^4.0.80",
     "@supabase/supabase-js": "^2.117.2",
+    "@vercel/analytics": "^2.0.1",
     "ai": "^7.0.114",
     "framer-motion": "^13.4.4",
     "leaflet": "^1.9.4",

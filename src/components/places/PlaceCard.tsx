@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 
+import { FavoriteButton } from '@/components/places/FavoriteButton';
 import { Badge, Button } from '@/components/ui';
 import { useLocale } from '@/lib/i18n';
 import { resolvePlaceImage } from '@/lib/place-images';
@@ -77,32 +78,47 @@ export function PlaceCard({
       }`}
       whileHover={reduce ? undefined : { y: -3, transition: { duration: 0.25 } }}
     >
-      <Link href={link} className="block overflow-hidden">
-        <div className="relative aspect-[16/10] bg-gradient-to-br from-[var(--green-deep)] via-[var(--green)] to-[var(--gold)]/30">
-          {image ? (
-            <Image
-              src={image}
-              alt={name}
-              fill
-              className="object-cover transition duration-500 hover:scale-[1.03]"
-              sizes="(max-width:768px) 85vw, 33vw"
-              unoptimized
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-end p-4">
-              <span className="font-display text-3xl font-bold text-white/85">
-                {name.slice(0, 1)}
+      <div className="relative">
+        <Link href={link} className="block overflow-hidden">
+          <div className="relative aspect-[16/10] bg-gradient-to-br from-[var(--green-deep)] via-[var(--green)] to-[var(--gold)]/30">
+            {image ? (
+              <Image
+                src={image}
+                alt={name}
+                fill
+                className="object-cover transition duration-500 hover:scale-[1.03]"
+                sizes="(max-width:768px) 85vw, 33vw"
+                unoptimized
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-end p-4">
+                <span className="font-display text-3xl font-bold text-white/85">
+                  {name.slice(0, 1)}
+                </span>
+              </div>
+            )}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/35 to-transparent" />
+            {categoryLabel ? (
+              <span className="absolute left-3 top-3 rounded-full bg-black/40 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
+                {categoryLabel}
               </span>
-            </div>
-          )}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/35 to-transparent" />
-          {categoryLabel ? (
-            <span className="absolute left-3 top-3 rounded-full bg-black/40 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
-              {categoryLabel}
-            </span>
-          ) : null}
-        </div>
-      </Link>
+            ) : null}
+          </div>
+        </Link>
+        <FavoriteButton
+          place={{
+            id: site.id,
+            name,
+            slug,
+            city: site.city ?? undefined,
+            region: site.region ?? undefined,
+            category: site.category ?? undefined,
+            imageUrl: image,
+            latitude: 'latitude' in site ? site.latitude : null,
+            longitude: 'longitude' in site ? site.longitude : null,
+          }}
+        />
+      </div>
       <div className={`space-y-2 ${compact ? 'p-3' : 'space-y-3 p-4'}`}>
         <div>
           <h3 className="font-display text-lg font-semibold leading-snug text-[var(--green-deep)]">

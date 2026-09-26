@@ -6,6 +6,7 @@ import { MapPin, MessageCircle, Plus } from 'lucide-react';
 
 import { TourismMap } from '@/components/maps/TourismMap';
 import { PageTransition } from '@/components/motion';
+import { FavoriteButton } from '@/components/places/FavoriteButton';
 import { Badge, Button, ErrorState, Skeleton } from '@/components/ui';
 import { fetchTouristSite, friendlyError, listTouristSites } from '@/lib/api/client';
 import { useLocale } from '@/lib/i18n';
@@ -180,19 +181,33 @@ export default function DestinationDetailPage() {
               </section>
             ) : null}
             <div className="mt-8 flex flex-wrap gap-2">
-              <Button
-                type="button"
-                onClick={() => {
-                addPlaceToTrip({
+              <FavoriteButton
+                variant="button"
+                place={{
                   id: site.id,
                   name: site.name,
+                  slug: site.slug,
                   city: site.city,
                   region: site.region,
                   category: site.category,
                   imageUrl: cover ?? site.images[0],
                   latitude: site.latitude,
                   longitude: site.longitude,
-                });
+                }}
+              />
+              <Button
+                type="button"
+                onClick={() => {
+                  addPlaceToTrip({
+                    id: site.id,
+                    name: site.name,
+                    city: site.city,
+                    region: site.region,
+                    category: site.category,
+                    imageUrl: cover ?? site.images[0],
+                    latitude: site.latitude,
+                    longitude: site.longitude,
+                  });
                   setAdded(true);
                 }}
               >
