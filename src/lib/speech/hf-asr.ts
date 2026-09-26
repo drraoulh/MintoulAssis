@@ -82,14 +82,17 @@ export async function transcribeWithHuggingFace(
     }
 
     if (!res.ok) {
-      const msg =
-        (data &&
-          typeof data === 'object' &&
-          'error' in data &&
-          typeof (data as { error: unknown }).error === 'string' &&
-          (data as { error: string }).error) ||
-        rawText.slice(0, 300) ||
-        `HF ASR ${res.status}`;
+      let msg = `HF ASR ${res.status}`;
+      if (
+        data &&
+        typeof data === 'object' &&
+        'error' in data &&
+        typeof (data as { error: unknown }).error === 'string'
+      ) {
+        msg = (data as { error: string }).error;
+      } else if (rawText.trim()) {
+        msg = rawText.slice(0, 300);
+      }
 
       if (res.status === 503 || /loading|currently loading/i.test(msg)) {
         throw Object.assign(
