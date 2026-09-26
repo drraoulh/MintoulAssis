@@ -1,0 +1,362 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+:root {
+  /* Cameroon flag — green, red, yellow */
+  --green-deep: #007a5e;
+  --green: #00966f;
+  --green-mid: #00a86b;
+  --gold: #a67c00;
+  --gold-soft: #fcd116;
+  --ivory: #ffffff;
+  --white: #ffffff;
+  --ink: #1a1a1a;
+  --muted: #535557;
+  --mint-soft: #e7f6f1;
+  --line: #e5e7eb;
+  --danger: #ce1126;
+  --cm-red: #ce1126;
+  --cm-yellow: #fcd116;
+  /* Intro cinematic accents (scoped usage — do not restyle whole site) */
+  --intro-black: #050505;
+  --intro-anthracite: #151515;
+  --cm-green: #007a5e;
+  --cm-red: #ce1126;
+  --cm-yellow: #fcd116;
+  --intro-gold: #d4af37;
+  --intro-gold-soft: #e5c76b;
+  --intro-ivory: #f8f5ed;
+  --intro-water: #2c8fb3;
+  --radius: 1rem;
+  --radius-lg: 1.5rem;
+  --shadow-soft: 0 8px 30px rgba(11, 61, 46, 0.08);
+  --shadow-lift: 0 12px 40px rgba(11, 61, 46, 0.12);
+  --header-h: 4rem;
+  --bottom-nav-h: 4.5rem;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@theme inline {
+  --color-green-deep: var(--green-deep);
+  --color-green: var(--green);
+  --color-green-mid: var(--green-mid);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-ivory: var(--ivory);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-mint-soft: var(--mint-soft);
+  --color-line: var(--line);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-body);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  min-height: 100svh;
+  overflow-x: clip;
+  color: var(--ink);
+  background: #f3f4f6;
+  font-family: var(--font-body), "Plus Jakarta Sans", sans-serif;
+}
+
+html.intro-playing,
+html.intro-playing body {
+  height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--gold) 35%, white);
+  color: var(--green-deep);
+}
+
+.font-display {
+  font-family: var(--font-body), "Plus Jakarta Sans", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius);
+  z-index: 0;
+  background: var(--mint-soft);
+}
+
+/* Subtle scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--green) 40%, transparent) transparent;
+}
+
+/* Reduced motion: keep opacity only — except the cinematic intro */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  html:not(.intro-playing) *,
+  html:not(.intro-playing) *::before,
+  html:not(.intro-playing) *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mobile bottom padding when bottom nav present */
+.pb-bottom-nav {
+  padding-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom) + 1rem);
+}
+
+@media (min-width: 1024px) {
+  .pb-bottom-nav {
+    padding-bottom: 0;
+  }
+}
+
+/* Hide scrollbar for horizontal quick actions */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes assistant-halo {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+  }
+}
+
+.assistant-halo {
+  animation: assistant-halo 3.8s ease-in-out infinite;
+}
+
+/* Skeleton shimmer */
+@keyframes smartmboa-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--line) 0%,
+    var(--mint-soft) 50%,
+    var(--line) 100%
+  );
+  background-size: 200% 100%;
+  animation: smartmboa-shimmer 1.4s ease-in-out infinite;
+}
+
+/* SmartMboa thinking dots — Cameroon flag colors (green / red / yellow) */
+@keyframes sm-think-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  40% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+.sm-think-dot {
+  animation: sm-think-bounce 1.05s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    animation: none;
+  }
+
+  .sm-think-dot {
+    animation: none;
+    opacity: 0.9;
+    transform: none;
+  }
+}
+
+/* Intro cinematic — one layout that fits phone, tablet, desktop, landscape */
+.intro-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.intro-stage {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.35rem, 1.4vh, 1.15rem);
+  padding: 2.6rem clamp(0.75rem, 3vw, 2rem) 0.35rem;
+}
+
+.intro-map {
+  position: relative;
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: center;
+  width: min(68vw, 220px);
+  max-height: min(36svh, 230px);
+}
+
+.intro-map svg {
+  width: 100%;
+  height: auto;
+  max-height: inherit;
+}
+
+.intro-copy {
+  position: relative;
+  z-index: 20;
+  width: 100%;
+  max-width: 40rem;
+  min-height: 4rem;
+  padding-inline: 0.15rem;
+  text-align: center;
+}
+
+.intro-copy p {
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+.intro-cta-slot {
+  display: flex;
+  width: 100%;
+  flex-shrink: 0;
+  justify-content: center;
+  min-height: 4.5rem;
+  padding: 0.4rem clamp(0.75rem, 4vw, 1.5rem) 0.85rem;
+}
+
+.intro-cta {
+  display: inline-flex;
+  min-height: 3rem;
+  width: min(100%, 20.5rem);
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  padding: 0.85rem 1.15rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+@media (min-width: 640px) {
+  .intro-map {
+    width: min(50vw, 280px);
+    max-height: min(40svh, 300px);
+  }
+  .intro-copy {
+    min-height: 4.75rem;
+  }
+  .intro-cta {
+    width: auto;
+    min-width: 16rem;
+    padding-inline: 1.6rem;
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .intro-map {
+    width: min(42vw, 340px);
+    max-height: min(46svh, 360px);
+  }
+  .intro-copy {
+    min-height: 5.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .intro-map {
+    width: min(34vw, 400px);
+    max-height: min(50svh, 420px);
+  }
+}
+
+@media (min-width: 1280px) {
+  .intro-map {
+    width: min(30vw, 460px);
+    max-height: min(54svh, 480px);
+  }
+}
+
+@media (max-height: 560px) and (orientation: landscape) {
+  .intro-stage {
+    flex-direction: row;
+    justify-content: center;
+    gap: clamp(1rem, 4vw, 2.5rem);
+    padding: 2.25rem 1.25rem 0.2rem;
+  }
+
+  .intro-map {
+    width: min(36vw, 260px);
+    max-height: min(74svh, 280px);
+  }
+
+  .intro-copy {
+    min-height: 0;
+    max-width: 22rem;
+    text-align: left;
+  }
+
+  .intro-cta-slot {
+    min-height: 3.75rem;
+    padding-bottom: 0.5rem;
+  }
+}

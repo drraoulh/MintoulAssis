@@ -1,0 +1,43 @@
+{
+  "name": "webmintoul",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "scrape:restauration": "node scripts/scrape-ayilaa-restauration.mjs",
+    "scrape:tourisme": "node scripts/scrape-ayilaa-sites-touristiques.mjs",
+    "scrape:hotels": "node scripts/scrape-ayilaa-hotels.mjs",
+    "scrape:transports": "node scripts/scrape-ayilaa-transports.mjs",
+    "db:schema": "node scripts/apply-schema.mjs"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^4.0.80",
+    "@supabase/supabase-js": "^2.117.2",
+    "ai": "^7.0.114",
+    "framer-motion": "^13.4.4",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^1.48.0",
+    "next": "16.3.6",
+    "postgres": "^3.4.9",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-leaflet": "^5.0.0",
+    "react-markdown": "^10.1.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
