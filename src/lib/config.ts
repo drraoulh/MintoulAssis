@@ -17,6 +17,22 @@ export function getApiBaseUrl(): string {
 export const API_BASE_URL = getApiBaseUrl();
 
 /**
+ * Canonical public site URL (SEO, sitemap, Open Graph).
+ * Prefer NEXT_PUBLIC_SITE_URL; else Vercel production host; else smartmboatour.com.
+ */
+export function getSiteUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, '');
+  if (fromEnv) return fromEnv.replace(/\/$/, '');
+  const vercel =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim() ||
+    process.env.NEXT_PUBLIC_VERCEL_URL?.trim();
+  if (vercel) {
+    return vercel.startsWith('http') ? vercel.replace(/\/$/, '') : `https://${vercel.replace(/\/$/, '')}`;
+  }
+  return 'https://smartmboatour.com';
+}
+
+/**
  * Voice WebSocket URL derived from the HTTP API base.
  * https → wss, http → ws. Never use ws:// on an HTTPS page.
  */
@@ -36,6 +52,26 @@ export function getVoiceWebSocketUrl(): string {
 export const APP_NAME = 'SmartMboa';
 export const APP_TAGLINE_FR = 'Votre guide intelligent pour découvrir le Cameroun';
 export const APP_TAGLINE_EN = 'Your intelligent guide to discover Cameroon';
+
+/** SEO-oriented long description (FR). */
+export const APP_DESCRIPTION_FR =
+  'SmartMboa est le guide touristique intelligent du Cameroun : explorez les régions, découvrez les sites, planifiez un itinéraire, et discutez avec l’assistant vocal et Vision IA.';
+
+export const APP_KEYWORDS = [
+  'Cameroun',
+  'tourisme Cameroun',
+  'guide touristique',
+  'SmartMboa',
+  'Mintoul',
+  'itinéraires Cameroun',
+  'Kribi',
+  'Limbé',
+  'Yaoundé',
+  'Douala',
+  'parcs nationaux',
+  'assistant vocal',
+  'voyage Cameroun',
+] as const;
 
 export const HEALTH_PROBE_TIMEOUT_MS = 20_000;
 export const REQUEST_TIMEOUT_MS = 180_000;

@@ -14,31 +14,48 @@ function BookingForm() {
   const params = useSearchParams();
   const hotelId = params.get('hotel');
   const [hotel, setHotel] = useState<TouristSite | null>(null);
-  const [step, setStep] = useState(0);
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
-  const [guests, setGuests] = useState('2');
+  const [step, setStep] = useState(hotelId ? 1 : 0);
+  const [checkIn, setCheckIn] = useState(params.get('checkIn') || '');
+  const [checkOut, setCheckOut] = useState(params.get('checkOut') || '');
+  const [guests, setGuests] = useState(params.get('guests') || '2');
   const [room, setRoom] = useState('Standard');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [ref, setRef] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loadingHotel, setLoadingHotel] = useState(!!hotelId);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!hotelId) return;
+      if (!hotelId) {
+        setLoadingHotel(false);
+        return;
+      }
+      setLoadingHotel(true);
       try {
         try {
           const one = await fetchTouristSite(hotelId);
-          if (!cancelled) setHotel(one);
+          if (!cancelled) {
+            setHotel(one);
+            setStep((s) => (s === 0 ? 1 : s));
+          }
         } catch {
-          const all = await listTouristSites();
+          const all = await listTouristSites({
+            category: 'hotels',
+            limit: 96,
+            includeHotels: true,
+          });
           const found = all.items.find((s) => s.id === hotelId);
-          if (!cancelled) setHotel(found ?? null);
+          if (!cancelled) {
+            setHotel(found ?? null);
+            if (found) setStep((s) => (s === 0 ? 1 : s));
+          }
         }
       } catch (e) {
         if (!cancelled) setError(friendlyError(e));
+      } finally {
+        if (!cancelled) setLoadingHotel(false);
       }
     })();
     return () => {
@@ -85,11 +102,12 @@ function BookingForm() {
         <p className="mt-4 text-lg">
           Référence : <strong>{ref}</strong>
         </p>
-        <p className="mt-2 text-sm text-[var(--muted)]">
-          Confirmation de démonstration (aucun email réel — le backend n’expose pas encore d’envoi mail).
-        </p>
-        <div className="mt-6">
+        <p className="mt-2 text-sm text-[var(--muted)]">{t('booking.demoNote')}</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Button href="/mon-voyage">{t('nav.trip')}</Button>
+          <Button href="/hotels" variant="secondary">
+            {t('nav.hotels')}
+          </Button>
         </div>
       </div>
     );
@@ -100,11 +118,20 @@ function BookingForm() {
       <p className="inline-block rounded-full bg-[var(--gold)]/35 px-3 py-1 text-sm font-semibold text-[var(--green-deep)]">
         {t('booking.demoNote')}
       </p>
-      <h1 className="mt-4 font-display text-3xl text-[var(--green-deep)]">{t('booking.title')}</h1>
-      {error ? <div className="mt-4"><ErrorState message={error} /></div> : null}
-      {hotel ? (
+      <h1 className="mt-4 font-display text-3xl text-[var(--green-deep)]">
+        {t('booking.title')}
+      </h1>
+      {error ? (
+        <div className="mt-4">
+          <ErrorState message={error} />
+        </div>
+      ) : null}
+      {loadingHotel ? (
+        <Skeleton className="mt-4 h-6 w-2/3" />
+      ) : hotel ? (
         <p className="mt-2 text-[var(--muted)]">
           {hotel.name} · {hotel.city}
+          {hotel.price ? ` · ${hotel.price}` : ''}
         </p>
       ) : (
         <p className="mt-2 text-sm text-[var(--muted)]">
@@ -128,7 +155,9 @@ function BookingForm() {
           <li
             key={label}
             className={`rounded-full px-3 py-1 ${
-              step === i ? 'bg-[var(--green)] text-white' : 'bg-[var(--line)] text-[var(--muted)]'
+              step === i
+                ? 'bg-[var(--green)] text-white'
+                : 'bg-[var(--line)] text-[var(--muted)]'
             }`}
           >
             {label}
@@ -144,16 +173,50 @@ function BookingForm() {
         )}
         {step === 1 && (
           <>
-            <Input type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} required />
-            <Input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} required />
-            <Button type="button" onClick={() => setStep(2)}>
+            <label className="block text-sm font-medium">
+              {t('booking.checkIn')}
+              <Input
+                className="mt-1"
+                type="date"
+                value={checkIn}
+                onChange={(e) => setCheckIn(e.target.value)}
+                required
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              {t('booking.checkOut')}
+              <Input
+                className="mt-1"
+                type="date"
+                value={checkOut}
+                min={checkIn || undefined}
+                onChange={(e) => setCheckOut(e.target.value)}
+                required
+              />
+            </label>
+            <Button
+              type="button"
+              disabled={!checkIn || !checkOut || checkOut <= checkIn}
+              onClick={() => setStep(2)}
+            >
               {t('common.continue')}
             </Button>
           </>
         )}
         {step === 2 && (
           <>
-            <Input value={guests} onChange={(e) => setGuests(e.target.value)} required />
+            <label className="block text-sm font-medium">
+              {t('booking.guests')}
+              <Input
+                className="mt-1"
+                type="number"
+                min={1}
+                max={12}
+                value={guests}
+                onChange={(e) => setGuests(e.target.value)}
+                required
+              />
+            </label>
             <Button type="button" onClick={() => setStep(3)}>
               {t('common.continue')}
             </Button>
@@ -161,7 +224,14 @@ function BookingForm() {
         )}
         {step === 3 && (
           <>
-            <Input value={room} onChange={(e) => setRoom(e.target.value)} />
+            <label className="block text-sm font-medium">
+              {t('booking.roomType')}
+              <Input
+                className="mt-1"
+                value={room}
+                onChange={(e) => setRoom(e.target.value)}
+              />
+            </label>
             <Button type="button" onClick={() => setStep(4)}>
               {t('common.continue')}
             </Button>
@@ -169,14 +239,27 @@ function BookingForm() {
         )}
         {step === 4 && (
           <>
-            <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+            <label className="block text-sm font-medium">
+              {t('booking.guestName')}
+              <Input
+                className="mt-1"
+                placeholder={t('booking.guestName')}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              {t('booking.guestEmail')}
+              <Input
+                className="mt-1"
+                type="email"
+                placeholder={t('booking.guestEmail')}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </label>
             <Button type="button" onClick={() => setStep(5)}>
               {t('common.continue')}
             </Button>
@@ -192,7 +275,7 @@ function BookingForm() {
                 {checkIn} → {checkOut}
               </p>
               <p>
-                {guests} voyageurs · {room}
+                {guests} · {room}
               </p>
               <p>
                 {name} · {email}

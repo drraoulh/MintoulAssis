@@ -1,13 +1,15 @@
 import type { MetadataRoute } from 'next';
 
-const SITE = 'https://smartmboa-web.onrender.com';
+import { getSiteUrl } from '@/lib/config';
 
 export default function robots(): MetadataRoute.Robots {
+  const site = getSiteUrl();
   return {
     rules: [
       {
         userAgent: '*',
         allow: '/',
+        disallow: ['/api/', '/groupe/'],
       },
       {
         userAgent: 'ClaudeBot',
@@ -25,8 +27,12 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: 'anthropic-ai',
         allow: '/',
       },
+      {
+        userAgent: 'GPTBot',
+        allow: '/',
+      },
     ],
-    sitemap: `${SITE}/sitemap.xml`,
-    host: SITE,
+    sitemap: `${site}/sitemap.xml`,
+    host: site,
   };
 }

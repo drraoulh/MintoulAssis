@@ -113,6 +113,8 @@ export function listTouristSites(params?: {
   q?: string;
   limit?: number;
   withCounts?: boolean;
+  /** When true, include lodging even if category is not set (default API excludes hotels). */
+  includeHotels?: boolean;
 }): Promise<TouristSiteListResponse> {
   const q = new URLSearchParams();
   if (params?.city) q.set('city', params.city);
@@ -121,6 +123,7 @@ export function listTouristSites(params?: {
   if (params?.q) q.set('q', params.q);
   if (params?.limit) q.set('limit', String(params.limit));
   if (params?.withCounts) q.set('with_counts', '1');
+  if (params?.includeHotels) q.set('exclude_hotels', '0');
   const qs = q.toString();
   return request<TouristSiteListResponse>(
     `/api/tourist-sites${qs ? `?${qs}` : ''}`,
