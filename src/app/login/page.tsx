@@ -16,14 +16,17 @@ function safeNext(value: string | null) {
 function LoginForm() {
   const { t, locale, toggleLocale } = useLocale();
   const searchParams = useSearchParams();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    searchParams.get('error') ? t('login.invalid') : null,
+  );
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    const username = String(form.get('username') ?? '');
+    const password = String(form.get('password') ?? '');
     if (!username.trim() || !password) {
       setError(t('login.required'));
       return;
@@ -83,10 +86,13 @@ function LoginForm() {
           </div>
 
           <form
+            method="post"
+            action="/api/auth/login"
             onSubmit={onSubmit}
             noValidate
             className="space-y-4 rounded-2xl bg-white p-6 shadow-md ring-1 ring-black/5"
           >
+            <input type="hidden" name="next" value={safeNext(searchParams.get('next'))} />
             <div>
               <label htmlFor="username" className="mb-1.5 block text-sm font-medium text-[var(--ink)]">
                 {t('login.username')}
@@ -99,8 +105,6 @@ function LoginForm() {
                   autoComplete="username"
                   autoCapitalize="none"
                   autoFocus
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
                   className="w-full rounded-xl border border-gray-300 py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-[#007A5E] focus:ring-2 focus:ring-[#007A5E]/20"
                 />
               </div>
@@ -117,8 +121,6 @@ function LoginForm() {
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-xl border border-gray-300 py-2.5 pl-10 pr-10 text-sm outline-none transition focus:border-[#007A5E] focus:ring-2 focus:ring-[#007A5E]/20"
                 />
                 <button
