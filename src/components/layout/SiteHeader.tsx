@@ -22,6 +22,14 @@ import { APP_NAME } from '@/lib/config';
 import { useLocale } from '@/lib/i18n';
 import type { BackendStatus } from '@/lib/types';
 
+async function logout() {
+  try {
+    await fetch('/api/auth/logout', { method: 'POST' });
+  } finally {
+    window.location.replace('/login');
+  }
+}
+
 const LINKS = [
   { href: '/explorer', key: 'nav.explorer', icon: Compass },
   { href: '/planifier', key: 'nav.planifier', icon: Map },
@@ -230,6 +238,13 @@ export function SiteHeader() {
             >
               {t('nav.replayIntro')}
             </Link>
+            <button
+              type="button"
+              onClick={() => void logout()}
+              className="rounded-xl px-3 py-2 text-left text-xs font-medium text-[#CE1126]"
+            >
+              {t('nav.logout')}
+            </button>
           </div>
         </div>
       ) : null}
@@ -308,6 +323,13 @@ export function SiteFooter() {
           >
             {t('footer.replayIntro')}
           </Link>
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="mt-2 block text-sm text-white/70 underline-offset-4 hover:text-[#FCD116] hover:underline"
+          >
+            {t('nav.logout')}
+          </button>
         </div>
       </div>
       <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-white/50 md:px-6">
