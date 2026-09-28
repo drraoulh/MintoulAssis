@@ -2,9 +2,10 @@
 
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useState, type FormEvent } from 'react';
+import { Suspense, useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Eye, EyeOff, Loader2, Lock, User } from 'lucide-react';
 
+import { SmartMboaIntro } from '@/components/intro/SmartMboaIntro';
 import { APP_NAME } from '@/lib/config';
 import { useLocale } from '@/lib/i18n';
 
@@ -21,6 +22,15 @@ function LoginForm() {
     searchParams.get('error') ? t('login.invalid') : null,
   );
   const [loading, setLoading] = useState(false);
+  const [showIntro, setShowIntro] = useState(() => !searchParams.get('error'));
+  const onIntroComplete = useCallback(() => setShowIntro(false), []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('intro-playing', showIntro);
+    return () => document.documentElement.classList.remove('intro-playing');
+  }, [showIntro]);
+
+  if (showIntro) return <SmartMboaIntro onComplete={onIntroComplete} />;
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -157,7 +167,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<div className="fixed inset-0 bg-[#050505]" aria-hidden />}>
       <LoginForm />
     </Suspense>
   );
