@@ -16,7 +16,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isAssistant = pathname === '/assistant' || pathname.startsWith('/assistant/');
   const isGroupRoom = /^\/groupe\/[^/]+$/.test(pathname);
   const isFullHeight = isAssistant || isGroupRoom || introPlaying;
-  const isLogin = pathname === '/login';
 
   useEffect(() => {
     const sync = () =>
@@ -26,8 +25,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     return () => mo.disconnect();
   }, []);
-
-  if (isLogin) return <>{children}</>;
 
   return (
     <div

@@ -426,21 +426,20 @@ export function VoiceMode({
 
     try {
       let uploadBlob: Blob;
+      let uploadMime = 'audio/wav';
+      let uploadFilename = 'recording.wav';
       try {
         uploadBlob = await blobToWavBlob(rawBlob);
       } catch {
-        const tip =
-          'Impossible de préparer l’audio. Réessayez, ou utilisez Chrome / Edge.';
-        setHint(tip);
-        onExchangeRef.current({ tip });
-        sendingRef.current = false;
-        setPhase('idle');
-        return;
+        // Fallback to raw recording if client-side WAV conversion fails
+        uploadBlob = rawBlob;
+        uploadMime = rawBlob.type || 'audio/webm';
+        uploadFilename = uploadMime.includes('mp4') ? 'recording.mp4' : 'recording.webm';
       }
 
       const { text } = await transcribeAudio(uploadBlob, {
-        mimeType: 'audio/wav',
-        filename: 'recording.wav',
+        mimeType: uploadMime,
+        filename: uploadFilename,
       });
 
       if (!text) {

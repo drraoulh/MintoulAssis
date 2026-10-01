@@ -87,9 +87,17 @@ export async function blobToWavBlob(
   }
   const ctx = new AC();
   try {
+    if (ctx.state === 'suspended') {
+      await ctx.resume().catch(() => undefined);
+    }
     const ab = await blob.arrayBuffer();
     // copy: decodeAudioData may detach the buffer
-    const decoded = await ctx.decodeAudioData(ab.slice(0));
+    const decoded = await new Promise<AudioBuffer>((resolve, reject) => {
+      const res = ctx.decodeAudioData(ab.slice(0), resolve, reject);
+      if (res && typeof res.then === 'function') {
+        res.then(resolve, reject);
+      }
+    });
     const mono = mixToMono(decoded);
     const resampled = resampleLinear(mono, decoded.sampleRate, targetSampleRate);
     const wav = encodeWavPcm16(resampled, targetSampleRate);

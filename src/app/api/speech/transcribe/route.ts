@@ -23,14 +23,20 @@ function openRouterFormat(mime: string, filename: string): string | null {
 
 function errMeta(e: unknown): { message: string; code?: string; status?: number } {
   if (e && typeof e === 'object') {
-    const o = e as { message?: string; code?: string; status?: number };
+    const o = e as { message?: unknown; code?: unknown; status?: unknown };
+    const rawMsg =
+      typeof o.message === 'string'
+        ? o.message
+        : o.message
+          ? JSON.stringify(o.message)
+          : 'Erreur de transcription';
     return {
-      message: o.message || 'Erreur de transcription',
-      code: o.code,
-      status: o.status,
+      message: rawMsg,
+      code: typeof o.code === 'string' ? o.code : undefined,
+      status: typeof o.status === 'number' ? o.status : undefined,
     };
   }
-  return { message: e instanceof Error ? e.message : 'Erreur de transcription' };
+  return { message: e instanceof Error ? e.message : String(e || 'Erreur de transcription') };
 }
 
 /**
@@ -42,7 +48,15 @@ function errMeta(e: unknown): { message: string; code?: string; status?: number 
  */
 export async function POST(req: Request) {
   try {
-    const form = await req.formData();
+    let form: FormData;
+    try {
+      form = await req.formData();
+    } catch {
+      return NextResponse.json(
+        { detail: 'Format de requête invalide (multipart attendu).' },
+        { status: 400 },
+      );
+    }
     const file = form.get('file');
     if (!(file instanceof Blob) || file.size === 0) {
       return NextResponse.json({ detail: 'Aucun audio reçu.' }, { status: 400 });

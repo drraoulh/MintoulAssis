@@ -7,6 +7,12 @@
  * - Production fallback without env: existing Render API (never invent domains).
  */
 export function getApiBaseUrl(): string {
+  // In the browser, stay on the current origin to avoid apex-to-www 308 redirects that drop POST bodies
+  if (typeof window !== 'undefined') {
+    const fromEnv = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
+    if (fromEnv && !fromEnv.includes('smartmboatour.com')) return fromEnv;
+    return '';
+  }
   const fromEnv = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '');
   if (fromEnv) return fromEnv;
   // Same-origin Next.js API (Supabase + OpenRouter/Gemini)
