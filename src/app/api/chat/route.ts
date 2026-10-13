@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { getPlaces, searchPlacesForGuide } from "@/lib/places";
 import { prepareAiMarkdown } from "@/lib/markdown/sanitize-ai-markdown";
 import {
+  buildGeneralWebQuery,
   buildTourismWebQuery,
   formatWebHitsForPrompt,
   searchWeb,
@@ -24,9 +25,36 @@ const CHAT_MAX_OUTPUT_TOKENS = 5_000;
 type Incoming = {
   message?: string;
   messages?: { role: string; content: string }[];
+  /** Previous turns, oldest first (excluding `message`). */
+  history?: { role: string; content: string }[];
   conversation_id?: string;
   locale?: string;
 };
+
+type HistoryTurn = { role: "user" | "assistant"; content: string };
+
+const HISTORY_MAX_TURNS = 8;
+const HISTORY_MAX_CHARS = 2_000;
+
+/** Recent prior turns from `history` (or legacy `messages`), without the current question. */
+function sanitizeHistory(body: Incoming, lastUser: string): HistoryTurn[] {
+  const raw = Array.isArray(body.history)
+    ? body.history
+    : Array.isArray(body.messages)
+      ? body.messages
+      : [];
+  const turns: HistoryTurn[] = [];
+  for (const m of raw) {
+    if (!m || (m.role !== "user" && m.role !== "assistant")) continue;
+    if (typeof m.content !== "string" || !m.content.trim()) continue;
+    turns.push({ role: m.role, content: m.content.trim().slice(0, HISTORY_MAX_CHARS) });
+  }
+  const last = turns[turns.length - 1];
+  if (last?.role === "user" && last.content === lastUser.slice(0, HISTORY_MAX_CHARS)) {
+    turns.pop();
+  }
+  return turns.slice(-HISTORY_MAX_TURNS);
+}
 
 type UrlCitationAnnotation = {
   type?: string;
@@ -84,17 +112,31 @@ function looksLikeGreetingOrChitchat(text: string): boolean {
 
 function greetingReply(locale: string): string {
   if (locale === "en") {
-    return `Hello! I'm the **SmartMboa** travel guide for Cameroon.
+    return `Hello! I'm **SmartMboa**, your travel and culture assistant for Cameroon.
 
-I can help with destinations, national parks, beaches, city tips, and trip outlines.
+I can help with destinations, national parks, beaches, city tips and trip outlines — and also with other questions: cinema and filming locations, music, history, sport, culture…
 
-Tell me a city (Kribi, Limbe, Yaoundé…) or what you like (nature, beach, culture), and we'll start.`;
+Tell me a city (Kribi, Limbe, Yaoundé…) or just ask your question.`;
   }
-  return `Bonjour ! Je suis le guide **SmartMboa** pour le Cameroun.
+  return `Bonjour ! Je suis **SmartMboa**, votre assistant voyage et culture pour le Cameroun.
 
-Je peux vous aider pour les destinations, parcs nationaux, plages, idées de séjour et conseils pratiques.
+Je peux vous aider pour les destinations, parcs nationaux, plages, idées de séjour et conseils pratiques — mais aussi pour d'autres questions : cinéma et lieux de tournage, musique, histoire, sport, culture…
 
-Dites-moi une ville (Kribi, Limbé, Yaoundé…) ou ce que vous aimez (nature, plage, culture), et on commence.`;
+Dites-moi une ville (Kribi, Limbé, Yaoundé…) ou posez simplement votre question.`;
+}
+
+/** Film / clip / photo shoot scouting — answer with real sites + filming practicalities. */
+function looksLikeFilmingLocationQuery(text: string): boolean {
+  return /tournage|tourner\s+(un|une|le|la|les|des|mon|ma|mes|notre|nos)\s+(\S+\s+)?(film|clip|court|long|s[eé]rie|documentaire|sc[eè]ne|vid[eé]o|pub)|filmer|filming|\bshoot(ing)?\b|rep[eé]rages?|s[eé]ance\s+photo|photo\s*shoot|film\s+location|where\s+to\s+(shoot|film)/i.test(
+    text,
+  );
+}
+
+/** Questions outside travel logistics: cinema, music, history, sport, culture, general knowledge. */
+function looksLikeGeneralTopic(text: string): boolean {
+  return /cin[eé]ma|\bfilms?\b|movie|r[eé]alisat(eur|rice)|director|acteur|actrice|actor|actress|s[eé]ries?\b|documentaire|documentary|\bclips?\b|sc[eé]nario|musique|music|chanson|song|chanteu(r|se)|singer|album|artiste|makossa|bikutsi|histoire|history|historique|ind[eé]pendance|colonisation|colonial|sport|football|lions\s+indomptables|joueu(r|se)|litt[eé]rature|livres?\b|book|roman|[eé]crivain|writer|po[eè]te|peinture|sculpture|danse|dance|langues?\b|language|religion|tradition|coutume|chefferie|science|technolog|[eé]conomie|economy|politique|politics|qui\s+(est|a|[eé]tait)|who\s+(is|was)|pourquoi|why\b|explique|explain|c'est\s+quoi|qu'est[\s-]ce\s+que|what\s+is/i.test(
+    text,
+  );
 }
 
 /**
@@ -658,6 +700,56 @@ ${commonEn}
 ${kbBlockEn}`;
 }
 
+/** Non-tourism questions (cinema, music, history…) and filming-location scouting. */
+function buildGeneralSystemPrompt(
+  locale: string,
+  context: string,
+  opts: { webEnabled: boolean; filming: boolean },
+): string {
+  const fr = locale !== "en";
+  const hasContext = context.trim().length > 0;
+
+  if (fr) {
+    const filmingFr = opts.filming
+      ? `
+Repérage / tournage (film, clip, photo) :
+- Propose 4–8 lieux RÉELS au Cameroun adaptés à l'ambiance demandée (ex. horreur : forêts denses, grottes, ruines, vieux bâtiments coloniaux, villages isolés, brume des hauts plateaux, mangroves). Pour chacun : nom, région, pourquoi il convient à l'ambiance, accès, précautions.
+- Ajoute une section « Démarches et conseils pratiques » : autorisation de tournage (en général auprès du Ministère des Arts et de la Culture — MINAC, à confirmer), accord des autorités locales / chefferies, respect des sites sacrés et des communautés, sécurité de l'équipe (saison des pluies, faune, zones à éviter), logistique (électricité, transport du matériel).
+- Distingue ce qui vient du CONTEXTE (vérifié) de ce qui est « à confirmer ».`
+      : "";
+    return `Tu es SmartMboa / MINTOUL, assistant culturel et touristique du Cameroun. Tu réponds aussi aux questions générales : cinéma, musique, histoire, sport, littérature, arts, société, sciences…
+
+Règles :
+- Réponds directement à la question posée, de façon naturelle, claire et structurée (Markdown simple : titres, listes, gras). Ne ramène PAS la conversation vers les hôtels ou les réservations si ce n'est pas demandé.
+- Quand c'est pertinent, ajoute l'angle camerounais (artistes, œuvres, lieux, événements comme le festival Écrans Noirs), sans forcer.
+- N'invente JAMAIS de faits précis (dates, chiffres, titres, noms). Si tu n'es pas sûr, dis-le.
+- ${opts.webEnabled ? "Des RÉSULTATS WEB sont fournis : appuie-toi dessus pour les faits récents ou vérifiables, marque « selon sources web » si besoin." : "Pas de recherche web pour ce message : réponds avec tes connaissances en signalant l'incertitude."}
+- Ne mets PAS d'URL ni de liste « Sources » dans le texte — l'application affiche les sources à part.
+- Refuse seulement ce qui est dangereux ou illégal ; sinon aide toujours.
+${filmingFr}
+${hasContext ? `CONTEXTE :\n${context}` : "CONTEXTE : (aucun)"}`;
+  }
+
+  const filmingEn = opts.filming
+    ? `
+Location scouting / filming (film, music video, photo shoot):
+- Propose 4–8 REAL places in Cameroon that fit the requested mood (e.g. horror: dense forests, caves, ruins, old colonial buildings, remote villages, highland mist, mangroves). For each: name, region, why it fits the mood, access, precautions.
+- Add a "Permits and practical tips" section: filming permit (usually from the Ministry of Arts and Culture — MINAC, to confirm), local authorities / traditional chiefs' consent, respect for sacred sites and communities, crew safety (rainy season, wildlife, areas to avoid), logistics (power, moving gear).
+- Distinguish what comes from CONTEXT (verified) from what is "to confirm".`
+    : "";
+  return `You are SmartMboa / MINTOUL, a culture and travel assistant for Cameroon. You also answer general questions: cinema, music, history, sport, literature, arts, society, science…
+
+Rules:
+- Answer the actual question directly, naturally, clearly and with structure (simple Markdown: headings, lists, bold). Do NOT steer the conversation to hotels or bookings unless asked.
+- When relevant, add a Cameroonian angle (artists, works, places, events such as the Écrans Noirs festival), without forcing it.
+- NEVER invent precise facts (dates, numbers, titles, names). If unsure, say so.
+- ${opts.webEnabled ? 'WEB RESULTS are provided: rely on them for recent or verifiable facts, mark "per web sources" when useful.' : "No web search for this message: answer from your knowledge and flag uncertainty."}
+- Do NOT put URLs or a "Sources" list in the body — the app shows sources separately.
+- Only refuse what is dangerous or illegal; otherwise always help.
+${filmingEn}
+${hasContext ? `CONTEXT:\n${context}` : "CONTEXT: (none)"}`;
+}
+
 function citationsFromAnnotations(
   annotations: UrlCitationAnnotation[] | undefined,
 ): { title: string; url: string; type: "WEB" }[] {
@@ -710,12 +802,36 @@ export async function POST(req: Request) {
   const lodgingQuery = looksLikeLodgingQuery(lastUser);
   const limit = itineraryMode ? 12 : lodgingQuery ? 10 : 8;
   const cityHint = extractCameroonCity(lastUser);
+  const history = sanitizeHistory(body, lastUser);
+
+  // Non-tourism questions (cinema, music, history…) and filming scouting get their own prompt.
+  // Short follow-ups ("et pour un thriller ?") inherit the previous user turn's intent.
+  const prevUser = [...history].reverse().find((m) => m.role === "user")?.content ?? "";
+  const tourismLogistics =
+    itineraryMode ||
+    lodgingQuery ||
+    looksLikeRestaurantQuery(lastUser) ||
+    looksLikeFactualTourismQuery(lastUser);
+  const shortFollowUp = lastUser.length <= 80 && !tourismLogistics && !!prevUser;
+  const filmingQuery =
+    !tourismLogistics &&
+    (looksLikeFilmingLocationQuery(lastUser) ||
+      (shortFollowUp && looksLikeFilmingLocationQuery(prevUser)));
+  const generalMode =
+    filmingQuery ||
+    (!tourismLogistics &&
+      !looksLikeParksOrNatureQuery(lastUser) &&
+      (looksLikeGeneralTopic(lastUser) ||
+        (shortFollowUp && !cityHint && looksLikeGeneralTopic(prevUser))));
+
   const parkHintEarly = extractSpecificParkHint(lastUser);
   // City-scoped trips must NOT pull nationwide parks just because "Nature" is an interest.
   const nationwideParksQuery =
     looksLikeParksOrNatureQuery(lastUser) && !cityHint && !itineraryMode;
   // Help KB retrieval for nature / lodging without changing the search architecture.
-  const kbQuery = parkHintEarly
+  const kbQuery = filmingQuery
+    ? `${cityHint || ""} ${lastUser} forêt grotte chute cascade montagne lac ruines patrimoine site naturel`.trim()
+    : parkHintEarly
     ? `parc national ${parkHintEarly} ${lastUser}`
     : lodgingQuery && cityHint
       ? `${cityHint} hôtel hotel auberge lodge résidence hébergement`
@@ -727,9 +843,11 @@ export async function POST(req: Request) {
 
   let contextPlaces: GuidePlace[] = [];
   try {
-    contextPlaces = await searchPlacesForGuide(kbQuery, limit);
+    // General-knowledge questions never show place cards — skip the KB entirely.
+    const skipKb = generalMode && !filmingQuery;
+    if (!skipKb) contextPlaces = await searchPlacesForGuide(kbQuery, limit);
     // City-focused follow-up when the broad query returned few on-topic hits.
-    if (cityHint && contextPlaces.filter((p) => placeInDestinationArea(p, cityHint)).length < 3) {
+    if (!skipKb && cityHint && contextPlaces.filter((p) => placeInDestinationArea(p, cityHint)).length < 3) {
       const cityPlaces = await searchPlacesForGuide(cityHint, limit);
       contextPlaces = mergePlacesById(
         contextPlaces.filter((p) => placeInDestinationArea(p, cityHint)),
@@ -808,6 +926,16 @@ export async function POST(req: Request) {
   // Prefer on-topic places in the UI cards (avoid restaurants on a parks question).
   const parkHint = extractSpecificParkHint(lastUser);
   const placesForUi = (() => {
+    // Filming scouting → scenic / heritage sites (no hotels); other general questions → none.
+    if (generalMode) {
+      if (!filmingQuery) return [];
+      return contextPlaces.filter(
+        (p) =>
+          isTouristInterestPlace(p) &&
+          !isLodgingPlace(p) &&
+          (!cityHint || placeInDestinationArea(p, cityHint)),
+      );
+    }
     // Explicit hotel / lodging ask → only verified stays in the destination area.
     if (lodgingQuery) {
       const lodging = contextPlaces.filter(
@@ -920,21 +1048,31 @@ export async function POST(req: Request) {
       looksLikeActivityQuery(lastUser) ||
       looksLikeParksOrNatureQuery(lastUser) ||
       !!cityHint);
-  const enableWeb = webSearchEnvEnabled() && (itineraryMode || needsWebFill);
+  const enableWeb = webSearchEnvEnabled() && (itineraryMode || needsWebFill || generalMode);
 
   // External web search (Tavily → Brave) when KB is thin for this city/topic.
   let webHitsBlock = "";
   let webCitations: { title: string; url: string; type: "WEB" }[] = [];
   let webProvider: "tavily" | "brave" | "none" = "none";
   if (enableWeb) {
-    const webQuery = buildTourismWebQuery({
-      userText: lastUser,
-      cityHint,
-      lodging: lodgingQuery,
-      restaurant: looksLikeRestaurantQuery(lastUser),
-      parks: looksLikeParksOrNatureQuery(lastUser),
-      activity: looksLikeActivityQuery(lastUser),
-    });
+    // Short follow-ups carry little signal on their own — prefix the previous question.
+    const generalWebText =
+      shortFollowUp && generalMode ? `${prevUser.slice(0, 120)} ${lastUser}` : lastUser;
+    const webQuery = generalMode
+      ? buildGeneralWebQuery({
+          userText: filmingQuery
+            ? `${generalWebText} lieux de tournage décors naturels`
+            : generalWebText,
+          cameroonContext: filmingQuery,
+        })
+      : buildTourismWebQuery({
+          userText: lastUser,
+          cityHint,
+          lodging: lodgingQuery,
+          restaurant: looksLikeRestaurantQuery(lastUser),
+          parks: looksLikeParksOrNatureQuery(lastUser),
+          activity: looksLikeActivityQuery(lastUser),
+        });
     const web = await searchWeb({
       query: webQuery,
       maxResults: itineraryMode ? 6 : 5,
@@ -968,12 +1106,17 @@ export async function POST(req: Request) {
     uiNames: placesForUi.map((p) => p.name).slice(0, 8),
   });
 
-  const system = buildSystemPrompt(locale, contextWithWeb, itineraryMode, {
-    webEnabled: enableWeb,
-    kbCount: countRelevantKbHits(contextPlacesForPrompt, lastUser),
-    lodgingQuery,
-    cityHint,
-  });
+  const system = generalMode
+    ? buildGeneralSystemPrompt(locale, contextWithWeb, {
+        webEnabled: enableWeb && webCitations.length > 0,
+        filming: filmingQuery,
+      })
+    : buildSystemPrompt(locale, contextWithWeb, itineraryMode, {
+        webEnabled: enableWeb,
+        kbCount: countRelevantKbHits(contextPlacesForPrompt, lastUser),
+        lodgingQuery,
+        cityHint,
+      });
   const modelId = process.env.OPENROUTER_MODEL || "google/gemini-2.5-flash";
 
   let message: string;
@@ -1132,6 +1275,7 @@ Les sources sont listées sous la réponse. Précisez votre besoin pour affiner.
         max_tokens: maxTokens,
         messages: [
           { role: "system", content: system },
+          ...history,
           { role: "user", content: lastUser },
         ],
       };
@@ -1191,8 +1335,14 @@ Les sources sont listées sous la réponse. Précisez votre besoin pour affiner.
         message: rawMsg,
       });
 
-      // Prefer a useful KB answer only for real tourism / itinerary asks.
-      if (itineraryMode || tourismTopic || lodgingQuery) {
+      // Prefer a useful KB answer only for real tourism / itinerary asks
+      // (or general questions where web / KB found something to show).
+      if (
+        itineraryMode ||
+        tourismTopic ||
+        lodgingQuery ||
+        (generalMode && (webCitations.length > 0 || contextPlacesForPrompt.length > 0))
+      ) {
         message = kbFallbackMessage(enableWeb && webCitations.length === 0);
         provider = "kb-fallback";
       } else if (isCreditOrTokenError(res.status, rawMsg)) {
@@ -1242,7 +1392,7 @@ Les sources sont listées sous la réponse. Précisez votre besoin pour affiner.
       const result = await generateText({
         model: google("gemini-2.0-flash"),
         system,
-        prompt: lastUser,
+        messages: [...history, { role: "user", content: lastUser }],
         maxOutputTokens: CHAT_MAX_OUTPUT_TOKENS,
       });
       message = result.text;
@@ -1252,7 +1402,11 @@ Les sources sont listées sous la réponse. Précisez votre besoin pour affiner.
         err instanceof Error ? err.message : String(err),
       );
       console.error("[chat] Gemini error", { message: rawMsg });
-      if (itineraryMode || tourismTopic) {
+      if (
+        itineraryMode ||
+        tourismTopic ||
+        (generalMode && (webCitations.length > 0 || contextPlacesForPrompt.length > 0))
+      ) {
         message = kbFallbackMessage(true);
         provider = "kb-fallback";
       } else if (isCreditOrTokenError(0, rawMsg)) {

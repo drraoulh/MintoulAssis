@@ -41,6 +41,8 @@ export interface ChatRequest {
   conversation_id?: string;
   mode?: ChatMode;
   locale?: ChatLocale;
+  /** Previous turns (oldest first), excluding `message`. */
+  history?: { role: 'user' | 'assistant'; content: string }[];
 }
 
 /** PlaceUI */
