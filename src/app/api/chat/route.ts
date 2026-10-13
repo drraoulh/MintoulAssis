@@ -21,7 +21,7 @@ export const maxDuration = 60;
  * via OpenRouter — that exceeds typical credit budgets. Cap output explicitly.
  */
 const CHAT_MAX_OUTPUT_TOKENS = 5_000;
-
+ 
 type Incoming = {
   message?: string;
   messages?: { role: string; content: string }[];
