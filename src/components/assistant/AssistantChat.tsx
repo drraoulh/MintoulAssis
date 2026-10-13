@@ -233,6 +233,11 @@ export function AssistantChat({
     }
 
     stopAllAudio();
+    // Recent turns so follow-ups ("et ses autres films ?") keep their context.
+    const history = messages
+      .filter((m) => !m.isError && !m.isTip && !m.streaming && m.content.trim())
+      .slice(-8)
+      .map((m) => ({ role: m.role, content: m.content }));
     setSending(true);
     setMessages((m) => [
       ...m,
@@ -244,6 +249,7 @@ export function AssistantChat({
         message: trimmed,
         conversation_id: conversationId,
         locale,
+        history,
       });
       setConversationId(res.conversation_id);
       setMessages((m) => [

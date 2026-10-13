@@ -250,6 +250,22 @@ export function buildTourismWebQuery(opts: {
     .trim();
 }
 
+/**
+ * Search query for non-tourism questions (cinema, music, history, sport…).
+ * Adds "Cameroun" only when the ask is about Cameroon, so "who directed Titanic?"
+ * is not skewed towards Cameroonian pages.
+ */
+export function buildGeneralWebQuery(opts: {
+  userText: string;
+  cameroonContext: boolean;
+}): string {
+  const base = opts.userText.replace(/\s+/g, " ").trim().slice(0, 220);
+  const mentionsCameroon = /cameroun|cameroon|camerounais/i.test(base);
+  return [base, opts.cameroonContext && !mentionsCameroon ? "Cameroun" : null]
+    .filter(Boolean)
+    .join(" ");
+}
+
 export function formatWebHitsForPrompt(hits: WebSearchHit[]): string {
   if (!hits.length) return "";
   return hits
