@@ -1,11 +1,19 @@
-import type { FilmLocationMeta, FilmLook } from '@/lib/film/types';
+import { practicalFor } from '@/lib/film/location-practical';
+import type {
+  AccessLevel,
+  CostTier,
+  FilmLocationMeta,
+  FilmLook,
+} from '@/lib/film/types';
 import { LOCAL_PLACE_COVERS } from '@/lib/place-images';
+
+type FilmLocationSeed = Omit<FilmLocationMeta, 'costTier' | 'accessLevel'>;
 
 /**
  * Filming locations that share identity with tourism destinations where marked.
  * Coordinates are indicative for map pins; always confirm on scouting.
  */
-export const FILM_LOCATIONS: FilmLocationMeta[] = [
+const FILM_LOCATION_SEEDS: FilmLocationSeed[] = [
   {
     placeId: 'chutes-de-la-lobe',
     slug: 'chutes-de-la-lobe',
@@ -284,6 +292,11 @@ export const FILM_LOCATIONS: FilmLocationMeta[] = [
   },
 ];
 
+export const FILM_LOCATIONS: FilmLocationMeta[] = FILM_LOCATION_SEEDS.map((seed) => ({
+  ...seed,
+  ...practicalFor(seed.slug),
+}));
+
 export const FILM_LOOKS: { id: FilmLook; fr: string; en: string }[] = [
   { id: 'coast', fr: 'Côte', en: 'Coast' },
   { id: 'savanna', fr: 'Savane', en: 'Savanna' },
@@ -304,6 +317,8 @@ export function filterFilmLocations(opts: {
   regionId?: string;
   look?: FilmLook | 'all';
   q?: string;
+  costTier?: CostTier | 'all';
+  accessLevel?: AccessLevel | 'all';
 }): FilmLocationMeta[] {
   const q = opts.q?.trim().toLowerCase();
   return FILM_LOCATIONS.filter((loc) => {
@@ -311,6 +326,16 @@ export function filterFilmLocations(opts: {
       return false;
     }
     if (opts.look && opts.look !== 'all' && !loc.looks.includes(opts.look)) return false;
+    if (opts.costTier && opts.costTier !== 'all' && loc.costTier !== opts.costTier) {
+      return false;
+    }
+    if (
+      opts.accessLevel &&
+      opts.accessLevel !== 'all' &&
+      loc.accessLevel !== opts.accessLevel
+    ) {
+      return false;
+    }
     if (q) {
       const hay = `${loc.nameFr} ${loc.nameEn} ${loc.cityFr} ${loc.cityEn} ${loc.looks.join(' ')}`.toLowerCase();
       if (!hay.includes(q)) return false;

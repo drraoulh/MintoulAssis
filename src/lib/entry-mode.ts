@@ -1,5 +1,7 @@
 /** Which world the user chose after the intro gateway. */
 
+import { clearFilmAudience } from '@/lib/film/audience';
+
 export const ENTRY_MODE_KEY = 'smartmboa_entry_mode';
 
 export type EntryMode = 'tourism' | 'film';
@@ -29,4 +31,5 @@ export function clearEntryMode(): void {
   } catch {
     /* ignore */
   }
+  clearFilmAudience();
 }

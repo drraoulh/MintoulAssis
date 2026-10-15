@@ -10,10 +10,13 @@ import {
   CheckSquare,
   Clapperboard,
   ClipboardList,
+  Columns2,
+  GraduationCap,
   Home,
   LayoutGrid,
   MapPin,
   Menu,
+  UserCircle2,
   Users,
   Wrench,
   X,
@@ -30,6 +33,9 @@ const FILM_LINKS = [
   { href: '/film/directory', key: 'film.nav.directory', icon: Users },
   { href: '/film/equipment', key: 'film.nav.equipment', icon: Wrench },
   { href: '/film/planning', key: 'film.nav.planning', icon: CheckSquare },
+  { href: '/film/locations/compare', key: 'film.nav.compare', icon: Columns2 },
+  { href: '/film/resources', key: 'film.nav.resources', icon: GraduationCap },
+  { href: '/film/profile', key: 'film.nav.profile', icon: UserCircle2 },
 ] as const;
 
 function isActive(pathname: string, href: string, exact?: boolean) {
@@ -84,7 +90,11 @@ function FilmHeader() {
 
           <div className="ml-auto hidden items-center gap-3 lg:flex">
             <nav className="flex items-center gap-1" aria-label={t('film.nav.primary')}>
-              {FILM_LINKS.map((link) => {
+              {FILM_LINKS.filter((l) =>
+                ['/film', '/film/locations', '/film/procedures', '/film/directory', '/film/equipment'].includes(
+                  l.href,
+                ),
+              ).map((link) => {
                 const active = isActive(pathname, link.href, 'exact' in link ? link.exact : false);
                 return (
                   <Link
@@ -193,6 +203,11 @@ function FilmBottomNav() {
       [
         { href: '/film/procedures', label: t('film.nav.procedures'), icon: ClipboardList },
         { href: '/film/equipment', label: t('film.nav.equipment'), icon: Wrench },
+        { href: '/film/planning', label: t('film.nav.planning'), icon: CheckSquare },
+        { href: '/film/locations/compare', label: t('film.nav.compare'), icon: Columns2 },
+        { href: '/film/resources', label: t('film.nav.resources'), icon: GraduationCap },
+        { href: '/film/profile', label: t('film.nav.profile'), icon: UserCircle2 },
+        { href: '/film?change_audience=1', label: t('film.audience.switch'), icon: Clapperboard },
         { href: '/?change_mode=1', label: t('nav.changeMode'), icon: LayoutGrid },
       ] as const,
     [t],

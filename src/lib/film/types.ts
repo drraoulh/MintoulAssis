@@ -12,6 +12,12 @@ export type FilmLook =
 
 export type FilmSeason = 'dry' | 'rainy' | 'year-round';
 
+/** Relative shoot cost for local productions (crew/logistics, not hotel rates). */
+export type CostTier = 'budget' | 'moderate' | 'premium';
+
+/** How hard it is to reach and work the location with a small unit. */
+export type AccessLevel = 'easy' | 'moderate' | 'demanding';
+
 export interface FilmLocationMeta {
   /** Same id/slug as tourism catalog when the place is shared. */
   placeId: string;
@@ -35,9 +41,40 @@ export interface FilmLocationMeta {
   permitEn: string;
   practicalFr: string;
   practicalEn: string;
+  costTier: CostTier;
+  accessLevel: AccessLevel;
   /** True when this record is also promoted as a tourist destination. */
   alsoTourism: boolean;
   tourismHref?: string;
+}
+
+export type ResourceKind = 'training' | 'festival' | 'funding' | 'call';
+
+export interface FilmResource {
+  id: string;
+  kind: ResourceKind;
+  titleFr: string;
+  titleEn: string;
+  bodyFr: string;
+  bodyEn: string;
+  cityFr: string;
+  cityEn: string;
+  /** Only verified entries are shown. */
+  verified: true;
+  url?: string;
+  periodFr?: string;
+  periodEn?: string;
+}
+
+export interface LocalFilmProfile {
+  name: string;
+  role: string;
+  city: string;
+  bio: string;
+  specialties: string;
+  contact: string;
+  projectTitle?: string;
+  updatedAt: string;
 }
 
 export type DirectoryCategory =

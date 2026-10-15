@@ -3,10 +3,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Compass, MapPin } from 'lucide-react';
+import { ArrowLeft, Compass, Download, MapPin } from 'lucide-react';
 
 import { TourismMap } from '@/components/maps/TourismMap';
 import { setEntryMode } from '@/lib/entry-mode';
+import { downloadTextFile, locationDossierMarkdown } from '@/lib/film/dossier';
 import {
   FILM_LOOKS,
   filmLocationCover,
@@ -144,6 +145,16 @@ export default function FilmLocationDetailPage() {
                 {t(`film.season.${loc.season}`)}
               </dd>
             </div>
+            <div className="flex justify-between gap-3 border-b border-white/10 py-2">
+              <dt className="text-white/45">{t('film.cost.label')}</dt>
+              <dd className="font-medium text-[#F8F5ED]">{t(`film.cost.${loc.costTier}`)}</dd>
+            </div>
+            <div className="flex justify-between gap-3 border-b border-white/10 py-2">
+              <dt className="text-white/45">{t('film.access.label')}</dt>
+              <dd className="font-medium text-[#F8F5ED]">
+                {t(`film.access.${loc.accessLevel}`)}
+              </dd>
+            </div>
             <div className="flex justify-between gap-3 py-2">
               <dt className="text-white/45">{t('film.detail.coords')}</dt>
               <dd className="font-mono text-xs text-[#F8F5ED]">
@@ -151,6 +162,20 @@ export default function FilmLocationDetailPage() {
               </dd>
             </div>
           </dl>
+          <button
+            type="button"
+            onClick={() =>
+              downloadTextFile(
+                `smartmboa-dossier-${loc.slug}-${locale}.md`,
+                locationDossierMarkdown(loc, locale),
+              )
+            }
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#CE1126] px-5 py-3 text-sm font-bold text-white hover:bg-[#b50e21]"
+          >
+            <Download className="h-4 w-4" aria-hidden />
+            {t('film.dossier.download')}
+          </button>
+          <p className="text-center text-[11px] text-white/40">{t('film.dossier.hint')}</p>
         </aside>
       </div>
     </div>
