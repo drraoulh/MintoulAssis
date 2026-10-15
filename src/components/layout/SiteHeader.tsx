@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { AssistantMark } from '@/components/brand/AssistantMark';
+import { SectionSwitcher } from '@/components/entry/SectionSwitcher';
 import { fetchHealth } from '@/lib/api/client';
 import { APP_NAME } from '@/lib/config';
 import { useLocale } from '@/lib/i18n';
@@ -126,8 +127,9 @@ export function SiteHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 lg:ml-6">
+          <SectionSwitcher className="hidden sm:inline-flex" />
           <span
-            className="hidden items-center gap-1.5 text-xs text-[#535557] sm:inline-flex"
+            className="hidden items-center gap-1.5 text-xs text-[#535557] md:inline-flex"
             title={statusLabel}
           >
             <span
@@ -223,6 +225,9 @@ export function SiteHeader() {
             >
               {t('nav.vision')}
             </Link>
+            <div className="mt-2 border-t border-[var(--line)] px-1 pt-3 sm:hidden">
+              <SectionSwitcher size="md" className="w-full justify-center" />
+            </div>
             <Link
               href="/?change_mode=1"
               onClick={() => setOpen(false)}

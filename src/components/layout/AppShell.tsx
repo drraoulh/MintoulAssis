@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
+import { FilmShell } from '@/components/film/FilmShell';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { SiteFooter, SiteHeader } from '@/components/layout/SiteHeader';
 import { ScrollToTop } from '@/components/layout/ScrollToTop';
 
 /**
- * App chrome — hide site footer + bottom nav on /assistant (full-height chat).
+ * App chrome — tourism shell by default; film world gets its own menus.
+ * Hide chrome entirely during the cinematic intro / gateway.
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,7 +19,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isGroupRoom = /^\/groupe\/[^/]+$/.test(pathname);
   const isFilmWorld = pathname === '/film' || pathname.startsWith('/film/');
   const isFullHeight = isAssistant || isGroupRoom || introPlaying;
-  const hideChrome = introPlaying || isFilmWorld;
 
   useEffect(() => {
     const sync = () =>
@@ -28,6 +29,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return () => mo.disconnect();
   }, []);
 
+  if (introPlaying) {
+    return (
+      <div className="flex h-[100dvh] min-h-[100dvh] flex-col overflow-hidden">
+        <ScrollToTop />
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</main>
+      </div>
+    );
+  }
+
+  if (isFilmWorld) {
+    return (
+      <>
+        <ScrollToTop />
+        <FilmShell>{children}</FilmShell>
+      </>
+    );
+  }
+
   return (
     <div
       className={
@@ -37,20 +56,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       }
     >
       <ScrollToTop />
-      {hideChrome ? null : <SiteHeader />}
+      <SiteHeader />
       <main
         className={
           isFullHeight
             ? 'flex min-h-0 flex-1 flex-col overflow-hidden'
-            : hideChrome
-              ? 'flex-1'
-              : 'flex-1 pb-bottom-nav'
+            : 'flex-1 pb-bottom-nav'
         }
       >
         {children}
       </main>
-      {hideChrome || isFullHeight ? null : <SiteFooter />}
-      {hideChrome || isFullHeight ? null : <MobileBottomNav />}
+      {isFullHeight ? null : <SiteFooter />}
+      {isFullHeight ? null : <MobileBottomNav />}
     </div>
   );
 }

@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 
+import { SectionSwitcher } from '@/components/entry/SectionSwitcher';
 import { useLocale } from '@/lib/i18n';
 
 function isActivePath(pathname: string, href: string, exact?: boolean) {
@@ -111,6 +112,9 @@ export function MobileBottomNav() {
                 >
                   <X className="h-4 w-4" />
                 </button>
+              </div>
+              <div className="mb-3 flex justify-center">
+                <SectionSwitcher size="md" />
               </div>
               <ul className="grid grid-cols-2 gap-2">
                 {moreLinks.map((link) => {
