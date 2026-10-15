@@ -15,7 +15,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [introPlaying, setIntroPlaying] = useState(false);
   const isAssistant = pathname === '/assistant' || pathname.startsWith('/assistant/');
   const isGroupRoom = /^\/groupe\/[^/]+$/.test(pathname);
+  const isFilmWorld = pathname === '/film' || pathname.startsWith('/film/');
   const isFullHeight = isAssistant || isGroupRoom || introPlaying;
+  const hideChrome = introPlaying || isFilmWorld;
 
   useEffect(() => {
     const sync = () =>
@@ -35,18 +37,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       }
     >
       <ScrollToTop />
-      {introPlaying ? null : <SiteHeader />}
+      {hideChrome ? null : <SiteHeader />}
       <main
         className={
           isFullHeight
             ? 'flex min-h-0 flex-1 flex-col overflow-hidden'
-            : 'flex-1 pb-bottom-nav'
+            : hideChrome
+              ? 'flex-1'
+              : 'flex-1 pb-bottom-nav'
         }
       >
         {children}
       </main>
-      {isFullHeight || introPlaying ? null : <SiteFooter />}
-      {isFullHeight || introPlaying ? null : <MobileBottomNav />}
+      {hideChrome || isFullHeight ? null : <SiteFooter />}
+      {hideChrome || isFullHeight ? null : <MobileBottomNav />}
     </div>
   );
 }

@@ -224,6 +224,13 @@ export function SiteHeader() {
               {t('nav.vision')}
             </Link>
             <Link
+              href="/?change_mode=1"
+              onClick={() => setOpen(false)}
+              className="rounded-xl px-3 py-2 text-xs text-[var(--muted)]"
+            >
+              {t('nav.changeMode')}
+            </Link>
+            <Link
               href="/?reset_intro=1"
               onClick={() => setOpen(false)}
               className="rounded-xl px-3 py-2 text-xs text-[var(--muted)]"
@@ -303,8 +310,14 @@ export function SiteFooter() {
             {t('footer.hoursBody')}
           </p>
           <Link
-            href="/?reset_intro=1"
+            href="/?change_mode=1"
             className="mt-4 inline-block text-sm text-white/70 underline-offset-4 hover:text-[#FCD116] hover:underline"
+          >
+            {t('nav.changeMode')}
+          </Link>
+          <Link
+            href="/?reset_intro=1"
+            className="mt-2 inline-block text-sm text-white/70 underline-offset-4 hover:text-[#FCD116] hover:underline"
           >
             {t('footer.replayIntro')}
           </Link>

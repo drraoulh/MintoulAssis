@@ -14,10 +14,17 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+import { EntryGateway } from '@/components/entry/EntryGateway';
 import { PlaceCard } from '@/components/places/PlaceCard';
 import { RegionCoverGrid } from '@/components/places/RegionCoverCard';
 import { Button, Skeleton } from '@/components/ui';
 import { SmartMboaIntro, hasSeenIntro } from '@/components/intro/SmartMboaIntro';
+import {
+  clearEntryMode,
+  getEntryMode,
+  setEntryMode,
+  type EntryMode,
+} from '@/lib/entry-mode';
 import { clearIntroSeen } from '@/lib/intro';
 import { listTouristSites } from '@/lib/api/client';
 import { APP_NAME } from '@/lib/config';
@@ -27,6 +34,9 @@ import { REGIONS } from '@/lib/regions';
 import { isHotelCategory } from '@/lib/utils/response';
 import { isTouristAttraction } from '@/lib/utils/text';
 import type { TouristSite } from '@/lib/types';
+
+/** Home entry stages: decide → cinematic → gateway → tourism home */
+type HomeStage = 'loading' | 'intro' | 'gateway' | 'tourism';
 
 const INTENTS = [
   {
@@ -58,33 +68,71 @@ const INTENTS = [
 export default function HomePage() {
   const { t } = useLocale();
   const router = useRouter();
-  /** null = deciding; true = play intro; false = home */
-  const [showIntro, setShowIntro] = useState<boolean | null>(null);
+  const [stage, setStage] = useState<HomeStage>('loading');
   const [q, setQ] = useState('');
   const [allPlaces, setAllPlaces] = useState<TouristSite[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [loadingPlaces, setLoadingPlaces] = useState(true);
-  const onIntroComplete = useCallback(() => setShowIntro(false), []);
+
+  const onIntroComplete = useCallback(() => setStage('gateway'), []);
+
+  const onGatewaySelect = useCallback(
+    (mode: EntryMode) => {
+      setEntryMode(mode);
+      if (mode === 'film') {
+        router.push('/film');
+        return;
+      }
+      setStage('tourism');
+    },
+    [router],
+  );
 
   useEffect(() => {
-    const forceReplay = new URLSearchParams(window.location.search).has('reset_intro');
+    const params = new URLSearchParams(window.location.search);
+    const forceReplay = params.has('reset_intro');
+    const changeMode = params.has('change_mode');
+
     if (forceReplay) {
       clearIntroSeen();
-      setShowIntro(true);
+      clearEntryMode();
+      setStage('intro');
       router.replace('/');
       return;
     }
-    setShowIntro(!hasSeenIntro());
+
+    if (changeMode) {
+      clearEntryMode();
+      setStage('gateway');
+      router.replace('/');
+      return;
+    }
+
+    if (!hasSeenIntro()) {
+      setStage('intro');
+      return;
+    }
+
+    const mode = getEntryMode();
+    if (mode === 'film') {
+      router.replace('/film');
+      return;
+    }
+    if (mode === 'tourism') {
+      setStage('tourism');
+      return;
+    }
+    setStage('gateway');
   }, [router]);
 
   useEffect(() => {
-    const playing = showIntro === true || showIntro === null;
-    document.documentElement.classList.toggle('intro-playing', playing);
+    const overlay = stage === 'loading' || stage === 'intro' || stage === 'gateway';
+    document.documentElement.classList.toggle('intro-playing', overlay);
     return () => document.documentElement.classList.remove('intro-playing');
-  }, [showIntro]);
+  }, [stage]);
 
   useEffect(() => {
-    if (showIntro !== false) return;
+    if (stage !== 'tourism') return;
     let cancelled = false;
     (async () => {
       try {
@@ -108,7 +156,7 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, [showIntro]);
+  }, [stage]);
 
   const mustSee = useMemo(() => {
     const byId = new Map(allPlaces.map((p) => [p.id, p]));
@@ -137,15 +185,21 @@ export default function HomePage() {
     }
   }
 
-  if (showIntro === null) {
+  if (stage === 'loading') {
     return <div className="fixed inset-0 z-[100] bg-[#050505]" aria-hidden />;
+  }
+
+  if (stage === 'intro') {
+    return <SmartMboaIntro onComplete={onIntroComplete} />;
+  }
+
+  if (stage === 'gateway') {
+    return <EntryGateway onSelect={onGatewaySelect} />;
   }
 
   return (
     <>
-      {showIntro ? <SmartMboaIntro onComplete={onIntroComplete} /> : null}
-
-      <div className={showIntro ? 'hidden' : ''}>
+      <div>
         <section className="relative overflow-hidden bg-gradient-to-br from-white via-[var(--mint-soft)] to-[#FCD116]/30">
           <div className="mx-auto flex max-w-6xl flex-col-reverse items-center gap-8 px-4 py-10 sm:gap-10 sm:px-8 sm:py-14 md:flex-row md:gap-6 md:py-16 lg:px-12">
             <div className="w-full min-w-0 md:w-1/2">
