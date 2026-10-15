@@ -1,0 +1,23 @@
+{
+  "name": "SmartMboa",
+  "short_name": "SmartMboa",
+  "description": "Guide touristique intelligent du Cameroun — sites, itinéraires, assistant vocal et Vision IA.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#007A5E",
+  "theme_color": "#007A5E",
+  "lang": "fr-CM",
+  "icons": [
+    {
+      "src": "/brand/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
