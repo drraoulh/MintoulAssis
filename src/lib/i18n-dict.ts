@@ -90,6 +90,7 @@ const STRINGS: Record<Locale, Dict> = {
     'film.halls.suitable.public-screening': 'Projection publique',
     'film.halls.suitable.festival': 'Festival',
     'film.halls.suitable.cultural': 'Événement culturel',
+    'film.halls.gallery': 'Galerie',
     'film.halls.imageNote':
       'Photo illustrative de la région — confirmer l’ambiance et la jauge avec la salle avant de réserver.',
     'film.events.title': 'Événements cinéma à venir',
@@ -759,6 +760,7 @@ const STRINGS: Record<Locale, Dict> = {
     'film.halls.suitable.public-screening': 'Public screening',
     'film.halls.suitable.festival': 'Festival',
     'film.halls.suitable.cultural': 'Cultural event',
+    'film.halls.gallery': 'Gallery',
     'film.halls.imageNote':
       'Regional cover image — confirm atmosphere and capacity with the venue before booking.',
     'film.events.title': 'Upcoming cinema events',

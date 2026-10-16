@@ -3,10 +3,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Armchair,
   ArrowLeft,
   ExternalLink,
+  Images,
   MapPin,
   Theater,
 } from 'lucide-react';
@@ -20,6 +22,19 @@ export default function FilmHallDetailPage() {
   const slug = String(params.slug ?? '');
   const { t, locale } = useLocale();
   const hall = getHall(slug);
+
+  const gallery = useMemo(() => {
+    if (!hall) return [] as string[];
+    const photos = hall.gallery?.length ? hall.gallery : [hall.image];
+    return [...new Set(photos)];
+  }, [hall]);
+
+  const [activeSrc, setActiveSrc] = useState<string | null>(null);
+  const heroSrc = activeSrc ?? hall?.image ?? '';
+
+  useEffect(() => {
+    setActiveSrc(null);
+  }, [hall?.id]);
 
   if (!hall) {
     return (
@@ -47,7 +62,15 @@ export default function FilmHallDetailPage() {
   return (
     <div>
       <div className="relative h-56 overflow-hidden sm:h-72 md:h-80">
-        <Image src={hall.image} alt="" fill priority className="object-cover" sizes="100vw" />
+        <Image
+          key={heroSrc}
+          src={heroSrc}
+          alt=""
+          fill
+          priority
+          className="object-cover"
+          sizes="100vw"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/45 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 mx-auto max-w-6xl px-4 pb-6 sm:px-8">
           <Link
@@ -87,6 +110,41 @@ export default function FilmHallDetailPage() {
 
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-8 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="space-y-5">
+          {gallery.length > 1 ? (
+            <section className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5">
+              <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#FCD116]">
+                <Images className="h-3.5 w-3.5" aria-hidden />
+                {t('film.halls.gallery')}
+              </h2>
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {gallery.map((src) => {
+                  const selected = src === heroSrc;
+                  return (
+                    <button
+                      key={src}
+                      type="button"
+                      onClick={() => setActiveSrc(src)}
+                      aria-pressed={selected}
+                      className={`relative aspect-[4/3] overflow-hidden rounded-xl border transition ${
+                        selected
+                          ? 'border-[#FCD116] ring-1 ring-[#FCD116]/50'
+                          : 'border-white/10 hover:border-white/30'
+                      }`}
+                    >
+                      <Image
+                        src={src}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="(max-width:640px) 50vw, 220px"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
+
           <section className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5">
             <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#FCD116]">
               <Theater className="h-3.5 w-3.5" aria-hidden />
@@ -173,9 +231,11 @@ export default function FilmHallDetailPage() {
               ))}
             </div>
           </div>
-          <p className="text-[11px] leading-relaxed text-white/35">
-            {t('film.halls.imageNote')}
-          </p>
+          {hall.imageIsRegional ? (
+            <p className="text-[11px] leading-relaxed text-white/35">
+              {t('film.halls.imageNote')}
+            </p>
+          ) : null}
         </aside>
       </div>
     </div>

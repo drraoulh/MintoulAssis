@@ -35,6 +35,10 @@ export interface ProjectionHall {
   statusNoteEn?: string;
   /** Local cover image path under /public. */
   image: string;
+  /** Extra venue photos (detail gallery). Cover is `image`. */
+  gallery?: string[];
+  /** True when `image` is a regional placeholder, not the venue itself. */
+  imageIsRegional?: boolean;
   website?: string;
   bookingHintFr: string;
   bookingHintEn: string;
@@ -70,6 +74,7 @@ export const PROJECTION_HALLS: ProjectionHall[] = [
     suitableFor: ['premiere', 'public-screening', 'cultural', 'festival'],
     status: 'active',
     image: '/regions/centre.jpg',
+    imageIsRegional: true,
     bookingHintFr: 'Contacter l’administration / gestion culturelle du campus.',
     bookingHintEn: 'Contact campus administration / cultural management.',
   },
@@ -98,6 +103,7 @@ export const PROJECTION_HALLS: ProjectionHall[] = [
     suitableFor: ['premiere', 'public-screening', 'festival', 'cultural'],
     status: 'active',
     image: '/regions/centre.jpg',
+    imageIsRegional: true,
     website: 'https://ifcameroun.com',
     bookingHintFr: 'Réservation via l’Institut français du Cameroun — antenne de Yaoundé.',
     bookingHintEn: 'Book via the French Institute of Cameroon — Yaoundé branch.',
@@ -126,7 +132,18 @@ export const PROJECTION_HALLS: ProjectionHall[] = [
     status: 'active',
     statusNoteFr: 'Coordonnées GPS approximatives — confirmer le site exact.',
     statusNoteEn: 'Approximate GPS — confirm the exact site.',
-    image: '/regions/littoral.jpg',
+    image: '/film/halls/institut-francais-douala/01-facade.jpg',
+    gallery: [
+      '/film/halls/institut-francais-douala/01-facade.jpg',
+      '/film/halls/institut-francais-douala/02-salle-spectacle.jpg',
+      '/film/halls/institut-francais-douala/03-projection.jpg',
+      '/film/halls/institut-francais-douala/04-ecran-panel.jpg',
+      '/film/halls/institut-francais-douala/05-scene-concert.jpg',
+      '/film/halls/institut-francais-douala/06-scene-danse.jpg',
+      '/film/halls/institut-francais-douala/07-atelier.jpg',
+      '/film/halls/institut-francais-douala/08-galerie.jpg',
+      '/film/halls/institut-francais-douala/09-exposition.jpg',
+    ],
     website: 'https://ifcameroun.com',
     bookingHintFr: 'Réservation via l’Institut français du Cameroun — antenne de Douala.',
     bookingHintEn: 'Book via the French Institute of Cameroon — Douala branch.',
@@ -156,6 +173,7 @@ export const PROJECTION_HALLS: ProjectionHall[] = [
     suitableFor: ['premiere', 'public-screening', 'cultural'],
     status: 'active',
     image: '/regions/littoral.jpg',
+    imageIsRegional: true,
     bookingHintFr: 'Contacter la direction de la salle pour disponibilités et jauge.',
     bookingHintEn: 'Contact the venue management for availability and capacity.',
   },
@@ -186,6 +204,7 @@ export const PROJECTION_HALLS: ProjectionHall[] = [
     statusNoteFr: 'Statut et horaires à confirmer — vérifier avant déplacement.',
     statusNoteEn: 'Status and showtimes to confirm — verify before going.',
     image: '/regions/littoral.jpg',
+    imageIsRegional: true,
     bookingHintFr: 'Contacter Genesis Cinema / Douala Grand Mall pour réservation privée.',
     bookingHintEn: 'Contact Genesis Cinema / Douala Grand Mall for a private booking.',
   },
