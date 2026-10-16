@@ -86,9 +86,10 @@ async function wikiSummary(
       originalimage?: { source?: string };
       content_urls?: { desktop?: { page?: string } };
     };
+    // Prefer thumbnail for faster chat cards; fall back to original
     const photo =
-      sum.originalimage?.source || sum.thumbnail?.source
-        ? cleanWikiThumb(sum.originalimage?.source || sum.thumbnail!.source!)
+      sum.thumbnail?.source || sum.originalimage?.source
+        ? cleanWikiThumb(sum.thumbnail?.source || sum.originalimage!.source!)
         : undefined;
     return {
       title: sum.title || title,
