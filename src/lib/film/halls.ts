@@ -191,11 +191,11 @@ export const PROJECTION_HALLS: ProjectionHall[] = [
   {
     id: 'genesis-cinema-douala',
     slug: 'genesis-cinema-douala',
-    name: 'Genesis Cinema',
+    name: 'Genesis Cinemas',
     city: 'Douala',
     regionId: 'littoral',
-    addressFr: 'Douala Grand Mall, Autoroute de l’Aviation, Nkolminta',
-    addressEn: 'Douala Grand Mall, Aviation Highway, Nkolminta',
+    addressFr: '4e étage, Douala Grand Mall, Autoroute de l’Aviation, Nkolminta',
+    addressEn: '4th floor, Douala Grand Mall, Aviation Highway, Nkolminta',
     neighborhoodFr: 'Douala Grand Mall',
     neighborhoodEn: 'Douala Grand Mall',
     latitude: 4.0223748,
@@ -203,21 +203,30 @@ export const PROJECTION_HALLS: ProjectionHall[] = [
     capacitySeats: null,
     capacityStatus: 'indicative',
     capacityNoteFr:
-      'Complexe multi-salles (ouverture / activités rapportées dès 2022). Jauge par salle à vérifier selon la programmation actuelle.',
+      'Complexe multi-salles (screens) — jauge par salle à confirmer auprès de Genesis pour une première privée.',
     capacityNoteEn:
-      'Multi-screen complex (opening / activity reported from 2022). Per-screen capacity must be verified against current programming.',
+      'Multi-screen complex — confirm per-screen capacity with Genesis for a private premiere.',
     descriptionFr:
-      'Complexe de cinéma au Douala Grand Mall. Vérifier le statut actuel et la programmation avant de s’y déplacer pour une première.',
+      'Complexe de cinéma moderne au Douala Grand Mall (4e étage) : billetterie, snacks / concessions, espace d’attente et plusieurs salles (« SCREENS »). Adapté aux projections publiques et aux lancements commerciaux.',
     descriptionEn:
-      'Cinema complex at Douala Grand Mall. Verify current status and programming before planning a premiere visit.',
+      'Modern cinema complex at Douala Grand Mall (4th floor): box office, snacks / concessions, lounge seating, and multiple screening rooms (“SCREENS”). Suited to public screenings and commercial launches.',
     suitableFor: ['premiere', 'public-screening'],
-    status: 'verify',
-    statusNoteFr: 'Statut et horaires à confirmer — vérifier avant déplacement.',
-    statusNoteEn: 'Status and showtimes to confirm — verify before going.',
-    image: '/regions/littoral.jpg',
-    imageIsRegional: true,
-    bookingHintFr: 'Contacter Genesis Cinema / Douala Grand Mall pour réservation privée.',
-    bookingHintEn: 'Contact Genesis Cinema / Douala Grand Mall for a private booking.',
+    status: 'active',
+    statusNoteFr: 'Confirmer la programmation et la disponibilité des salles avant réservation.',
+    statusNoteEn: 'Confirm programming and screen availability before booking.',
+    image: '/film/halls/genesis-cinema-douala/01-entree-mall.jpg',
+    gallery: [
+      '/film/halls/genesis-cinema-douala/01-entree-mall.jpg',
+      '/film/halls/genesis-cinema-douala/02-lobby-concession.jpg',
+      '/film/halls/genesis-cinema-douala/03-box-office.jpg',
+      '/film/halls/genesis-cinema-douala/04-snacks.jpg',
+      '/film/halls/genesis-cinema-douala/05-attente.jpg',
+      '/film/halls/genesis-cinema-douala/06-facade-enseigne.jpg',
+    ],
+    bookingHintFr:
+      'Contacter le box office Genesis Cinemas (Douala Grand Mall, 4e étage) pour une réservation privée / avant-première.',
+    bookingHintEn:
+      'Contact the Genesis Cinemas box office (Douala Grand Mall, 4th floor) for a private booking / premiere.',
   },
 ];
 
