@@ -3,25 +3,23 @@
 import { useEffect, useId, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Clapperboard, X } from 'lucide-react';
-import { createPortal } from 'react-dom';
 
 import { FilmAssistantChat } from '@/components/film/FilmAssistantChat';
 import { useLocale } from '@/lib/i18n';
 
 /**
  * Floating Film AI — bottom-right on Film pages (hidden on the full /film/assistant page).
+ * Rendered in-tree (not portaled) so it still mounts if hydration is slow.
  */
 export function FilmFloatingAssistant() {
   const pathname = usePathname();
   const { t } = useLocale();
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const panelId = useId();
 
   const onAssistantPage =
     pathname === '/film/assistant' || pathname.startsWith('/film/assistant/');
 
-  useEffect(() => setMounted(true), []);
   useEffect(() => setOpen(false), [pathname]);
 
   useEffect(() => {
@@ -38,9 +36,9 @@ export function FilmFloatingAssistant() {
     };
   }, [open]);
 
-  if (!mounted || onAssistantPage) return null;
+  if (onAssistantPage) return null;
 
-  return createPortal(
+  return (
     <>
       {!open ? (
         <button
@@ -94,7 +92,6 @@ export function FilmFloatingAssistant() {
           </div>
         </div>
       )}
-    </>,
-    document.body,
+    </>
   );
 }

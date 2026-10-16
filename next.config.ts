@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Cloud / local agents often open the app via 127.0.0.1 while Next binds on localhost.
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "ayilaa.s3.eu-west-1.amazonaws.com" },
