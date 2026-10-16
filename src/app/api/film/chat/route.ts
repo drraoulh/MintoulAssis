@@ -7,19 +7,13 @@ import {
   buildFilmAssistantContext,
   buildFilmSystemPrompt,
 } from '@/lib/film/assistant-context';
+import { researchCameroonCinema } from '@/lib/film/research-cinema';
 import { prepareAiMarkdown } from '@/lib/markdown/sanitize-ai-markdown';
-import {
-  buildCinemaWebQuery,
-  formatWebHitsForPrompt,
-  searchWeb,
-  webHitsToCitations,
-  webSearchEnvEnabled,
-} from '@/lib/web-search';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-const CHAT_MAX_OUTPUT_TOKENS = 4_000;
+const CHAT_MAX_OUTPUT_TOKENS = 4_500;
 
 type Incoming = {
   message?: string;
@@ -51,31 +45,13 @@ function looksLikeGreeting(text: string): boolean {
 
 function greeting(locale: string): string {
   if (locale === 'en') {
-    return `Hello — I'm the **SmartMboa Film** assistant for **Cameroon cinematography**.
+    return `Hello — I'm the **SmartMboa Film** assistant for the **Cameroon movie industry**.
 
-Ask me about filmmakers, producers, actors, films, festivals (Écrans Noirs…), or how to shoot / premiere in Cameroon.`;
+Ask about any producer, director, actor, actress, videographer, film, series, or festival in Cameroon — I research online (Wikipedia, African cinema sources, and the web) to answer.`;
   }
-  return `Bonjour — je suis l’assistant **SmartMboa Film** pour la **cinématographie camerounaise**.
+  return `Bonjour — je suis l’assistant **SmartMboa Film** pour l’**industrie du cinéma camerounais**.
 
-Posez-moi une question sur un cinéaste, producteur, acteur, film, festival (Écrans Noirs…) ou sur comment tourner / lancer une première au Cameroun.`;
-}
-
-function looksLikeCinemaPersonOrFilm(text: string): boolean {
-  return /qui\s+est|who\s+is|acteur|actrice|actor|réalisat|director|producteur|producer|cinéaste|filmmaker|film\b|movie|long[-\s]?m[eé]trage|casting|star/i.test(
-    text,
-  );
-}
-
-function looksLikeFestival(text: string): boolean {
-  return /festival|écrans?\s*noirs|ecrans?\s*noirs|mis\s*me\s*binga|compétition|selection|sélection/i.test(
-    text,
-  );
-}
-
-function looksLikeProduction(text: string): boolean {
-  return /tournage|production|fixer|permis|autorisation|matériel|studio|salle|premi[eè]re|projection|lieu\s+de\s+tournage|shoot/i.test(
-    text,
-  );
+Demandez n’importe quel producteur, réalisateur, acteur, actrice, vidéographe, film, série ou festival au Cameroun — je recherche en ligne (Wikipédia, sources cinéma africain, web) pour répondre.`;
 }
 
 function sanitizeProviderError(msg: string): string {
@@ -93,18 +69,91 @@ function parseAffordableMaxTokens(msg: string): number | null {
   const m = msg.match(/afford\s+(\d+)/i) || msg.match(/max[_\s-]?tokens?[^\d]*(\d+)/i);
   if (!m) return null;
   const n = parseInt(m[1], 10);
-  return Number.isFinite(n) && n >= 256 ? Math.min(n, 3_000) : null;
+  return Number.isFinite(n) && n >= 256 ? Math.min(n, 3_500) : null;
 }
 
-function kbOnlyFallback(locale: string, context: string): string {
+function composeFromResearch(
+  locale: string,
+  hits: { title: string; url: string; snippet: string }[],
+  kbContext: string,
+): string {
+  const primary = hits[0];
+  if (!primary?.snippet) return '';
+
+  const cleanTitle = primary.title
+    .replace(/\s*\(Wikipedia[^)]*\)/i, '')
+    .replace(/\s*—\s*.*$/, '')
+    .trim();
+  const related = hits
+    .slice(1, 4)
+    .filter((h) => h.snippet && h.url !== primary.url)
+    .map((h) => {
+      const t = h.title.replace(/\s*\(Wikipedia[^)]*\)/i, '').trim();
+      return `- **${t}** — ${h.snippet.slice(0, 180).trim()}${h.snippet.length > 180 ? '…' : ''}`;
+    });
+
   if (locale === 'en') {
-    return context
-      ? `Here is what I can share from SmartMboa Film’s Cameroon cinema notes (verify details online if critical):\n\n${context.slice(0, 1800)}\n\nAdd an AI key for fuller answers, or ask about a specific filmmaker, film, or festival.`
-      : 'I need an AI key configured to answer in depth. Meanwhile ask about Écrans Noirs, projection halls, or a known Cameroonian filmmaker.';
+    return [
+      `## ${cleanTitle}`,
+      '',
+      primary.snippet.trim(),
+      '',
+      related.length ? `### Related Cameroon cinema` : '',
+      ...related,
+      related.length ? '' : '',
+      `**Source:** [${cleanTitle}](${primary.url})`,
+      kbContext
+        ? `\n### SmartMboa notes\n${kbContext.slice(0, 700)}`
+        : '',
+    ]
+      .filter((line, i, arr) => !(line === '' && arr[i - 1] === ''))
+      .join('\n')
+      .trim();
   }
-  return context
-    ? `Voici ce que je peux partager à partir des notes cinéma Cameroun de SmartMboa Film (vérifiez les détails critiques en ligne) :\n\n${context.slice(0, 1800)}\n\nAjoutez une clé IA pour des réponses plus riches, ou demandez un cinéaste, un film ou un festival précis.`
-    : 'Une clé IA est nécessaire pour répondre en profondeur. En attendant, demandez Écrans Noirs, les salles de projection, ou un cinéaste camerounais connu.';
+
+  return [
+    `## ${cleanTitle}`,
+    '',
+    primary.snippet.trim(),
+    '',
+    related.length ? `### Liens cinéma camerounais` : '',
+    ...related,
+    related.length ? '' : '',
+    `**Source :** [${cleanTitle}](${primary.url})`,
+    kbContext
+      ? `\n### Notes SmartMboa\n${kbContext.slice(0, 700)}`
+      : '',
+  ]
+    .filter((line, i, arr) => !(line === '' && arr[i - 1] === ''))
+    .join('\n')
+    .trim();
+}
+
+function researchFallback(
+  locale: string,
+  research: {
+    block: string;
+    hits: { title: string; url: string; snippet: string }[];
+  },
+  kbContext: string,
+): string {
+  const composed = composeFromResearch(locale, research.hits, kbContext);
+  if (composed) return composed;
+
+  if (research.block) {
+    if (locale === 'en') {
+      return `From online Cameroon film sources:\n\n${research.block.slice(0, 2400)}`;
+    }
+    return `D’après les sources en ligne sur le cinéma camerounais :\n\n${research.block.slice(0, 2400)}`;
+  }
+  if (locale === 'en') {
+    return kbContext
+      ? `From SmartMboa Film notes:\n\n${kbContext.slice(0, 1600)}\n\nI could not reach live web sources just now — retry shortly.`
+      : 'I could not find reliable online sources for that name yet. Try another spelling, or ask about a film / series title.';
+  }
+  return kbContext
+    ? `D’après les notes SmartMboa Film :\n\n${kbContext.slice(0, 1600)}\n\nLes sources web n’ont pas répondu — réessayez dans un instant.`
+    : 'Je n’ai pas encore trouvé de sources fiables pour ce nom. Essayez une autre orthographe, ou un titre de film / série.';
 }
 
 export async function POST(req: Request) {
@@ -139,53 +188,29 @@ export async function POST(req: Request) {
     });
   }
 
-  const context = buildFilmAssistantContext(lastUser, locale);
-  const personOrFilm = looksLikeCinemaPersonOrFilm(lastUser);
-  const festival = looksLikeFestival(lastUser);
-  const production = looksLikeProduction(lastUser);
+  const [kbContext, research] = await Promise.all([
+    Promise.resolve(buildFilmAssistantContext(lastUser, locale)),
+    researchCameroonCinema(lastUser),
+  ]);
 
-  // Strong agent: almost always search the web for cinema Q&A when keys exist
-  const enableWeb =
-    webSearchEnvEnabled() &&
-    (personOrFilm || festival || production || lastUser.length > 12);
+  const contextWithWeb = research.block
+    ? `${kbContext}\n\nRECHERCHE WEB / WIKIPÉDIA (${research.provider}) — industrie cinéma Cameroun :\n${research.block}`
+    : kbContext;
 
-  let webHitsBlock = '';
-  let webCitations: { title: string; url: string; type: 'WEB' }[] = [];
-  let webProvider: 'tavily' | 'brave' | 'none' = 'none';
-
-  if (enableWeb) {
-    const webQuery = buildCinemaWebQuery({
-      userText: lastUser,
-      personOrFilm,
-      festival,
-      production,
-    });
-    const web = await searchWeb({ query: webQuery, maxResults: 6 });
-    webProvider = web.provider;
-    webCitations = webHitsToCitations(web.hits);
-    webHitsBlock = formatWebHitsForPrompt(web.hits);
-    console.info('[film-chat] web-search', {
-      provider: web.provider,
-      hits: web.hits.length,
-      query: web.query.slice(0, 140),
-    });
-  }
-
-  const contextWithWeb = webHitsBlock
-    ? `${context}\n\nRÉSULTATS WEB (${webProvider}, à confirmer) :\n${webHitsBlock}`
-    : context;
-
-  const system = buildFilmSystemPrompt(locale, contextWithWeb, enableWeb);
+  const system = buildFilmSystemPrompt(locale, contextWithWeb, true);
   const modelId = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
 
   let message = '';
-  let provider = 'kb';
+  let provider = 'research';
 
-  if (process.env.OPENROUTER_API_KEY) {
+  const openRouterKey = process.env.OPENROUTER_API_KEY?.trim();
+  const geminiKey = process.env.GEMINI_API_KEY?.trim();
+
+  if (openRouterKey) {
     const callOpenRouter = async (maxTokens: number) => {
       const payload: Record<string, unknown> = {
         model: modelId,
-        temperature: 0.4,
+        temperature: 0.35,
         max_tokens: maxTokens,
         messages: [
           { role: 'system', content: system },
@@ -195,10 +220,10 @@ export async function POST(req: Request) {
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          Authorization: `Bearer ${openRouterKey}`,
           'Content-Type': 'application/json',
           'HTTP-Referer':
-            process.env.OPENROUTER_HTTP_REFERER || 'https://webmintoul.local',
+            process.env.OPENROUTER_HTTP_REFERER || 'https://smartmboatour.com',
           'X-Title': 'SmartMboa Film Assistant',
         },
         body: JSON.stringify(payload),
@@ -210,7 +235,7 @@ export async function POST(req: Request) {
       return { res, data };
     };
 
-    let maxTok = Math.min(CHAT_MAX_OUTPUT_TOKENS, personOrFilm ? 3_200 : 2_800);
+    let maxTok = Math.min(CHAT_MAX_OUTPUT_TOKENS, 3_500);
     let { res, data } = await callOpenRouter(maxTok);
 
     if (!res.ok) {
@@ -231,8 +256,9 @@ export async function POST(req: Request) {
       console.error('[film-chat] OpenRouter error', {
         status: res.status,
         message: rawMsg,
+        researchHits: research.hits.length,
       });
-      if (isCreditOrTokenError(res.status, rawMsg)) {
+      if (isCreditOrTokenError(res.status, rawMsg) && !research.block) {
         return NextResponse.json(
           {
             detail:
@@ -243,18 +269,18 @@ export async function POST(req: Request) {
           { status: 402 },
         );
       }
-      message = kbOnlyFallback(locale, context);
-      provider = 'kb-fallback';
+      message = researchFallback(locale, research, kbContext);
+      provider = 'research-fallback';
     } else {
       message = data?.choices?.[0]?.message?.content?.trim() || '';
       if (!message) {
-        message = kbOnlyFallback(locale, context);
-        provider = 'kb-fallback';
+        message = researchFallback(locale, research, kbContext);
+        provider = 'research-fallback';
       } else {
         provider = 'openrouter';
       }
     }
-  } else if (process.env.GEMINI_API_KEY) {
+  } else if (geminiKey) {
     try {
       const result = await generateText({
         model: google('gemini-2.0-flash'),
@@ -266,12 +292,12 @@ export async function POST(req: Request) {
       provider = 'gemini';
     } catch (err) {
       console.error('[film-chat] Gemini error', err);
-      message = kbOnlyFallback(locale, context);
-      provider = 'kb-fallback';
+      message = researchFallback(locale, research, kbContext);
+      provider = 'research-fallback';
     }
   } else {
-    message = kbOnlyFallback(locale, context);
-    provider = 'kb';
+    message = researchFallback(locale, research, kbContext);
+    provider = research.hits.length ? 'wikipedia' : 'kb';
   }
 
   const prepared = prepareAiMarkdown(message);
@@ -281,7 +307,7 @@ export async function POST(req: Request) {
     const seen = new Set<string>();
     const out: { title: string; url: string; type: 'WEB' | 'KB' }[] = [];
     for (const s of [
-      ...webCitations,
+      ...research.citations,
       ...prepared.sources.map((x) => ({ ...x, type: 'WEB' as const })),
     ]) {
       if (!s.url || seen.has(s.url)) continue;
@@ -290,6 +316,13 @@ export async function POST(req: Request) {
     }
     return out;
   })();
+
+  console.info('[film-chat] done', {
+    provider,
+    research: research.provider,
+    hits: research.hits.length,
+    query: research.query.slice(0, 100),
+  });
 
   return NextResponse.json({
     conversation_id: conversationId,

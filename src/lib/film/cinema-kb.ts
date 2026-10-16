@@ -164,6 +164,135 @@ export const CAMEROON_CINEMA_KB: CinemaKbEntry[] = [
       'Cameroonian actor and director linked to popular cinema and local productions of earlier decades.',
   },
   {
+    id: 'ebenezer-kepombia',
+    kind: 'filmmaker',
+    name: 'Ebenezer Kepombia',
+    nameAlt: ['Mitoumba', 'Ebenzer Kepombia', 'Ebenezer Kepombi'],
+    summaryFr:
+      'Acteur, réalisateur, scénariste et producteur camerounais (né le 19 mai 1970 à Bazou), alias Mitoumba. Enseignant d’allemand de formation ; carrière artistique dès 2000 ; premier long métrage Le Conjoint d’autrui (2005). Créateur / producteur de séries TV majeures : Foyer polygamique (Les Déballeurs), Cercle vicieux, La Reine blanche, Habiba, Madame… Monsieur, La Bataille des chéries. Figure centrale du cinéma et de la télé camerounais (Canal 2, CINAF).',
+    summaryEn:
+      'Cameroonian actor, director, screenwriter and producer (born 19 May 1970 in Bazou), aka Mitoumba. Trained as a German teacher; artistic career from 2000; first feature Le Conjoint d’autrui (2005). Creator / producer of major TV series: Foyer polygamique (Les Déballeurs), Cercle vicieux, La Reine blanche, Habiba, Madame… Monsieur, La Bataille des chéries. A central figure of Cameroonian cinema and TV (Canal 2, CINAF).',
+    related: [
+      'Mitoumba',
+      'Foyer polygamique',
+      'Madame Monsieur',
+      'La Reine blanche',
+      'La Bataille des chéries',
+      'Habiba',
+      'Cercle vicieux',
+      'Les Déballeurs',
+      'Canal 2',
+    ],
+    years: '1970–',
+    city: 'Douala / Cameroun',
+  },
+  {
+    id: 'brenda-elung',
+    kind: 'producer',
+    name: 'Brenda Elung',
+    nameAlt: ['Elung Brenda'],
+    summaryFr:
+      'Productrice et actrice camerounaise, figure de l’industrie (Cameroon Film Industry / CFI). Connue notamment pour la série Samba et un rôle structurant côté production populaire.',
+    summaryEn:
+      'Cameroonian producer and actress, industry figure (Cameroon Film Industry / CFI). Known especially for the Samba series and a structuring role in popular production.',
+    related: ['Samba', 'CFI', 'Cameroon Film Industry'],
+  },
+  {
+    id: 'syndy-emade',
+    kind: 'producer',
+    name: 'Syndy Emade',
+    summaryFr:
+      'Actrice, productrice et entrepreneure camerounaise (fiction / films populaires). Présente aussi comme face publique de l’industrie.',
+    summaryEn:
+      'Cameroonian actress, producer and entrepreneur (fiction / popular films). Also a public face of the industry.',
+    related: ['production camerounaise'],
+  },
+  {
+    id: 'enah-johnscott',
+    kind: 'filmmaker',
+    name: 'Enah Johnscott',
+    summaryFr:
+      'Réalisateur / producteur camerounais actif dans la fiction contemporaine et le cinéma populaire anglophone / bilingue.',
+    summaryEn:
+      'Cameroonian director / producer active in contemporary fiction and popular Anglophone / bilingual cinema.',
+  },
+  {
+    id: 'nkanya-nkwai',
+    kind: 'producer',
+    name: 'Nkanya Nkwai',
+    summaryFr:
+      'Acteur et producteur camerounais (ex. Nightfall / Tombée de la nuit), actif entre productions locales et collaborations internationales.',
+    summaryEn:
+      'Cameroonian actor and producer (e.g. Nightfall / Tombée de la nuit), active between local productions and international collaborations.',
+    related: ['Nightfall'],
+  },
+  {
+    id: 'epule-jeffrey',
+    kind: 'actor',
+    name: 'Epule Jeffrey',
+    nameAlt: ['Jeffrey Epule', 'Epule Jeffery'],
+    summaryFr:
+      'Acteur camerounais très présent dans les séries et films populaires (souvent cité aux côtés de productions CFI / Nollywood-influencées).',
+    summaryEn:
+      'Cameroonian actor widely present in popular series and films (often cited alongside CFI / Nollywood-influenced productions).',
+  },
+  {
+    id: 'muriel-blanche',
+    kind: 'actor',
+    name: 'Muriel Blanche',
+    summaryFr:
+      'Actrice camerounaise connue pour des rôles dans des séries populaires (dont des productions liées à Ebenezer Kepombia / Mitoumba).',
+    summaryEn:
+      'Cameroonian actress known for roles in popular series (including productions linked to Ebenezer Kepombia / Mitoumba).',
+    related: ['Madame Monsieur', 'Ebenezer Kepombia'],
+  },
+  {
+    id: 'axel-abessolo',
+    kind: 'actor',
+    name: 'Axel Abessolo',
+    summaryFr:
+      'Acteur camerounais présent dans des séries TV (Madame… Monsieur, La Bataille des chéries, etc.).',
+    summaryEn:
+      'Cameroonian actor present in TV series (Madame… Monsieur, La Bataille des chéries, etc.).',
+    related: ['Madame Monsieur', 'Ebenezer Kepombia'],
+  },
+  {
+    id: 'eriq-ebouaney',
+    kind: 'actor',
+    name: 'Eriq Ebouaney',
+    summaryFr:
+      'Acteur franco-camerounais international (cinéma européen et africain), référence de la diaspora camerounaise à l’écran.',
+    summaryEn:
+      'Franco-Cameroonian international actor (European and African cinema), a reference of the Cameroonian diaspora on screen.',
+  },
+  {
+    id: 'solange-yijika',
+    kind: 'actor',
+    name: 'Solange Yijika',
+    summaryFr: 'Actrice et productrice camerounaise active dans la fiction populaire.',
+    summaryEn: 'Cameroonian actress and producer active in popular fiction.',
+  },
+  {
+    id: 'daniel-kamwa',
+    kind: 'filmmaker',
+    name: 'Daniel Kamwa',
+    summaryFr:
+      'Réalisateur camerounais classique (Pousse-Pousse, et autres fictions populaires des décennies précédentes).',
+    summaryEn:
+      'Classic Cameroonian director (Pousse-Pousse, and other popular fiction from earlier decades).',
+    related: ['Pousse-Pousse'],
+  },
+  {
+    id: 'emy-dany-bassong',
+    kind: 'actor',
+    name: 'Emy Dany Bassong',
+    nameAlt: ['Émilienne Danielle Ngo Bassong'],
+    summaryFr:
+      'Actrice camerounaise (séries et films) ; présente dans des productions liées au cinéma / télé populaire camerounais.',
+    summaryEn:
+      'Cameroonian actress (series and films); present in productions linked to popular Cameroonian cinema / TV.',
+  },
+  {
     id: 'ecrans-noirs',
     kind: 'festival',
     name: 'Écrans Noirs',
@@ -217,42 +346,66 @@ export const CAMEROON_CINEMA_KB: CinemaKbEntry[] = [
   },
 ];
 
+const KB_STOP = new Set(
+  'a an the do you know who is what about me tell qui est ce que des les une un du de la le pour avec dans sur and or of in to for on please peux tu parler connais'.split(
+    ' ',
+  ),
+);
+
 export function searchCinemaKb(query: string, limit = 8): CinemaKbEntry[] {
   const q = query.trim().toLowerCase();
   if (!q) return CAMEROON_CINEMA_KB.filter((e) => e.kind === 'topic').slice(0, 2);
 
   const tokens = q
     .split(/[^\p{L}\p{N}]+/u)
-    .map((t) => t.trim())
-    .filter((t) => t.length >= 2);
+    .map((t) => t.trim().toLowerCase())
+    .filter((t) => t.length >= 3 && !KB_STOP.has(t));
+
+  // Proper-name bias: if user typed capitalized words, require those to match when possible
+  const nameHints = [
+    ...query.matchAll(
+      /\b([A-ZÀÂÄÉÈÊËÏÎÔÙÛÜÇ][\p{L}'’-]+(?:\s+[A-ZÀÂÄÉÈÊËÏÎÔÙÛÜÇ][\p{L}'’-]+){0,3})\b/gu,
+    ),
+  ].map((m) => m[1].toLowerCase());
 
   const scored = CAMEROON_CINEMA_KB.map((e) => {
-    const hay = `${e.name} ${(e.nameAlt || []).join(' ')} ${e.summaryFr} ${e.summaryEn} ${(e.related || []).join(' ')} ${e.city || ''}`.toLowerCase();
+    const nameHay = `${e.name} ${(e.nameAlt || []).join(' ')}`.toLowerCase();
+    const hay = `${nameHay} ${e.summaryFr} ${e.summaryEn} ${(e.related || []).join(' ')} ${e.city || ''}`.toLowerCase();
     let score = 0;
-    if (hay.includes(q)) score += 10;
+    if (nameHay.includes(q) || hay.includes(q)) score += 12;
+    for (const hint of nameHints) {
+      if (hint.length >= 4 && nameHay.includes(hint)) score += 14;
+    }
     for (const t of tokens) {
-      if (e.name.toLowerCase().includes(t)) score += 6;
-      if ((e.nameAlt || []).some((a) => a.toLowerCase().includes(t))) score += 5;
-      if ((e.related || []).some((r) => r.toLowerCase().includes(t))) score += 4;
-      if (hay.includes(t)) score += 2;
+      if (nameHay.includes(t)) score += 8;
+      else if ((e.related || []).some((r) => r.toLowerCase().includes(t))) score += 4;
+      else if (hay.includes(t)) score += 1;
     }
     if (/festival|écrans|ecrans|mis me binga/i.test(q) && e.kind === 'festival') score += 3;
     if (/film|movie|long[-\s]?m[eé]trage/i.test(q) && e.kind === 'film') score += 2;
-    if (/acteur|actrice|actor|actrice|réalisat|director|producteur|producer/i.test(q) &&
-      (e.kind === 'filmmaker' || e.kind === 'actor' || e.kind === 'producer')) {
+    if (
+      /acteur|actrice|actor|réalisat|director|producteur|producer|vidéographe|videographer/i.test(
+        q,
+      ) &&
+      (e.kind === 'filmmaker' || e.kind === 'actor' || e.kind === 'producer')
+    ) {
       score += 2;
     }
     return { e, score };
   })
-    .filter((x) => x.score > 0)
+    .filter((x) => x.score >= 4)
     .sort((a, b) => b.score - a.score);
 
   if (scored.length) return scored.slice(0, limit).map((x) => x.e);
 
-  // Always give topical anchors for open cinema questions
+  // Named person/film query with no KB hit — return empty so web research leads
+  if (nameHints.some((h) => h.split(' ').length >= 2) || tokens.length <= 3) {
+    return [];
+  }
+
   return CAMEROON_CINEMA_KB.filter((e) => e.kind === 'topic' || e.kind === 'festival').slice(
     0,
-    4,
+    3,
   );
 }
 

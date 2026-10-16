@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 
 import { FilmSectionSwitcher } from '@/components/entry/SectionSwitcher';
+import { FilmFloatingAssistant } from '@/components/film/FilmFloatingAssistant';
 import { APP_NAME } from '@/lib/config';
 import { useLocale } from '@/lib/i18n';
 
@@ -72,6 +73,7 @@ export function FilmShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <FilmBottomNav />
+      <FilmFloatingAssistant />
     </div>
   );
 }

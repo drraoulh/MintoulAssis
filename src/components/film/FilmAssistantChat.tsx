@@ -65,8 +65,11 @@ const SUGGESTIONS = [
 
 export function FilmAssistantChat({
   initialQuestion,
+  embedded = false,
 }: {
   initialQuestion?: string;
+  /** Hide page chrome when shown inside the floating panel. */
+  embedded?: boolean;
 }) {
   const { t, locale } = useLocale();
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -193,31 +196,46 @@ export function FilmAssistantChat({
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-[#0a0a0a] text-[#F8F5ED]">
-      <header className="shrink-0 border-b border-white/10 bg-[#0f0f0f] px-4 py-3 sm:px-6">
-        <div className="mx-auto flex max-w-5xl items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#CE1126]/20">
-            <Clapperboard className="h-5 w-5 text-[#FCD116]" aria-hidden />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="font-display text-lg font-bold text-[#F8F5ED] sm:text-xl">
-              {t('film.assistant.title')}
-            </h1>
-            <p className="truncate text-xs text-white/50 sm:text-sm">
-              {t('film.assistant.sub')}
-            </p>
-          </div>
-          {(audioPlaying || speakingMsgId) && (
+      {embedded ? (
+        (audioPlaying || speakingMsgId) && (
+          <div className="flex justify-end border-b border-white/10 px-3 py-2">
             <button
               type="button"
               onClick={stopAllAudio}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#CE1126] px-3 py-2 text-xs font-semibold text-white"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#CE1126] px-3 py-1.5 text-xs font-semibold text-white"
             >
               <Square className="h-3.5 w-3.5 fill-current" aria-hidden />
               Stop
             </button>
-          )}
-        </div>
-      </header>
+          </div>
+        )
+      ) : (
+        <header className="shrink-0 border-b border-white/10 bg-[#0f0f0f] px-4 py-3 sm:px-6">
+          <div className="mx-auto flex max-w-5xl items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#CE1126]/20">
+              <Clapperboard className="h-5 w-5 text-[#FCD116]" aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="font-display text-lg font-bold text-[#F8F5ED] sm:text-xl">
+                {t('film.assistant.title')}
+              </h1>
+              <p className="truncate text-xs text-white/50 sm:text-sm">
+                {t('film.assistant.sub')}
+              </p>
+            </div>
+            {(audioPlaying || speakingMsgId) && (
+              <button
+                type="button"
+                onClick={stopAllAudio}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#CE1126] px-3 py-2 text-xs font-semibold text-white"
+              >
+                <Square className="h-3.5 w-3.5 fill-current" aria-hidden />
+                Stop
+              </button>
+            )}
+          </div>
+        </header>
+      )}
 
       <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6">
         {messages.length === 0 && !sending ? (
