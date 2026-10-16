@@ -5,6 +5,7 @@
 
 import {
   extractDateHint,
+  isOrganisedInCameroon,
   type CinemaEvent,
   type CinemaEventKind,
 } from '@/lib/film/events';
@@ -293,6 +294,8 @@ export async function fetchIcicineFestivalEvents(now = new Date()): Promise<{
       source: 'official',
       provider: 'icicine',
     };
+
+    if (!isOrganisedInCameroon(event)) continue;
 
     const existing = byFamily.get(family);
     if (!existing) {

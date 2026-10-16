@@ -125,6 +125,34 @@ export function localizeEvent(
   };
 }
 
+const CAMEROON_CITY_RE =
+  /yaound|douala|limb[eé]|kribi|buea|bamenda|garoua|maroua|ngaound|bafoussam|ebolowa|bertoua|edea|kumba|dschang|foumban|ngaoundéré|ngaoundere|cameroun|cameroon/i;
+
+const FOREIGN_VENUE_RE =
+  /cannes|kara|n[’']?djamena|ndjamena|abidjan|cotonou|ouagadougou|maryland|paris|lyon|marseille|londres|london|berlin|toronto|namur|fameck|vancouver|t[eé]touan|dakar|lagos|accra|nairobi|johannesburg|tunis|rabat|casablanca|bruxelles|brussels|genève|geneva|amsterdam|new\s*york|los\s*angeles/i;
+
+/**
+ * Keep only events whose venue / city is in Cameroon.
+ * Mentions of Cameroonian films abroad (e.g. selection at Cannes) are dropped.
+ */
+export function isOrganisedInCameroon(event: CinemaEvent): boolean {
+  const city = (event.city || '').trim();
+  if (city && FOREIGN_VENUE_RE.test(city) && !CAMEROON_CITY_RE.test(city)) {
+    return false;
+  }
+  if (city && CAMEROON_CITY_RE.test(city)) return true;
+
+  const blob = `${event.title} ${event.summary} ${event.whenLabel || ''}`.toLowerCase();
+  // Clear foreign hosting phrases
+  if (
+    FOREIGN_VENUE_RE.test(blob) &&
+    !/yaound|douala|au\s+cameroun|en\s+cameroun|in\s+cameroon|à\s+yaound|à\s+douala/.test(blob)
+  ) {
+    return false;
+  }
+  return CAMEROON_CITY_RE.test(blob);
+}
+
 const MONTHS: Record<string, number> = {
   jan: 0,
   january: 0,

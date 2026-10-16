@@ -2,6 +2,7 @@ import {
   CINEMA_EVENT_QUERIES,
   CURATED_CINEMA_EVENTS,
   extractDateHint,
+  isOrganisedInCameroon,
   type CinemaEvent,
   type CinemaEventKind,
   type CinemaEventsResponse,
@@ -52,8 +53,9 @@ function isLikelyCinema(text: string): boolean {
   );
 }
 
-function isLikelyCameroonOrRegional(text: string): boolean {
-  return /cameroun|cameroon|yaound|douala|afrique\s*centrale|central\s*africa|panafricain|pan[- ]?african|écrans?\s*noirs|ecrans?\s*noirs/i.test(
+function isLikelyCameroonHosted(text: string): boolean {
+  // Must mention a Cameroon venue — not merely a Cameroonian film abroad
+  return /yaound|douala|limb[eé]|kribi|buea|bamenda|au\s+cameroun|en\s+cameroun|in\s+cameroon|cameroun\s*—|cameroon\s*—|écrans?\s*noirs|ecrans?\s*noirs|mis\s*me\s*binga|institut\s*fran[cç]ais\s*(du\s*)?cameroun/i.test(
     text,
   );
 }
@@ -61,10 +63,10 @@ function isLikelyCameroonOrRegional(text: string): boolean {
 export function hitToEvent(hit: WebSearchHit, index: number): CinemaEvent | null {
   const blob = `${hit.title} ${hit.snippet}`;
   if (!isLikelyCinema(blob)) return null;
-  if (!isLikelyCameroonOrRegional(blob)) return null;
+  if (!isLikelyCameroonHosted(blob)) return null;
 
   const { startDate, whenLabel } = extractDateHint(blob);
-  return {
+  const event: CinemaEvent = {
     id: `web-${slugId(hit.title) || index}`,
     title: hit.title,
     summary: hit.snippet || hit.title,
@@ -76,6 +78,8 @@ export function hitToEvent(hit: WebSearchHit, index: number): CinemaEvent | null
     source: 'web',
     provider: hit.provider,
   };
+  if (!isOrganisedInCameroon(event)) return null;
+  return event;
 }
 
 function dedupeKey(e: CinemaEvent): string {
@@ -162,7 +166,7 @@ function mergeEvents(parts: CinemaEvent[][]): CinemaEvent[] {
     }
   }
 
-  return sortEvents([...map.values()]);
+  return sortEvents([...map.values()].filter(isOrganisedInCameroon));
 }
 
 async function fetchSearchEvents(): Promise<{
