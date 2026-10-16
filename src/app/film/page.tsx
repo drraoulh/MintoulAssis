@@ -9,6 +9,7 @@ import {
   Columns2,
   GraduationCap,
   MapPin,
+  Theater,
   UserCircle2,
   Users,
   Wrench,
@@ -37,6 +38,12 @@ const SHARED_HUB = [
     icon: MapPin,
     titleKey: 'film.hub.locations',
     bodyKey: 'film.hub.locationsBody',
+  },
+  {
+    href: '/film/halls',
+    icon: Theater,
+    titleKey: 'film.hub.halls',
+    bodyKey: 'film.hub.hallsBody',
   },
   {
     href: '/film/events',

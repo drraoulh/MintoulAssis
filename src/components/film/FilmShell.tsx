@@ -17,6 +17,7 @@ import {
   LayoutGrid,
   MapPin,
   Menu,
+  Theater,
   UserCircle2,
   Users,
   Wrench,
@@ -30,6 +31,7 @@ import { useLocale } from '@/lib/i18n';
 const FILM_LINKS = [
   { href: '/film', key: 'film.nav.home', icon: Home, exact: true },
   { href: '/film/locations', key: 'film.nav.locations', icon: MapPin },
+  { href: '/film/halls', key: 'film.nav.halls', icon: Theater },
   { href: '/film/events', key: 'film.nav.events', icon: CalendarDays },
   { href: '/film/procedures', key: 'film.nav.procedures', icon: ClipboardList },
   { href: '/film/directory', key: 'film.nav.directory', icon: Users },
@@ -96,8 +98,8 @@ function FilmHeader() {
                 [
                   '/film',
                   '/film/locations',
+                  '/film/halls',
                   '/film/events',
-                  '/film/procedures',
                   '/film/directory',
                 ].includes(l.href),
               ).map((link) => {
@@ -198,8 +200,8 @@ function FilmBottomNav() {
       [
         { href: '/film', label: t('film.nav.home'), icon: Home, exact: true as const },
         { href: '/film/locations', label: t('film.nav.locationsShort'), icon: MapPin },
+        { href: '/film/halls', label: t('film.nav.hallsShort'), icon: Theater },
         { href: '/film/events', label: t('film.nav.eventsShort'), icon: CalendarDays },
-        { href: '/film/directory', label: t('film.nav.directoryShort'), icon: Building2 },
       ] as const,
     [t],
   );
@@ -207,6 +209,7 @@ function FilmBottomNav() {
   const moreLinks = useMemo(
     () =>
       [
+        { href: '/film/directory', label: t('film.nav.directory'), icon: Building2 },
         { href: '/film/procedures', label: t('film.nav.procedures'), icon: ClipboardList },
         { href: '/film/equipment', label: t('film.nav.equipment'), icon: Wrench },
         { href: '/film/planning', label: t('film.nav.planning'), icon: CheckSquare },
