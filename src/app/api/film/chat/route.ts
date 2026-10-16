@@ -14,8 +14,13 @@ import {
   lookupMinacOfficials,
   minacToPersonCards,
 } from '@/lib/film/minac-team';
+import {
+  fetchOnlinePersonProfile,
+  onlineProfileToPersonUI,
+} from '@/lib/film/person-photo';
 import { researchCameroonCinema } from '@/lib/film/research-cinema';
 import { prepareAiMarkdown } from '@/lib/markdown/sanitize-ai-markdown';
+import type { PersonUI } from '@/lib/types';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -203,9 +208,9 @@ export async function POST(req: Request) {
   const minacPeople = minacToPersonCards(minac.matches);
   const minacBlock = formatMinacForPrompt(minac.matches, locale);
 
-  // 2) KB + web (still run when no organigram hit, or to enrich cinema figures)
+  // 2) KB + web + online portrait (when not on MINAC organigram)
   const runWeb = minac.matches.length === 0;
-  const [kbContext, research] = await Promise.all([
+  const [kbContext, research, onlinePerson] = await Promise.all([
     Promise.resolve(buildFilmAssistantContext(lastUser, locale)),
     runWeb
       ? researchCameroonCinema(lastUser)
@@ -216,10 +221,23 @@ export async function POST(req: Request) {
           block: '',
           citations: [] as { title: string; url: string; type: 'WEB' }[],
         }),
+    runWeb ? fetchOnlinePersonProfile(lastUser) : Promise.resolve(null),
   ]);
+
+  const onlinePeople: PersonUI[] = onlinePerson
+    ? [onlineProfileToPersonUI(onlinePerson)]
+    : [];
+  const peopleCards: PersonUI[] = minacPeople.length ? minacPeople : onlinePeople;
+
+  const personPhotoBlock = onlinePerson
+    ? locale === 'en'
+      ? `PERSON PHOTO / PROFILE (show this portrait to the user):\n- Name: ${onlinePerson.name}\n- Role: ${onlinePerson.title || '—'}\n- Photo: ${onlinePerson.photoUrl || '(none found)'}\n- Page: ${onlinePerson.sourceUrl || '—'}`
+      : `PHOTO / PROFIL PERSONNE (affiche ce portrait à l’utilisateur) :\n- Nom : ${onlinePerson.name}\n- Rôle : ${onlinePerson.title || '—'}\n- Photo : ${onlinePerson.photoUrl || '(aucune trouvée)'}\n- Page : ${onlinePerson.sourceUrl || '—'}`
+    : '';
 
   const contextWithWeb = [
     minacBlock,
+    personPhotoBlock,
     kbContext,
     research.block
       ? `RECHERCHE WEB / WIKIPÉDIA (${research.provider}) — industrie cinéma Cameroun :\n${research.block}`
@@ -370,19 +388,29 @@ export async function POST(req: Request) {
     return out;
   })();
 
-  const images = minacPeople
+  const images = peopleCards
     .filter((p) => p.photoUrl)
-    .map((p) => ({
-      image_url: p.photoUrl!,
-      page_url: p.sourceUrl || minac.sourceUrl,
-      title: `${p.name} — ${p.title || ''}`.trim(),
-      source_domain: 'minac.gov.cm',
-      alt_text: p.name,
-    }));
+    .map((p) => {
+      let domain = 'web';
+      try {
+        domain = p.sourceUrl ? new URL(p.sourceUrl).hostname : domain;
+      } catch {
+        /* keep */
+      }
+      return {
+        image_url: p.photoUrl!,
+        page_url: p.sourceUrl || minac.sourceUrl,
+        title: `${p.name} — ${p.title || ''}`.trim(),
+        source_domain: domain,
+        alt_text: p.name,
+      };
+    });
 
   console.info('[film-chat] done', {
     provider,
     minac: minac.matches.length,
+    onlinePerson: onlinePerson?.name || null,
+    photo: Boolean(peopleCards[0]?.photoUrl),
     research: research.provider,
     hits: research.hits.length,
     query: (research.query || lastUser).slice(0, 100),
@@ -394,10 +422,10 @@ export async function POST(req: Request) {
     message,
     text: message,
     provider,
-    response_type: minacPeople.length ? 'PERSON_PROFILE' : 'SIMPLE_ANSWER',
+    response_type: peopleCards.length ? 'PERSON_PROFILE' : 'SIMPLE_ANSWER',
     ui_sources,
     places: [],
-    people: minacPeople,
+    people: peopleCards,
     images,
   });
 }

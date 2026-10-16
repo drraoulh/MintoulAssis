@@ -17,7 +17,7 @@ import {
 import { CollapsibleSources } from '@/components/assistant/CollapsibleSources';
 import { MarkdownContent } from '@/components/assistant/MarkdownContent';
 import { AssistantMark } from '@/components/brand/AssistantMark';
-import { MinacPersonCards } from '@/components/film/MinacPersonCard';
+import { PersonProfileCards } from '@/components/film/PersonProfileCard';
 import { ThinkingDots } from '@/components/ui';
 import {
   friendlyError,
@@ -319,7 +319,7 @@ export function FilmAssistantChat({
               {msg.role === 'assistant' && !msg.isError ? (
                 <div className="space-y-4">
                   {msg.people?.length ? (
-                    <MinacPersonCards people={msg.people} />
+                    <PersonProfileCards people={msg.people} />
                   ) : null}
                   <MarkdownContent content={msg.content} variant="onDark" />
                   {msg.sources?.length ? (
