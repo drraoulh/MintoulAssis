@@ -39,7 +39,7 @@ export function TourismMapInner({
 
   return (
     <div
-      className={`min-w-0 w-full overflow-hidden rounded-2xl border border-[var(--line)] ${className}`}
+      className={`relative z-0 isolate min-w-0 w-full overflow-hidden rounded-2xl border border-[var(--line)] ${className}`}
     >
       <MapContainer
         center={center}

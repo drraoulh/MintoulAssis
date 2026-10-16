@@ -103,8 +103,19 @@ select {
   width: 100%;
   height: 100%;
   border-radius: var(--radius);
+  /* Keep map panes/controls inside this stacking context so they never
+     intercept clicks on fixed UI (Film AI FAB, bottom nav, etc.). */
+  position: relative;
+  isolation: isolate;
   z-index: 0;
   background: var(--mint-soft);
+}
+
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control {
+  z-index: 1 !important;
 }
 
 /* Subtle scrollbar */

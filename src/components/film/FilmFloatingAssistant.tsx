@@ -42,22 +42,32 @@ export function FilmFloatingAssistant() {
 
   return createPortal(
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] right-4 z-[70] flex h-14 w-14 items-center justify-center rounded-full bg-[#CE1126] text-white shadow-[0_8px_28px_rgba(206,17,38,0.45)] transition hover:scale-105 hover:bg-[#b50e21] md:bottom-6 md:right-6"
-        aria-label={t('film.assistant.fab')}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-      >
-        <Clapperboard className="h-6 w-6" aria-hidden />
-        <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FCD116] px-1 text-[9px] font-black text-black">
-          IA
-        </span>
-      </button>
-
-      {open ? (
-        <div className="fixed inset-0 z-[80]" role="dialog" aria-modal aria-labelledby={panelId}>
+      {!open ? (
+        <button
+          type="button"
+          id="film-ai-fab"
+          data-film-ai-fab
+          onClick={() => setOpen(true)}
+          className="fixed bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] right-4 z-[9999] flex h-14 w-14 items-center justify-center rounded-full bg-[#CE1126] text-white shadow-[0_8px_28px_rgba(206,17,38,0.45)] transition hover:scale-105 hover:bg-[#b50e21] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FCD116] md:bottom-6 md:right-6"
+          style={{ zIndex: 9999 }}
+          aria-label={t('film.assistant.fab')}
+          aria-haspopup="dialog"
+          aria-expanded={false}
+        >
+          <Clapperboard className="pointer-events-none h-6 w-6" aria-hidden />
+          <span className="pointer-events-none absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FCD116] px-1 text-[9px] font-black text-black">
+            IA
+          </span>
+        </button>
+      ) : (
+        <div
+          id="film-ai-panel"
+          className="fixed inset-0 z-[9999]"
+          style={{ zIndex: 9999 }}
+          role="dialog"
+          aria-modal
+          aria-labelledby={panelId}
+        >
           <button
             type="button"
             className="absolute inset-0 bg-black/70"
@@ -83,7 +93,7 @@ export function FilmFloatingAssistant() {
             </div>
           </div>
         </div>
-      ) : null}
+      )}
     </>,
     document.body,
   );
