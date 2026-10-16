@@ -177,6 +177,17 @@ export interface ImageUI {
   alt_text?: string | null;
 }
 
+/** Official / industry person card (e.g. MINAC organigram). */
+export interface PersonUI {
+  id: string;
+  name: string;
+  title?: string | null;
+  organization?: string | null;
+  photoUrl?: string | null;
+  sourceUrl?: string | null;
+  sourceLabel?: string | null;
+}
+
 /** Intent the backend routed the message to (web-first chat). */
 export interface ChatRoutingUI {
   chat_intent: string;
@@ -197,6 +208,7 @@ export interface ChatRoutingUI {
 export interface StructuredChatUI {
   response_type?: ChatResponseType | null;
   places?: PlaceUI[];
+  people?: PersonUI[];
   map?: MapUI | null;
   itinerary?: ItineraryUI | null;
   budget?: BudgetUI | null;

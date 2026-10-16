@@ -87,6 +87,9 @@ const STRINGS: Record<Locale, Dict> = {
     'film.assistant.sug.festival': 'Festivals',
     'film.assistant.sug.festivalQ':
       'Qu’est-ce qu’Écrans Noirs et quand a lieu la prochaine édition à Yaoundé ?',
+    'film.assistant.sug.minac': 'MINAC',
+    'film.assistant.sug.minacQ':
+      'Qui est le ministre des Arts et de la Culture, et qui dirige la cinématographie au MINAC ?',
     'film.assistant.sug.premiere': 'Première',
     'film.assistant.sug.premiereQ':
       'Quelles salles à Douala ou Yaoundé pour lancer la première d’un film ?',
@@ -790,6 +793,9 @@ const STRINGS: Record<Locale, Dict> = {
     'film.assistant.sug.festival': 'Festivals',
     'film.assistant.sug.festivalQ':
       'What is Écrans Noirs and when is the next edition in Yaoundé?',
+    'film.assistant.sug.minac': 'MINAC',
+    'film.assistant.sug.minacQ':
+      'Who is the Minister of Arts and Culture, and who heads cinematography at MINAC?',
     'film.assistant.sug.premiere': 'Premiere',
     'film.assistant.sug.premiereQ':
       'Which halls in Douala or Yaoundé can host a film premiere?',

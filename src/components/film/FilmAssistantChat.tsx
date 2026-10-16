@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Building2,
   Clapperboard,
   Film,
   Mic,
@@ -16,6 +17,7 @@ import {
 import { CollapsibleSources } from '@/components/assistant/CollapsibleSources';
 import { MarkdownContent } from '@/components/assistant/MarkdownContent';
 import { AssistantMark } from '@/components/brand/AssistantMark';
+import { MinacPersonCards } from '@/components/film/MinacPersonCard';
 import { ThinkingDots } from '@/components/ui';
 import {
   friendlyError,
@@ -25,13 +27,14 @@ import {
 import { audioPlayback } from '@/lib/audio/playback';
 import { speakOnDevice, splitForSpeech, stopDeviceSpeech } from '@/lib/audio/tts';
 import { useLocale } from '@/lib/i18n';
-import type { SourceUI } from '@/lib/types';
+import type { PersonUI, SourceUI } from '@/lib/types';
 
 interface Msg {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   sources?: SourceUI[];
+  people?: PersonUI[];
   isError?: boolean;
 }
 
@@ -50,6 +53,11 @@ const SUGGESTIONS = [
     icon: Trophy,
     labelKey: 'film.assistant.sug.festival',
     qKey: 'film.assistant.sug.festivalQ',
+  },
+  {
+    icon: Building2,
+    labelKey: 'film.assistant.sug.minac',
+    qKey: 'film.assistant.sug.minacQ',
   },
   {
     icon: Theater,
@@ -119,6 +127,7 @@ export function FilmAssistantChat({
           role: 'assistant',
           content: res.message || res.text || '',
           sources: res.ui_sources ?? undefined,
+          people: res.people ?? undefined,
         },
       ]);
     } catch (error) {
@@ -309,6 +318,9 @@ export function FilmAssistantChat({
             >
               {msg.role === 'assistant' && !msg.isError ? (
                 <div className="space-y-4">
+                  {msg.people?.length ? (
+                    <MinacPersonCards people={msg.people} />
+                  ) : null}
                   <MarkdownContent content={msg.content} variant="onDark" />
                   {msg.sources?.length ? (
                     <CollapsibleSources sources={msg.sources} />

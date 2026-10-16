@@ -7,6 +7,13 @@ import {
   buildFilmAssistantContext,
   buildFilmSystemPrompt,
 } from '@/lib/film/assistant-context';
+import {
+  composeMinacAnswer,
+  formatMinacForPrompt,
+  looksLikeMinacOrPersonQuery,
+  lookupMinacOfficials,
+  minacToPersonCards,
+} from '@/lib/film/minac-team';
 import { researchCameroonCinema } from '@/lib/film/research-cinema';
 import { prepareAiMarkdown } from '@/lib/markdown/sanitize-ai-markdown';
 
@@ -47,11 +54,11 @@ function greeting(locale: string): string {
   if (locale === 'en') {
     return `Hello — I'm the **SmartMboa Film** assistant for the **Cameroon movie industry**.
 
-Ask about any producer, director, actor, actress, videographer, film, series, or festival in Cameroon — I research online (Wikipedia, African cinema sources, and the web) to answer.`;
+Ask about producers, directors, actors, actresses, films, festivals — or **MINAC** officials (Ministry of Arts and Culture). For ministry personalities I check the official organigram first, then the web.`;
   }
   return `Bonjour — je suis l’assistant **SmartMboa Film** pour l’**industrie du cinéma camerounais**.
 
-Demandez n’importe quel producteur, réalisateur, acteur, actrice, vidéographe, film, série ou festival au Cameroun — je recherche en ligne (Wikipédia, sources cinéma africain, web) pour répondre.`;
+Demandez producteurs, réalisateurs, acteurs, actrices, films, festivals — ou personnalités du **MINAC** (Ministère des Arts et de la Culture). Pour l’équipe dirigeante, je consulte d’abord l’organigramme officiel, puis le web.`;
 }
 
 function sanitizeProviderError(msg: string): string {
@@ -188,14 +195,38 @@ export async function POST(req: Request) {
     });
   }
 
+  // 1) Official MINAC organigram BEFORE general web research
+  const minac =
+    looksLikeMinacOrPersonQuery(lastUser)
+      ? await lookupMinacOfficials(lastUser)
+      : { matches: [], people: [], sourceUrl: 'https://minac.gov.cm/fr/team' };
+  const minacPeople = minacToPersonCards(minac.matches);
+  const minacBlock = formatMinacForPrompt(minac.matches, locale);
+
+  // 2) KB + web (still run when no organigram hit, or to enrich cinema figures)
+  const runWeb = minac.matches.length === 0;
   const [kbContext, research] = await Promise.all([
     Promise.resolve(buildFilmAssistantContext(lastUser, locale)),
-    researchCameroonCinema(lastUser),
+    runWeb
+      ? researchCameroonCinema(lastUser)
+      : Promise.resolve({
+          hits: [] as { title: string; url: string; snippet: string; provider: 'tavily' | 'brave' }[],
+          provider: 'none' as const,
+          query: lastUser,
+          block: '',
+          citations: [] as { title: string; url: string; type: 'WEB' }[],
+        }),
   ]);
 
-  const contextWithWeb = research.block
-    ? `${kbContext}\n\nRECHERCHE WEB / WIKIPÉDIA (${research.provider}) — industrie cinéma Cameroun :\n${research.block}`
-    : kbContext;
+  const contextWithWeb = [
+    minacBlock,
+    kbContext,
+    research.block
+      ? `RECHERCHE WEB / WIKIPÉDIA (${research.provider}) — industrie cinéma Cameroun :\n${research.block}`
+      : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
 
   const system = buildFilmSystemPrompt(locale, contextWithWeb, true);
   const modelId = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
@@ -203,10 +234,16 @@ export async function POST(req: Request) {
   let message = '';
   let provider = 'research';
 
+  // Authoritative organigram answer when we have a clear MINAC match and no LLM key
+  const minacAnswer = composeMinacAnswer(locale, minac.matches);
+
   const openRouterKey = process.env.OPENROUTER_API_KEY?.trim();
   const geminiKey = process.env.GEMINI_API_KEY?.trim();
 
-  if (openRouterKey) {
+  if (minac.matches.length && !openRouterKey && !geminiKey) {
+    message = minacAnswer;
+    provider = 'minac-organigram';
+  } else if (openRouterKey) {
     const callOpenRouter = async (maxTokens: number) => {
       const payload: Record<string, unknown> = {
         model: modelId,
@@ -269,13 +306,15 @@ export async function POST(req: Request) {
           { status: 402 },
         );
       }
-      message = researchFallback(locale, research, kbContext);
-      provider = 'research-fallback';
+      message =
+        minacAnswer || researchFallback(locale, research, kbContext);
+      provider = minacAnswer ? 'minac-organigram' : 'research-fallback';
     } else {
       message = data?.choices?.[0]?.message?.content?.trim() || '';
       if (!message) {
-        message = researchFallback(locale, research, kbContext);
-        provider = 'research-fallback';
+        message =
+          minacAnswer || researchFallback(locale, research, kbContext);
+        provider = minacAnswer ? 'minac-organigram' : 'research-fallback';
       } else {
         provider = 'openrouter';
       }
@@ -292,12 +331,18 @@ export async function POST(req: Request) {
       provider = 'gemini';
     } catch (err) {
       console.error('[film-chat] Gemini error', err);
-      message = researchFallback(locale, research, kbContext);
-      provider = 'research-fallback';
+      message =
+        minacAnswer || researchFallback(locale, research, kbContext);
+      provider = minacAnswer ? 'minac-organigram' : 'research-fallback';
     }
   } else {
-    message = researchFallback(locale, research, kbContext);
-    provider = research.hits.length ? 'wikipedia' : 'kb';
+    message =
+      minacAnswer || researchFallback(locale, research, kbContext);
+    provider = minacAnswer
+      ? 'minac-organigram'
+      : research.hits.length
+        ? 'wikipedia'
+        : 'kb';
   }
 
   const prepared = prepareAiMarkdown(message);
@@ -306,6 +351,14 @@ export async function POST(req: Request) {
   const ui_sources = (() => {
     const seen = new Set<string>();
     const out: { title: string; url: string; type: 'WEB' | 'KB' }[] = [];
+    if (minac.matches.length) {
+      out.push({
+        title: 'MINAC — Équipe dirigeante (organigramme)',
+        url: minac.sourceUrl,
+        type: 'WEB',
+      });
+      seen.add(minac.sourceUrl);
+    }
     for (const s of [
       ...research.citations,
       ...prepared.sources.map((x) => ({ ...x, type: 'WEB' as const })),
@@ -317,11 +370,22 @@ export async function POST(req: Request) {
     return out;
   })();
 
+  const images = minacPeople
+    .filter((p) => p.photoUrl)
+    .map((p) => ({
+      image_url: p.photoUrl!,
+      page_url: p.sourceUrl || minac.sourceUrl,
+      title: `${p.name} — ${p.title || ''}`.trim(),
+      source_domain: 'minac.gov.cm',
+      alt_text: p.name,
+    }));
+
   console.info('[film-chat] done', {
     provider,
+    minac: minac.matches.length,
     research: research.provider,
     hits: research.hits.length,
-    query: research.query.slice(0, 100),
+    query: (research.query || lastUser).slice(0, 100),
   });
 
   return NextResponse.json({
@@ -330,8 +394,10 @@ export async function POST(req: Request) {
     message,
     text: message,
     provider,
-    response_type: 'SIMPLE_ANSWER',
+    response_type: minacPeople.length ? 'PERSON_PROFILE' : 'SIMPLE_ANSWER',
     ui_sources,
     places: [],
+    people: minacPeople,
+    images,
   });
 }

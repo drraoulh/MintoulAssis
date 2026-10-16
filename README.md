@@ -21,7 +21,12 @@ Open [http://127.0.0.1:43123](http://127.0.0.1:43123).
 - Switch later: header **Tourism / Film** toggle, or `/?change_mode=1`
 - Replay intro: `/?reset_intro=1`
 
-Without API keys, browsing and static pages still work. The **Film AI** (floating bottom-right on Film pages) still answers using Wikipedia / Africiné / CINAF / DuckDuckGo research on Cameroon producers, actors, actresses, videographers, and films. Tourism chat, speech, and vision need the keys in `.env.example` (`OPENROUTER_API_KEY` or `GEMINI_API_KEY` for fuller narrative Film answers; optional `TAVILY_API_KEY` / `BRAVE_SEARCH_API_KEY`).
+Without API keys, browsing and static pages still work. The **Film AI** (floating bottom-right on Film pages) answers using:
+
+1. Official **MINAC** organigram ([minac.gov.cm/fr/team](https://minac.gov.cm/fr/team)) first for ministry personalities — photo, title, and function
+2. Then Wikipedia / Africiné / CINAF / DuckDuckGo for Cameroon producers, actors, actresses, videographers, and films
+
+Tourism chat, speech, and vision need the keys in `.env.example` (`OPENROUTER_API_KEY` or `GEMINI_API_KEY` for fuller narrative Film answers; optional `TAVILY_API_KEY` / `BRAVE_SEARCH_API_KEY`).
 
 ## Scripts
 

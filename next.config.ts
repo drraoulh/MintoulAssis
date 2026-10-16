@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "zgbccqtnguzbmaptahkf.supabase.co" },
       { protocol: "https", hostname: "**.supabase.co" },
       { protocol: "https", hostname: "**.onrender.com" },
+      { protocol: "https", hostname: "minac.gov.cm" },
       { protocol: "http", hostname: "127.0.0.1" },
       { protocol: "http", hostname: "localhost" },
     ],
