@@ -86,6 +86,16 @@ export function sendChatMessage(payload: ChatRequest): Promise<ChatResponse> {
   });
 }
 
+/** Film Production AI — Cameroon cinematography assistant. */
+export function sendFilmChatMessage(
+  payload: ChatRequest,
+): Promise<ChatResponse> {
+  return request<ChatResponse>('/api/film/chat', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export function listConversations(limit = 30): Promise<ConversationListResponse> {
   return request<ConversationListResponse>(`/api/conversations?limit=${limit}`);
 }

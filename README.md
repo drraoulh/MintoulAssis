@@ -3,7 +3,7 @@
 Cameroon web app with two entry worlds after the intro:
 
 - **Tourism & Discovery** — places, regions, planner, AI guide, voice & vision
-- **Film Production** — filming locations (shared with tourism where relevant), projection halls for premieres, cinema events, procedures, directory, gear, and planning checklists
+- **Film Production** — AI cinema assistant (filmmakers, films, actors, festivals), filming locations, projection halls, cinema events, procedures, directory, gear, and planning checklists
 
 Imported from [drraoulh/MintoulAssis](https://github.com/drraoulh/MintoulAssis).
 

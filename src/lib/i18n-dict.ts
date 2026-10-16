@@ -58,9 +58,39 @@ const STRINGS: Record<Locale, Dict> = {
     'film.nav.eventsShort': 'Events',
     'film.nav.halls': 'Salles de projection',
     'film.nav.hallsShort': 'Salles',
+    'film.nav.assistant': 'Assistant IA',
+    'film.nav.assistantShort': 'IA',
+    'film.hub.assistant': 'Assistant cinéma IA',
+    'film.hub.assistantBody':
+      'Cinéastes, films, acteurs, festivals et production au Cameroun.',
     'film.hub.halls': 'Salles de projection',
     'film.hub.hallsBody':
       'Lieux pour premières et projections publiques — images, adresse, jauge.',
+    'film.home.ctaAssistant': 'Parler à l’assistant Film',
+    'film.assistant.title': 'Assistant Film',
+    'film.assistant.sub': 'Expert cinématographie & production au Cameroun',
+    'film.assistant.bot': 'SmartMboa Film',
+    'film.assistant.hero': 'Posez votre question sur le',
+    'film.assistant.heroAccent': 'cinéma camerounais',
+    'film.assistant.heroSub':
+      'Producteurs, films, acteurs, festivals, salles et tournage — réponses ancrées Cameroun.',
+    'film.assistant.placeholder': 'Ex. Qui a réalisé Muna Moto ? Où lancer une première à Douala ?',
+    'film.assistant.send': 'Envoyer',
+    'film.assistant.speak': 'Écouter la réponse',
+    'film.assistant.sug.filmmaker': 'Cinéastes',
+    'film.assistant.sug.filmmakerQ':
+      'Quels sont les cinéastes camerounais les plus importants et pour quels films ?',
+    'film.assistant.sug.film': 'Un film',
+    'film.assistant.sug.filmQ': 'Parle-moi du film Muna Moto et de son réalisateur.',
+    'film.assistant.sug.festival': 'Festivals',
+    'film.assistant.sug.festivalQ':
+      'Qu’est-ce qu’Écrans Noirs et quand a lieu la prochaine édition à Yaoundé ?',
+    'film.assistant.sug.premiere': 'Première',
+    'film.assistant.sug.premiereQ':
+      'Quelles salles à Douala ou Yaoundé pour lancer la première d’un film ?',
+    'film.assistant.sug.produce': 'Produire',
+    'film.assistant.sug.produceQ':
+      'Comment préparer un tournage au Cameroun : permis, fixers et lieux ?',
     'film.hub.events': 'Événements cinéma',
     'film.hub.eventsBody': 'Festivals et dates récupérés en ligne (ex. Écrans Noirs).',
     'film.halls.title': 'Salles pour votre première',
@@ -729,9 +759,39 @@ const STRINGS: Record<Locale, Dict> = {
     'film.nav.eventsShort': 'Events',
     'film.nav.halls': 'Projection halls',
     'film.nav.hallsShort': 'Halls',
+    'film.nav.assistant': 'AI assistant',
+    'film.nav.assistantShort': 'AI',
+    'film.hub.assistant': 'Cinema AI assistant',
+    'film.hub.assistantBody':
+      'Filmmakers, films, actors, festivals, and production in Cameroon.',
     'film.hub.halls': 'Projection halls',
     'film.hub.hallsBody':
       'Venues for premieres and public screenings — images, address, capacity.',
+    'film.home.ctaAssistant': 'Talk to the Film assistant',
+    'film.assistant.title': 'Film assistant',
+    'film.assistant.sub': 'Expert on cinematography & production in Cameroon',
+    'film.assistant.bot': 'SmartMboa Film',
+    'film.assistant.hero': 'Ask anything about',
+    'film.assistant.heroAccent': 'Cameroonian cinema',
+    'film.assistant.heroSub':
+      'Producers, films, actors, festivals, halls, and shoots — Cameroon-grounded answers.',
+    'film.assistant.placeholder': 'e.g. Who directed Muna Moto? Where to premiere in Douala?',
+    'film.assistant.send': 'Send',
+    'film.assistant.speak': 'Listen to the answer',
+    'film.assistant.sug.filmmaker': 'Filmmakers',
+    'film.assistant.sug.filmmakerQ':
+      'Who are the most important Cameroonian filmmakers and for which films?',
+    'film.assistant.sug.film': 'A film',
+    'film.assistant.sug.filmQ': 'Tell me about the film Muna Moto and its director.',
+    'film.assistant.sug.festival': 'Festivals',
+    'film.assistant.sug.festivalQ':
+      'What is Écrans Noirs and when is the next edition in Yaoundé?',
+    'film.assistant.sug.premiere': 'Premiere',
+    'film.assistant.sug.premiereQ':
+      'Which halls in Douala or Yaoundé can host a film premiere?',
+    'film.assistant.sug.produce': 'Produce',
+    'film.assistant.sug.produceQ':
+      'How do I prepare a shoot in Cameroon: permits, fixers, and locations?',
     'film.hub.events': 'Cinema events',
     'film.hub.eventsBody': 'Festivals and dates fetched online (e.g. Écrans Noirs).',
     'film.halls.title': 'Halls for your premiere',

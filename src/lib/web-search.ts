@@ -250,6 +250,28 @@ export function buildTourismWebQuery(opts: {
     .trim();
 }
 
+/** Build a Cameroon cinema / film-industry search query. */
+export function buildCinemaWebQuery(opts: {
+  userText: string;
+  personOrFilm?: boolean;
+  festival?: boolean;
+  production?: boolean;
+}): string {
+  const topic = opts.festival
+    ? "festival cinéma Écrans Noirs"
+    : opts.production
+      ? "production tournage cinéma audiovisuel"
+      : opts.personOrFilm
+        ? "cinéaste réalisateur acteur film camerounais"
+        : "cinéma film camerounais";
+  const base = opts.userText.replace(/\s+/g, " ").trim().slice(0, 180);
+  return [base, topic, "Cameroun Cameroon cinema film"]
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function formatWebHitsForPrompt(hits: WebSearchHit[]): string {
   if (!hits.length) return "";
   return hits

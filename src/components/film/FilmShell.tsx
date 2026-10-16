@@ -17,6 +17,7 @@ import {
   LayoutGrid,
   MapPin,
   Menu,
+  Sparkles,
   Theater,
   UserCircle2,
   Users,
@@ -30,6 +31,7 @@ import { useLocale } from '@/lib/i18n';
 
 const FILM_LINKS = [
   { href: '/film', key: 'film.nav.home', icon: Home, exact: true },
+  { href: '/film/assistant', key: 'film.nav.assistant', icon: Sparkles },
   { href: '/film/locations', key: 'film.nav.locations', icon: MapPin },
   { href: '/film/halls', key: 'film.nav.halls', icon: Theater },
   { href: '/film/events', key: 'film.nav.events', icon: CalendarDays },
@@ -47,10 +49,26 @@ function isActive(pathname: string, href: string, exact?: boolean) {
 }
 
 export function FilmShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isAssistant =
+    pathname === '/film/assistant' || pathname.startsWith('/film/assistant/');
+
   return (
-    <div className="flex min-h-[100svh] flex-col bg-[#0a0a0a] text-[#F8F5ED]">
+    <div
+      className={`flex bg-[#0a0a0a] text-[#F8F5ED] ${
+        isAssistant
+          ? 'h-[100dvh] min-h-[100dvh] flex-col overflow-hidden'
+          : 'min-h-[100svh] flex-col'
+      }`}
+    >
       <FilmHeader />
-      <main className="flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
+      <main
+        className={
+          isAssistant
+            ? 'flex min-h-0 flex-1 flex-col overflow-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0'
+            : 'flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0'
+        }
+      >
         {children}
       </main>
       <FilmBottomNav />
@@ -97,10 +115,10 @@ function FilmHeader() {
               {FILM_LINKS.filter((l) =>
                 [
                   '/film',
+                  '/film/assistant',
                   '/film/locations',
                   '/film/halls',
                   '/film/events',
-                  '/film/directory',
                 ].includes(l.href),
               ).map((link) => {
                 const active = isActive(pathname, link.href, 'exact' in link ? link.exact : false);
@@ -199,7 +217,7 @@ function FilmBottomNav() {
     () =>
       [
         { href: '/film', label: t('film.nav.home'), icon: Home, exact: true as const },
-        { href: '/film/locations', label: t('film.nav.locationsShort'), icon: MapPin },
+        { href: '/film/assistant', label: t('film.nav.assistantShort'), icon: Sparkles },
         { href: '/film/halls', label: t('film.nav.hallsShort'), icon: Theater },
         { href: '/film/events', label: t('film.nav.eventsShort'), icon: CalendarDays },
       ] as const,
@@ -209,6 +227,7 @@ function FilmBottomNav() {
   const moreLinks = useMemo(
     () =>
       [
+        { href: '/film/locations', label: t('film.nav.locations'), icon: MapPin },
         { href: '/film/directory', label: t('film.nav.directory'), icon: Building2 },
         { href: '/film/procedures', label: t('film.nav.procedures'), icon: ClipboardList },
         { href: '/film/equipment', label: t('film.nav.equipment'), icon: Wrench },

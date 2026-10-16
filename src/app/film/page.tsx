@@ -9,6 +9,7 @@ import {
   Columns2,
   GraduationCap,
   MapPin,
+  Sparkles,
   Theater,
   UserCircle2,
   Users,
@@ -33,6 +34,12 @@ import { useLocale } from '@/lib/i18n';
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 const SHARED_HUB = [
+  {
+    href: '/film/assistant',
+    icon: Sparkles,
+    titleKey: 'film.hub.assistant',
+    bodyKey: 'film.hub.assistantBody',
+  },
   {
     href: '/film/locations',
     icon: MapPin,
@@ -162,8 +169,15 @@ export default function FilmHomePage() {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Link
-                href="/film/locations"
+                href="/film/assistant"
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-[#CE1126] px-6 py-3 text-sm font-bold text-white hover:bg-[#b50e21]"
+              >
+                {t('film.home.ctaAssistant')}
+                <Sparkles className="h-4 w-4" aria-hidden />
+              </Link>
+              <Link
+                href="/film/locations"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-bold text-[#F8F5ED] hover:border-[#FCD116] hover:text-[#FCD116]"
               >
                 {t('film.home.ctaLocations')}
                 <ArrowRight className="h-4 w-4" aria-hidden />
