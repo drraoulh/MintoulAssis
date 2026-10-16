@@ -6,6 +6,7 @@ import {
   type CinemaEventKind,
   type CinemaEventsResponse,
 } from '@/lib/film/events';
+import { fetchIcicineFestivalEvents } from '@/lib/film/fetch-icicine-events';
 import { fetchOfficialCinemaEvents } from '@/lib/film/fetch-official-events';
 import { searchWeb, webSearchEnvEnabled, type WebSearchHit } from '@/lib/web-search';
 
@@ -136,15 +137,28 @@ function mergeEvents(parts: CinemaEvent[][]): CinemaEvent[] {
     }
   }
 
-  // Drop generic curated Écrans Noirs if we have a dated official edition
-  const hasDatedEcrans = [...map.values()].some(
+  // Drop generic curated Écrans Noirs if we have a dated official / IciCiné edition
+  const datedEcrans = [...map.values()].filter(
     (e) =>
-      e.id === 'official-ecrans-noirs-edition' ||
-      (/écrans?\s*noirs/i.test(e.title) && e.startDate && e.source === 'official'),
+      e.id !== 'curated-ecrans-noirs' &&
+      /écrans?\s*noirs/i.test(e.title) &&
+      Boolean(e.startDate),
   );
-  if (hasDatedEcrans) {
+  if (datedEcrans.length) {
     for (const [k, e] of map) {
       if (e.id === 'curated-ecrans-noirs') map.delete(k);
+    }
+    // Keep a single dated Écrans Noirs (prefer official site over IciCiné news)
+    if (datedEcrans.length > 1) {
+      const prefer =
+        datedEcrans.find((e) => e.provider === 'official') ||
+        datedEcrans.find((e) => e.id.startsWith('official-')) ||
+        datedEcrans[0];
+      for (const [k, e] of map) {
+        if (/écrans?\s*noirs/i.test(e.title) && e.id !== prefer.id && e.startDate) {
+          map.delete(k);
+        }
+      }
     }
   }
 
@@ -199,19 +213,28 @@ export async function getCinemaEvents(opts?: {
   }
 
   try {
-    const [official, search] = await Promise.all([
+    const [official, icicine, search] = await Promise.all([
       fetchOfficialCinemaEvents(),
+      fetchIcicineFestivalEvents(),
       fetchSearchEvents(),
     ]);
 
     const events = mergeEvents([
       official.events,
+      icicine.events,
       search.events,
       CURATED_CINEMA_EVENTS,
     ]);
 
-    const live = official.events.length > 0 || search.events.length > 0;
-    const providers = [official.provider, search.provider].filter((p) => p !== 'none');
+    const live =
+      official.events.length > 0 ||
+      icicine.events.length > 0 ||
+      search.events.length > 0;
+    const providers = [
+      official.provider,
+      icicine.fetched && icicine.events.length ? ('icicine' as const) : ('none' as const),
+      search.provider,
+    ].filter((p) => p !== 'none');
     const provider: CinemaEventsResponse['provider'] =
       providers.length === 0
         ? 'none'
@@ -224,7 +247,10 @@ export async function getCinemaEvents(opts?: {
       fetchedAt: new Date().toISOString(),
       live,
       provider,
-      queryCount: search.queryCount + (official.events.length ? 1 : 0),
+      queryCount:
+        search.queryCount +
+        (official.events.length ? 1 : 0) +
+        (icicine.fetched ? 1 : 0),
       message: live
         ? undefined
         : 'Live sources unavailable — showing curated festivals.',

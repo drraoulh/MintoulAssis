@@ -192,11 +192,13 @@ function EventCard({
                 : 'bg-white/5 text-white/45'
           }`}
         >
-          {event.source === 'official'
-            ? t('film.events.badgeOfficial')
-            : event.source === 'web'
-              ? t('film.events.badgeLive')
-              : t('film.events.badgeCurated')}
+          {event.provider === 'icicine'
+            ? t('film.events.badgeIcicine')
+            : event.source === 'official'
+              ? t('film.events.badgeOfficial')
+              : event.source === 'web'
+                ? t('film.events.badgeLive')
+                : t('film.events.badgeCurated')}
         </span>
         {event.recurring ? (
           <span className="text-[10px] font-medium text-white/35">

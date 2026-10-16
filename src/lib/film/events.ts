@@ -28,7 +28,7 @@ export interface CinemaEvent {
   whenLabel?: string | null;
   url?: string | null;
   source: CinemaEventSource;
-  provider?: 'tavily' | 'brave' | 'curated' | 'rss' | 'official';
+  provider?: 'tavily' | 'brave' | 'curated' | 'rss' | 'official' | 'icicine';
   /** Recurring annual festival / series. */
   recurring?: boolean;
 }
@@ -37,7 +37,7 @@ export interface CinemaEventsResponse {
   events: CinemaEvent[];
   fetchedAt: string;
   live: boolean;
-  provider: 'tavily' | 'brave' | 'none' | 'mixed' | 'official' | 'rss';
+  provider: 'tavily' | 'brave' | 'none' | 'mixed' | 'official' | 'rss' | 'icicine';
   queryCount: number;
   message?: string;
 }
