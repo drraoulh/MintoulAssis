@@ -172,21 +172,24 @@ export const PROJECTION_HALLS: ProjectionHall[] = [
     latitude: 4.0546359,
     longitude: 9.7150349,
     capacitySeats: null,
-    capacityStatus: 'unknown',
+    capacityStatus: 'indicative',
     capacityNoteFr:
-      'Salle historique de Douala — capacité à confirmer pour une première publique.',
+      'Grande salle classique avec parterre et balcon (sièges rouges / beige). Jauge exacte à confirmer pour une première.',
     capacityNoteEn:
-      'Historic Douala cinema — confirm capacity for a public premiere.',
+      'Large classic hall with stalls and balcony (red / beige seating). Confirm exact capacity for a premiere.',
     descriptionFr:
-      'Salle de cinéma connue à Douala. À considérer pour les projections publiques et les événements cinématographiques.',
+      'Cinéma historique de Douala (enseigne Eden / « Panoramique Dolby Stereo »), utilisé pour des premières et projections publiques — ex. avant-premières locales avec plateau et public.',
     descriptionEn:
-      'Well-known cinema in Douala. Consider for public screenings and film events.',
+      'Historic Douala cinema (Eden / “Panoramique Dolby Stereo” signage), used for premieres and public screenings — e.g. local premieres with stage Q&A and a full house.',
     suitableFor: ['premiere', 'public-screening', 'cultural'],
     status: 'active',
-    image: '/regions/littoral.jpg',
-    imageIsRegional: true,
-    bookingHintFr: 'Contacter la direction de la salle pour disponibilités et jauge.',
-    bookingHintEn: 'Contact the venue management for availability and capacity.',
+    image: '/film/halls/cinema-eden-douala/02-salle-balcon.jpg',
+    gallery: [
+      '/film/halls/cinema-eden-douala/02-salle-balcon.jpg',
+      '/film/halls/cinema-eden-douala/01-premiere-collage.jpg',
+    ],
+    bookingHintFr: 'Contacter la direction du Cinéma l’Eden pour disponibilités, jauge et réservation privée.',
+    bookingHintEn: 'Contact Cinéma l’Eden management for availability, capacity, and private booking.',
   },
   {
     id: 'genesis-cinema-douala',
