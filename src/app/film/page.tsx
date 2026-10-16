@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
+  CalendarDays,
   CheckSquare,
   ClipboardList,
   Columns2,
@@ -36,6 +37,12 @@ const SHARED_HUB = [
     icon: MapPin,
     titleKey: 'film.hub.locations',
     bodyKey: 'film.hub.locationsBody',
+  },
+  {
+    href: '/film/events',
+    icon: CalendarDays,
+    titleKey: 'film.hub.events',
+    bodyKey: 'film.hub.eventsBody',
   },
   {
     href: '/film/procedures',

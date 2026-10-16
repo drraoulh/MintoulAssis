@@ -7,6 +7,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Building2,
+  CalendarDays,
   CheckSquare,
   Clapperboard,
   ClipboardList,
@@ -29,6 +30,7 @@ import { useLocale } from '@/lib/i18n';
 const FILM_LINKS = [
   { href: '/film', key: 'film.nav.home', icon: Home, exact: true },
   { href: '/film/locations', key: 'film.nav.locations', icon: MapPin },
+  { href: '/film/events', key: 'film.nav.events', icon: CalendarDays },
   { href: '/film/procedures', key: 'film.nav.procedures', icon: ClipboardList },
   { href: '/film/directory', key: 'film.nav.directory', icon: Users },
   { href: '/film/equipment', key: 'film.nav.equipment', icon: Wrench },
@@ -91,9 +93,13 @@ function FilmHeader() {
           <div className="ml-auto hidden items-center gap-3 lg:flex">
             <nav className="flex items-center gap-1" aria-label={t('film.nav.primary')}>
               {FILM_LINKS.filter((l) =>
-                ['/film', '/film/locations', '/film/procedures', '/film/directory', '/film/equipment'].includes(
-                  l.href,
-                ),
+                [
+                  '/film',
+                  '/film/locations',
+                  '/film/events',
+                  '/film/procedures',
+                  '/film/directory',
+                ].includes(l.href),
               ).map((link) => {
                 const active = isActive(pathname, link.href, 'exact' in link ? link.exact : false);
                 return (
@@ -192,8 +198,8 @@ function FilmBottomNav() {
       [
         { href: '/film', label: t('film.nav.home'), icon: Home, exact: true as const },
         { href: '/film/locations', label: t('film.nav.locationsShort'), icon: MapPin },
+        { href: '/film/events', label: t('film.nav.eventsShort'), icon: CalendarDays },
         { href: '/film/directory', label: t('film.nav.directoryShort'), icon: Building2 },
-        { href: '/film/planning', label: t('film.nav.planningShort'), icon: CheckSquare },
       ] as const,
     [t],
   );
