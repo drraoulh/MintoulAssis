@@ -1,0 +1,11 @@
+{
+  "remote.autoForwardPorts": true,
+  "remote.autoForwardPortsSource": "output",
+  "remote.portsAttributes": {
+    "45231": {
+      "label": "SmartMboa Next.js",
+      "onAutoForward": "notify",
+      "elevateIfNeeded": false
+    }
+  }
+}

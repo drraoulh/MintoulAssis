@@ -12,10 +12,11 @@ Imported from [drraoulh/MintoulAssis](https://github.com/drraoulh/MintoulAssis).
 ```bash
 npm install
 cp .env.example .env.local   # optional — add API keys for chat/voice/vision
-npm run dev -- -p 43123
+npm run dev
 ```
 
-Open [http://127.0.0.1:43123](http://127.0.0.1:43123).
+Open **[http://localhost:45231](http://localhost:45231)** (prefer `localhost` over `127.0.0.1` in Cursor cloud preview).  
+Film UI: [http://localhost:45231/film](http://localhost:45231/film).
 
 - First visit: cinematic intro → section gateway
 - Switch later: header **Tourism / Film** toggle, or `/?change_mode=1`
