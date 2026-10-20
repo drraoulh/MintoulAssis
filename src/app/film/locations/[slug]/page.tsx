@@ -3,16 +3,21 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Compass, Download, MapPin } from 'lucide-react';
+import { ArrowLeft, Compass, Download } from 'lucide-react';
 
+import { KIND_ICONS } from '@/components/film/location-kind-icons';
+import { PlaceContactCard } from '@/components/film/PlaceContactCard';
 import { TourismMap } from '@/components/maps/TourismMap';
 import { setEntryMode } from '@/lib/entry-mode';
-import { downloadTextFile, locationDossierMarkdown } from '@/lib/film/dossier';
+import { dossierPdfUrl } from '@/lib/film/dossier';
 import {
+  FILM_LOCATION_KINDS,
   FILM_LOOKS,
   filmLocationCover,
+  filmLocationKind,
   getFilmLocation,
 } from '@/lib/film/locations';
+import { OSM_ATTRIBUTION } from '@/lib/film/osm-locations';
 import { REGIONS } from '@/lib/regions';
 import { useLocale } from '@/lib/i18n';
 
@@ -43,6 +48,8 @@ export default function FilmLocationDetailPage() {
   const city = locale === 'fr' ? loc.cityFr : loc.cityEn;
   const region = REGIONS.find((r) => r.id === loc.regionId);
   const cover = filmLocationCover(loc);
+  const KindIcon = KIND_ICONS[filmLocationKind(loc)];
+  const kindMeta = FILM_LOCATION_KINDS.find((k) => k.id === filmLocationKind(loc));
   const tourismHref = loc.tourismHref ?? `/destinations/${loc.placeId}`;
 
   return (
@@ -51,8 +58,8 @@ export default function FilmLocationDetailPage() {
         {cover ? (
           <Image src={cover} alt="" fill priority className="object-cover" sizes="100vw" />
         ) : (
-          <div className="flex h-full items-center justify-center bg-white/5">
-            <MapPin className="h-10 w-10 text-white/30" />
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#007A5E]/40 via-[#0f0f0f] to-[#CE1126]/30">
+            <KindIcon className="h-14 w-14 text-[#FCD116]/70" aria-hidden />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent" />
@@ -75,6 +82,11 @@ export default function FilmLocationDetailPage() {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-8 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6">
           <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FCD116] px-3 py-1 text-xs font-bold text-black">
+              <KindIcon className="h-3.5 w-3.5" aria-hidden />
+              {locale === 'fr' ? kindMeta?.fr : kindMeta?.en}
+              {loc.stars ? ` · ${'★'.repeat(Math.min(loc.stars, 5))}` : ''}
+            </span>
             {loc.looks.map((lk) => {
               const meta = FILM_LOOKS.find((x) => x.id === lk);
               return (
@@ -138,6 +150,14 @@ export default function FilmLocationDetailPage() {
               className="h-64"
             />
           </div>
+          {loc.osm ? (
+            <PlaceContactCard
+              contact={loc.contact}
+              city={city}
+              latitude={loc.latitude}
+              longitude={loc.longitude}
+            />
+          ) : null}
           <dl className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 text-sm">
             <div className="flex justify-between gap-3 border-b border-white/10 py-2">
               <dt className="text-white/45">{t('film.detail.season')}</dt>
@@ -162,20 +182,18 @@ export default function FilmLocationDetailPage() {
               </dd>
             </div>
           </dl>
-          <button
-            type="button"
-            onClick={() =>
-              downloadTextFile(
-                `smartmboa-dossier-${loc.slug}-${locale}.md`,
-                locationDossierMarkdown(loc, locale),
-              )
-            }
+          <a
+            href={dossierPdfUrl([loc.slug], locale)}
+            download
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#CE1126] px-5 py-3 text-sm font-bold text-white hover:bg-[#b50e21]"
           >
             <Download className="h-4 w-4" aria-hidden />
             {t('film.dossier.download')}
-          </button>
+          </a>
           <p className="text-center text-[11px] text-white/40">{t('film.dossier.hint')}</p>
+          {loc.osm ? (
+            <p className="text-center text-[10px] text-white/30">{OSM_ATTRIBUTION}</p>
+          ) : null}
         </aside>
       </div>
     </div>

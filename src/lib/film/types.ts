@@ -18,9 +18,28 @@ export type CostTier = 'budget' | 'moderate' | 'premium';
 /** How hard it is to reach and work the location with a small unit. */
 export type AccessLevel = 'easy' | 'moderate' | 'demanding';
 
+/** Natural / heritage sites, or stays and villages usable as sets. */
+export type FilmLocationKind = 'site' | 'hotel' | 'villa' | 'house' | 'village';
+
+export interface PlaceContact {
+  phone?: string;
+  whatsapp?: string;
+  email?: string;
+  website?: string;
+  facebook?: string;
+  address?: string;
+  openingHours?: string;
+}
+
 export interface FilmLocationMeta {
   /** Same id/slug as tourism catalog when the place is shared. */
   placeId: string;
+  /** Defaults to 'site' for the curated catalog. */
+  kind?: FilmLocationKind;
+  contact?: PlaceContact;
+  stars?: number;
+  /** OpenStreetMap object (e.g. "node/123") when the record comes from OSM. */
+  osm?: string;
   slug: string;
   nameFr: string;
   nameEn: string;
@@ -46,6 +65,28 @@ export interface FilmLocationMeta {
   /** True when this record is also promoted as a tourist destination. */
   alsoTourism: boolean;
   tourismHref?: string;
+}
+
+export type RentalCategory = 'vehicle' | 'two-wheel' | 'boat' | 'equipment' | 'event';
+
+/** A rental shop / agency (cars, gear, event equipment…) with its exact position. */
+export interface RentalShop extends PlaceContact {
+  id: string;
+  osm: string;
+  name: string;
+  category: RentalCategory;
+  lat: number;
+  lon: number;
+  city?: string;
+  regionId?: string;
+  brand?: string;
+  description?: string;
+  descriptionFr?: string;
+  descriptionEn?: string;
+  /** Position resolved from the neighbourhood / street, not the exact door. */
+  approximate?: boolean;
+  /** Where the details were verified (not shown in the UI). */
+  source?: string;
 }
 
 export type ResourceKind = 'training' | 'festival' | 'funding' | 'call';

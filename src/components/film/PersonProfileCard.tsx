@@ -1,26 +1,17 @@
 'use client';
 
 import Image from 'next/image';
-import { ExternalLink, User } from 'lucide-react';
+import { User } from 'lucide-react';
+import { useState } from 'react';
 
 import type { PersonUI } from '@/lib/types';
 
-function sourceLinkLabel(person: PersonUI): string {
-  const label = (person.sourceLabel || '').toLowerCase();
-  if (label.includes('minac') || person.sourceUrl?.includes('minac.gov.cm')) {
-    return 'Organigramme officiel';
-  }
-  if (label.includes('wikip')) return 'Voir la fiche';
-  if (label.includes('cinaf')) return 'Fiche CINAF';
-  if (label.includes('africin')) return 'Fiche Africiné';
-  return 'Source';
-}
-
 export function PersonProfileCard({ person }: { person: PersonUI }) {
-  const photo = person.photoUrl?.trim();
+  const [broken, setBroken] = useState(false);
+  const photo = broken ? undefined : person.photoUrl?.trim();
   return (
     <article className="overflow-hidden rounded-2xl border border-[#FCD116]/25 bg-black/40">
-      <div className="flex gap-3 p-3 sm:gap-4 sm:p-4">
+      <div className="flex items-center gap-3 p-3 sm:gap-4 sm:p-4">
         <div className="relative h-28 w-[5.5rem] shrink-0 overflow-hidden rounded-xl bg-white/5 sm:h-36 sm:w-28">
           {photo ? (
             <Image
@@ -30,6 +21,8 @@ export function PersonProfileCard({ person }: { person: PersonUI }) {
               className="object-cover object-top"
               sizes="112px"
               unoptimized
+              referrerPolicy="no-referrer"
+              onError={() => setBroken(true)}
             />
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-1 text-white/35">
@@ -41,10 +34,7 @@ export function PersonProfileCard({ person }: { person: PersonUI }) {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#FCD116]">
-            {person.sourceLabel || 'Profil'}
-          </p>
-          <h3 className="mt-1 font-display text-base font-bold leading-snug text-[#F8F5ED] sm:text-lg">
+          <h3 className="font-display text-base font-bold leading-snug text-[#F8F5ED] sm:text-lg">
             {person.name}
           </h3>
           {person.title ? (
@@ -54,17 +44,6 @@ export function PersonProfileCard({ person }: { person: PersonUI }) {
           ) : null}
           {person.organization ? (
             <p className="mt-1 text-xs text-white/45">{person.organization}</p>
-          ) : null}
-          {person.sourceUrl ? (
-            <a
-              href={person.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#FCD116] hover:underline"
-            >
-              {sourceLinkLabel(person)}
-              <ExternalLink className="h-3 w-3" aria-hidden />
-            </a>
           ) : null}
         </div>
       </div>

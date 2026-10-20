@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import {
   Building2,
   CalendarDays,
+  CarFront,
   CheckSquare,
   Clapperboard,
   ClipboardList,
@@ -39,6 +40,7 @@ const FILM_LINKS = [
   { href: '/film/procedures', key: 'film.nav.procedures', icon: ClipboardList },
   { href: '/film/directory', key: 'film.nav.directory', icon: Users },
   { href: '/film/equipment', key: 'film.nav.equipment', icon: Wrench },
+  { href: '/film/rentals', key: 'film.nav.rentals', icon: CarFront },
   { href: '/film/planning', key: 'film.nav.planning', icon: CheckSquare },
   { href: '/film/locations/compare', key: 'film.nav.compare', icon: Columns2 },
   { href: '/film/resources', key: 'film.nav.resources', icon: GraduationCap },
@@ -219,7 +221,6 @@ function FilmBottomNav() {
     () =>
       [
         { href: '/film', label: t('film.nav.home'), icon: Home, exact: true as const },
-        { href: '/film/assistant', label: t('film.nav.assistantShort'), icon: Sparkles },
         { href: '/film/halls', label: t('film.nav.hallsShort'), icon: Theater },
         { href: '/film/events', label: t('film.nav.eventsShort'), icon: CalendarDays },
       ] as const,
@@ -233,6 +234,7 @@ function FilmBottomNav() {
         { href: '/film/directory', label: t('film.nav.directory'), icon: Building2 },
         { href: '/film/procedures', label: t('film.nav.procedures'), icon: ClipboardList },
         { href: '/film/equipment', label: t('film.nav.equipment'), icon: Wrench },
+        { href: '/film/rentals', label: t('film.nav.rentals'), icon: CarFront },
         { href: '/film/planning', label: t('film.nav.planning'), icon: CheckSquare },
         { href: '/film/locations/compare', label: t('film.nav.compare'), icon: Columns2 },
         { href: '/film/resources', label: t('film.nav.resources'), icon: GraduationCap },
@@ -270,7 +272,7 @@ function FilmBottomNav() {
         className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#0f0f0f]/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur md:hidden"
         aria-label={t('film.nav.primary')}
       >
-        <div className="mx-auto grid h-[4.5rem] max-w-lg grid-cols-5 items-center px-1">
+        <div className="mx-auto grid h-[4.5rem] max-w-lg grid-cols-4 items-center px-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = isActive(pathname, tab.href, 'exact' in tab ? tab.exact : false);
@@ -304,7 +306,7 @@ function FilmBottomNav() {
 
       {mounted && moreOpen
         ? createPortal(
-            <div className="fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal>
+            <div className="fixed inset-0 z-[10000] md:hidden" role="dialog" aria-modal>
               <button
                 type="button"
                 className="absolute inset-0 bg-black/70"

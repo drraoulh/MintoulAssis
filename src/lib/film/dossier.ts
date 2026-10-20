@@ -99,6 +99,12 @@ export function locationDossierMarkdown(
   return lines.filter((l) => l !== undefined).join('\n');
 }
 
+/** Branded PDF dossier — one slug, or two for a comparison. */
+export function dossierPdfUrl(slugs: string[], locale: 'fr' | 'en'): string {
+  const params = new URLSearchParams({ slugs: slugs.join(','), locale });
+  return `/api/film/dossier?${params.toString()}`;
+}
+
 export function downloadTextFile(filename: string, content: string, mime = 'text/markdown;charset=utf-8') {
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);

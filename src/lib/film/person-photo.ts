@@ -4,6 +4,7 @@
  */
 
 import type { PersonUI } from '@/lib/types';
+import { wikiSearchTitles } from '@/lib/film/filmography';
 import { extractCinemaSearchTerms } from '@/lib/film/research-cinema';
 
 const UA = 'SmartMboaFilmBot/1.0 (+https://smartmboatour.com; person-photo)';
@@ -111,26 +112,10 @@ async function wikiFindPerson(
   query: string,
 ): Promise<OnlinePersonProfile | null> {
   try {
-    const searchUrl = new URL(`https://${lang}.wikipedia.org/w/api.php`);
-    searchUrl.searchParams.set('action', 'query');
-    searchUrl.searchParams.set('list', 'search');
-    searchUrl.searchParams.set('srsearch', query);
-    searchUrl.searchParams.set('srlimit', '5');
-    searchUrl.searchParams.set('format', 'json');
-    searchUrl.searchParams.set('origin', '*');
+    const titles = (await wikiSearchTitles(lang, query)).slice(0, 4);
+    const summaries = await Promise.all(titles.map((t) => wikiSummary(lang, t)));
 
-    const res = await fetch(searchUrl, {
-      headers: { 'User-Agent': UA, Accept: 'application/json' },
-      signal: AbortSignal.timeout(10_000),
-      cache: 'no-store',
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as {
-      query?: { search?: { title: string }[] };
-    };
-
-    for (const item of data.query?.search || []) {
-      const summary = await wikiSummary(lang, item.title);
+    for (const summary of summaries) {
       if (!summary) continue;
       if (
         !looksLikePersonPage({
@@ -149,17 +134,17 @@ async function wikiFindPerson(
         .split(/[^\p{L}]+/u)
         .filter((w) => w.length >= 3)
         .slice(0, 4);
-      const overlap = nameBits.filter((b) => tn.includes(b)).length;
-      if (nameBits.length >= 2 && overlap < 1) continue;
+      const overlap = nameBits.filter(
+        (b) => tn.includes(b) || tn.split(/[^\p{L}]+/u).some((w) => w.length >= 5 && b.length >= 5 && w.slice(0, 4) === b.slice(0, 4)),
+      ).length;
+      if (overlap < Math.min(2, nameBits.length)) continue;
 
       return {
         id: `wiki-${lang}-${slugify(summary.title)}`,
         name: summary.title,
         title: summary.description || undefined,
         organization:
-          lang === 'fr'
-            ? 'Cinéma / culture — Cameroun (Wikipédia)'
-            : 'Cameroon cinema / culture (Wikipedia)',
+          lang === 'fr' ? 'Cinéma / culture — Cameroun' : 'Cameroon cinema / culture',
         photoUrl: summary.photoUrl || null,
         sourceUrl: summary.pageUrl,
         sourceLabel: lang === 'fr' ? 'Wikipédia' : 'Wikipedia',
@@ -198,38 +183,124 @@ async function ogImageFromUrl(url: string): Promise<string | null> {
   }
 }
 
+const BROWSER_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
+
+type WebImage = { imageUrl: string; pageUrl: string | null; title: string };
+
+function nameTokens(s: string): string[] {
+  return slugify(s)
+    .split('-')
+    .filter((t) => t.length >= 3);
+}
+
+/** Bing Images (no API key): bare name first (most precise), then with a Cameroon cinema hint. */
+async function bingPortrait(name: string): Promise<WebImage | null> {
+  const [plain, hinted] = await Promise.all([
+    bingPortraitQuery(name, name),
+    bingPortraitQuery(name, `${name} cameroun cinéma`),
+  ]);
+  return plain || hinted;
+}
+
+/** Returns the first portrait whose caption / page URL names the person. */
+async function bingPortraitQuery(name: string, query: string): Promise<WebImage | null> {
+  const want = nameTokens(name);
+  if (!want.length) return null;
+  try {
+    const url = new URL('https://www.bing.com/images/search');
+    url.searchParams.set('q', query);
+    url.searchParams.set('qft', '+filterui:face-portrait');
+    url.searchParams.set('form', 'IRFLTR');
+    const res = await fetch(url, {
+      headers: { 'User-Agent': BROWSER_UA, 'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8' },
+      signal: AbortSignal.timeout(6_000),
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    for (const m of html.matchAll(/\sm="(\{[^"]+\})"/g)) {
+      let meta: { murl?: string; turl?: string; purl?: string; t?: string };
+      try {
+        meta = JSON.parse(m[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&'));
+      } catch {
+        continue;
+      }
+      const thumb = meta.turl || meta.murl;
+      if (!thumb || !/^https:\/\//i.test(thumb)) continue;
+      const hay = slugify(`${meta.t || ''} ${meta.purl || ''}`);
+      const overlap = want.filter((w) => hay.includes(w)).length;
+      if (overlap < Math.min(2, want.length)) continue;
+      return { imageUrl: thumb, pageUrl: meta.purl || null, title: meta.t || name };
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 async function enrichPhotoFromCatalogs(
   name: string,
   profile: OnlinePersonProfile,
+  allowWebSearch: boolean,
 ): Promise<OnlinePersonProfile> {
   if (profile.photoUrl) return profile;
   const slug = slugify(name);
-  const candidates = [
+  const catalogs = [
     `https://www.africine.org/personne/${slug}`,
     `https://www.cinaf.tv/fr/artistes/${slug}`,
   ];
   if (/kepombia|mitoumba/i.test(name)) {
-    candidates.push('https://www.cinaf.tv/fr/artistes/ebenzer-kepombia-c29');
+    catalogs.push('https://www.cinaf.tv/fr/artistes/ebenzer-kepombia-c29');
   }
-  for (const url of candidates) {
-    const img = await ogImageFromUrl(url);
-    if (img) {
-      return {
-        ...profile,
-        photoUrl: img,
-        sourceUrl: profile.sourceUrl || url,
-        sourceLabel: profile.sourceLabel || (url.includes('cinaf') ? 'CINAF' : 'Africiné'),
-      };
-    }
+
+  // All probes in parallel; pick by source priority (catalog pages before web search)
+  const [catalogHits, web] = await Promise.all([
+    Promise.all(catalogs.map(async (url) => ({ url, img: await ogImageFromUrl(url) }))),
+    allowWebSearch ? bingPortrait(name) : Promise.resolve(null),
+  ]);
+
+  const catalog = catalogHits.find((c) => c.img);
+  if (catalog?.img) {
+    return {
+      ...profile,
+      photoUrl: catalog.img,
+      sourceUrl: profile.sourceUrl || catalog.url,
+      sourceLabel:
+        profile.sourceLabel || (catalog.url.includes('cinaf') ? 'CINAF' : 'Africiné'),
+    };
+  }
+  if (web) {
+    return {
+      ...profile,
+      photoUrl: web.imageUrl,
+      sourceUrl: profile.sourceUrl || web.pageUrl,
+      sourceLabel: profile.sourceUrl ? profile.sourceLabel : 'Web',
+    };
   }
   return profile;
+}
+
+/** Name-shaped term that the user didn't phrase as a film / series title. */
+function looksLikePersonName(term: string, userText: string): boolean {
+  const words = term.trim().split(/\s+/);
+  if (words.length < 2 || words.length > 5) return false;
+  if (/^(le|la|les|l['’]|un|une|des|du|the|a|an)$/i.test(words[0])) return false;
+  if (/joue\s+dans|casting|distribution|acteurs?\s+(de|du|des|dans)|cast\s+of|starring|\bsaison\b|\bépisode\b/i.test(userText)) {
+    return false;
+  }
+  // "la série X" / "le film X" (but not "les films de X")
+  if (/\b(la\s+s[ée]rie|le\s+film|the\s+(series|film|movie))\b/i.test(userText)) return false;
+  // "… de La Bataille des chéries" — the term was preceded by an article in the original text
+  const first = words[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return !new RegExp(`\\b(le|la|les|l['’]|the)\\s+${first}`, 'i').test(userText);
 }
 
 export function looksLikePersonResearchQuery(text: string): boolean {
   const t = text.replace(/\s+/g, ' ').trim();
   if (!t) return false;
   if (
-    /\b(qui\s+est|who\s+is|do\s+you\s+know|connais[- ]tu|parle[- ]moi\s+de|tell\s+me\s+about|c['’]est\s+qui)\b/i.test(
+    /\b(qui\s+est|who\s+is|do\s+you\s+know|connais[- ]tu|parle[- ]moi\s+de|tell\s+me\s+about|c['’]est\s+qui|filmograph\w*|r[ée]alisations?\s+de|films?\s+(de|d['’]|par|r[ée]alis\w*|produit\w*)|s[ée]ries?\s+(de|d['’]|par|r[ée]alis\w*|produit\w*)|r[ée]alis[ée]e?s?\s+par|produits?\s+par|r[ôo]les?\s+de|[œo]euvres?\s+de|movies?\s+(of|by)|works\s+of|directed\s+by|produced\s+by)\b/i.test(
       t,
     )
   ) {
@@ -257,25 +328,25 @@ export async function fetchOnlinePersonProfile(
   const terms = extractCinemaSearchTerms(userText);
   const primary = terms[0] || userText.trim();
   if (primary.length < 3) return null;
-
-  // Prefer FR Wikipedia for Cameroon personalities, then EN
-  const queries = [
-    `${primary} Cameroun`,
-    primary,
-    `${primary} Cameroon`,
-  ];
-
-  let best: OnlinePersonProfile | null = null;
-  for (const q of queries) {
-    best = (await wikiFindPerson('fr', q)) || (await wikiFindPerson('en', q));
-    if (best) break;
+  // Cast / film / series questions get the dossier, not a single portrait
+  if (!looksLikePersonName(primary, userText) && !/\b(qui\s+est|who\s+is|c['’]est\s+qui)\b/i.test(userText)) {
+    return null;
   }
 
+  // Prefer FR Wikipedia for Cameroon personalities, then EN — searched in parallel
+  const candidates = await Promise.all([
+    wikiFindPerson('fr', `${primary} Cameroun`),
+    wikiFindPerson('fr', primary),
+    wikiFindPerson('en', primary),
+    wikiFindPerson('en', `${primary} Cameroon`),
+  ]);
+  let best: OnlinePersonProfile | null = candidates.find(Boolean) ?? null;
+
   if (!best) {
-    // Minimal stub so we can still try catalog photos
+    // Minimal stub so we can still try catalog / web photos
     best = {
       id: `web-${slugify(primary)}`,
-      name: primary,
+      name: primary.replace(/(^|[\s-])(\p{Ll})/gu, (_m, sep: string, c: string) => sep + c.toUpperCase()),
       title: undefined,
       organization: 'Industrie cinéma camerounaise',
       photoUrl: null,
@@ -284,7 +355,12 @@ export async function fetchOnlinePersonProfile(
     };
   }
 
-  best = await enrichPhotoFromCatalogs(primary, best);
+  const wikiPerson = best.sourceLabel !== 'Web';
+  best = await enrichPhotoFromCatalogs(
+    primary,
+    best,
+    wikiPerson || looksLikePersonName(primary, userText),
+  );
   // Drop stub with neither photo nor useful title/extract
   if (!best.photoUrl && !best.title && !best.extract && best.sourceLabel === 'Web') {
     return null;

@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "www.africine.org" },
       { protocol: "https", hostname: "www.cinaf.tv" },
       { protocol: "https", hostname: "cinaf.tv" },
+      { protocol: "https", hostname: "**.mm.bing.net" },
       { protocol: "http", hostname: "127.0.0.1" },
       { protocol: "http", hostname: "localhost" },
     ],

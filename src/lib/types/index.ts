@@ -41,6 +41,8 @@ export interface ChatRequest {
   conversation_id?: string;
   mode?: ChatMode;
   locale?: ChatLocale;
+  /** Recent turns so the assistant can resolve follow-ups ("et ses séries ?"). */
+  messages?: { role: 'user' | 'assistant'; content: string }[];
 }
 
 /** PlaceUI */

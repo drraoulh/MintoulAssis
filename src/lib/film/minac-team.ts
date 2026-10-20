@@ -202,13 +202,36 @@ export function looksLikeMinacOrPersonQuery(text: string): boolean {
   return text.trim().split(/\s+/).length <= 8;
 }
 
+function editDistance(a: string, b: string): number {
+  if (Math.abs(a.length - b.length) > 2) return 3;
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let diag = prev[0];
+    prev[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = prev[j];
+      prev[j] = Math.min(prev[j] + 1, prev[j - 1] + 1, diag + (a[i - 1] === b[j - 1] ? 0 : 1));
+      diag = tmp;
+    }
+  }
+  return prev[b.length];
+}
+
+/** Exact for short tokens; tolerates typos like Donatius → Donatus, Tangem → Tanguem. */
+function tokenMatches(nameToken: string, queryTokens: string[], queryNorm: string): boolean {
+  if (queryNorm.includes(nameToken)) return true;
+  if (nameToken.length < 5) return false;
+  const maxDist = nameToken.length >= 8 ? 2 : 1;
+  return queryTokens.some((q) => q.length >= 4 && editDistance(nameToken, q) <= maxDist);
+}
+
 function scoreOfficial(person: MinacOfficial, queryNorm: string, tokens: string[]): number {
   const hay = `${person.name} ${normalizePersonName(person.displayName)} ${normalizePersonName(person.title)}`;
   let score = 0;
   if (hay.includes(queryNorm) || queryNorm.includes(person.name)) score += 20;
   // All significant tokens of the person name appear in query
   const nameTokens = person.name.split(' ').filter((t) => t.length >= 3);
-  const hitName = nameTokens.filter((t) => queryNorm.includes(t));
+  const hitName = nameTokens.filter((t) => tokenMatches(t, tokens, queryNorm));
   if (nameTokens.length && hitName.length === nameTokens.length) score += 18;
   else if (hitName.length >= 2) score += 12;
   else if (hitName.length === 1 && nameTokens.length <= 2) score += 6;
@@ -291,12 +314,12 @@ export function formatMinacForPrompt(matches: MinacOfficial[], locale: 'fr' | 'e
   if (!matches.length) return '';
   const lines = matches.map(
     (p, i) =>
-      `${i + 1}. ${p.displayName}\n   Titre / fonction: ${p.title}\n   Photo: ${p.photoUrl}\n   Source: ${p.sourceUrl}`,
+      `${i + 1}. ${p.displayName}\n   Titre / fonction: ${p.title}`,
   );
   if (locale === 'en') {
-    return `OFFICIAL MINAC ORGANIGRAM (https://minac.gov.cm/fr/team) — authoritative for titles & photos:\n${lines.join('\n')}`;
+    return `OFFICIAL MINAC ORGANIGRAM — authoritative for titles (the UI shows their photo):\n${lines.join('\n')}`;
   }
-  return `ORGANIGRAMME OFFICIEL MINAC (https://minac.gov.cm/fr/team) — source prioritaire pour titres & photos :\n${lines.join('\n')}`;
+  return `ORGANIGRAMME OFFICIEL MINAC — référence pour les titres (l’UI affiche leur photo) :\n${lines.join('\n')}`;
 }
 
 export function composeMinacAnswer(
@@ -309,36 +332,24 @@ export function composeMinacAnswer(
     if (locale === 'en') {
       return `## ${p.displayName}
 
-**${p.title}** — Ministry of Arts and Culture (MINAC), Cameroon.
-
-This profile comes from the official MINAC leadership organigram.
-
-**Source:** [MINAC — Equipe dirigeante](${TEAM_URL})`;
+**${p.title}** — Ministry of Arts and Culture (MINAC), Cameroon.`;
     }
     return `## ${p.displayName}
 
-**${p.title}** — Ministère des Arts et de la Culture (MINAC), Cameroun.
-
-Fiche issue de l’organigramme officiel de l’équipe dirigeante du MINAC.
-
-**Source :** [MINAC — Équipe dirigeante](${TEAM_URL})`;
+**${p.title}** — Ministère des Arts et de la Culture (MINAC), Cameroun.`;
   }
 
   const list = matches
     .map((p) => `- **${p.displayName}** — ${p.title}`)
     .join('\n');
   if (locale === 'en') {
-    return `## MINAC leadership (official organigram)
+    return `## MINAC leadership
 
-${list}
-
-**Source:** [MINAC — Equipe dirigeante](${TEAM_URL})`;
+${list}`;
   }
-  return `## Équipe dirigeante MINAC (organigramme officiel)
+  return `## Équipe dirigeante du MINAC
 
-${list}
-
-**Source :** [MINAC — Équipe dirigeante](${TEAM_URL})`;
+${list}`;
 }
 
 /** UI payload for chat person cards */

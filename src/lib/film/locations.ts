@@ -1,7 +1,9 @@
 import { practicalFor } from '@/lib/film/location-practical';
+import { OSM_FILM_LOCATIONS } from '@/lib/film/osm-locations';
 import type {
   AccessLevel,
   CostTier,
+  FilmLocationKind,
   FilmLocationMeta,
   FilmLook,
 } from '@/lib/film/types';
@@ -292,10 +294,29 @@ const FILM_LOCATION_SEEDS: FilmLocationSeed[] = [
   },
 ];
 
-export const FILM_LOCATIONS: FilmLocationMeta[] = FILM_LOCATION_SEEDS.map((seed) => ({
-  ...seed,
-  ...practicalFor(seed.slug),
-}));
+export const FILM_LOCATIONS: FilmLocationMeta[] = [
+  ...FILM_LOCATION_SEEDS.map((seed) => ({
+    ...seed,
+    kind: 'site' as const,
+    ...practicalFor(seed.slug),
+  })),
+  // Skip OSM villages that duplicate a curated site (e.g. Rhumsiki)
+  ...OSM_FILM_LOCATIONS.filter(
+    (o) => !FILM_LOCATION_SEEDS.some((s) => o.slug.startsWith(`${s.slug}-`)),
+  ),
+];
+
+export const FILM_LOCATION_KINDS: { id: FilmLocationKind; fr: string; en: string }[] = [
+  { id: 'site', fr: 'Sites & patrimoine', en: 'Sites & heritage' },
+  { id: 'hotel', fr: 'Hôtels', en: 'Hotels' },
+  { id: 'villa', fr: 'Villas', en: 'Villas' },
+  { id: 'house', fr: 'Maisons & résidences', en: 'Houses & residences' },
+  { id: 'village', fr: 'Villages', en: 'Villages' },
+];
+
+export function filmLocationKind(loc: FilmLocationMeta): FilmLocationKind {
+  return loc.kind ?? 'site';
+}
 
 export const FILM_LOOKS: { id: FilmLook; fr: string; en: string }[] = [
   { id: 'coast', fr: 'Côte', en: 'Coast' },
@@ -316,12 +337,14 @@ export function getFilmLocation(slugOrId: string): FilmLocationMeta | undefined 
 export function filterFilmLocations(opts: {
   regionId?: string;
   look?: FilmLook | 'all';
+  kind?: FilmLocationKind | 'all';
   q?: string;
   costTier?: CostTier | 'all';
   accessLevel?: AccessLevel | 'all';
 }): FilmLocationMeta[] {
   const q = opts.q?.trim().toLowerCase();
   return FILM_LOCATIONS.filter((loc) => {
+    if (opts.kind && opts.kind !== 'all' && filmLocationKind(loc) !== opts.kind) return false;
     if (opts.regionId && opts.regionId !== 'all' && loc.regionId !== opts.regionId) {
       return false;
     }

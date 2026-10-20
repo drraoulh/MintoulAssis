@@ -14,7 +14,6 @@ import {
   Volume2,
 } from 'lucide-react';
 
-import { CollapsibleSources } from '@/components/assistant/CollapsibleSources';
 import { MarkdownContent } from '@/components/assistant/MarkdownContent';
 import { AssistantMark } from '@/components/brand/AssistantMark';
 import { PersonProfileCards } from '@/components/film/PersonProfileCard';
@@ -86,13 +85,15 @@ export function FilmAssistantChat({
   const [conversationId, setConversationId] = useState<string>();
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
   const [audioPlaying, setAudioPlaying] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const started = useRef(false);
   const ttsAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => audioPlayback.subscribe(setAudioPlaying), []);
+  // Scroll only the message list — scrollIntoView would also scroll the page and move the input bar
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = scrollRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   }, [messages, sending]);
 
   const stopAllAudio = useCallback(() => {
@@ -108,6 +109,10 @@ export function FilmAssistantChat({
     if (!trimmed || sending) return;
     stopAllAudio();
     setSending(true);
+    const history = messages
+      .filter((m) => !m.isError && m.content.trim())
+      .slice(-8)
+      .map((m) => ({ role: m.role, content: m.content.slice(0, 2000) }));
     setMessages((m) => [
       ...m,
       { id: `${Date.now()}-u`, role: 'user', content: trimmed },
@@ -118,6 +123,7 @@ export function FilmAssistantChat({
         message: trimmed,
         conversation_id: conversationId,
         locale,
+        messages: [...history, { role: 'user', content: trimmed }],
       });
       setConversationId(res.conversation_id);
       setMessages((m) => [
@@ -246,7 +252,10 @@ export function FilmAssistantChat({
         </header>
       )}
 
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6">
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6"
+      >
         {messages.length === 0 && !sending ? (
           <div className="mx-auto max-w-5xl">
             <div className="text-center">
@@ -322,9 +331,6 @@ export function FilmAssistantChat({
                     <PersonProfileCards people={msg.people} />
                   ) : null}
                   <MarkdownContent content={msg.content} variant="onDark" />
-                  {msg.sources?.length ? (
-                    <CollapsibleSources sources={msg.sources} />
-                  ) : null}
                 </div>
               ) : (
                 <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
@@ -338,7 +344,6 @@ export function FilmAssistantChat({
             <ThinkingDots />
           </div>
         ) : null}
-        <div ref={bottomRef} />
       </div>
 
       <form
@@ -347,12 +352,11 @@ export function FilmAssistantChat({
       >
         <div className="mx-auto flex max-w-5xl items-end gap-2">
           <label className="relative min-w-0 flex-1">
-            <span className="sr-only">{t('film.assistant.placeholder')}</span>
+            <span className="sr-only">{t('film.assistant.inputLabel')}</span>
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               rows={1}
-              placeholder={t('film.assistant.placeholder')}
               className="max-h-32 min-h-[2.75rem] w-full resize-none rounded-2xl border border-white/15 bg-black/50 px-4 py-3 text-sm text-[#F8F5ED] outline-none placeholder:text-white/35 focus:border-[#FCD116]/50"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {

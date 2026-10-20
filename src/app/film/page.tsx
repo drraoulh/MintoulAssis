@@ -4,16 +4,16 @@ import { motion } from 'framer-motion';
 import {
   ArrowRight,
   CalendarDays,
+  CarFront,
   CheckSquare,
   ClipboardList,
   Columns2,
   GraduationCap,
   MapPin,
-  Sparkles,
   Theater,
-  UserCircle2,
   Users,
   Wrench,
+  type LucideIcon,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -33,56 +33,71 @@ import { useLocale } from '@/lib/i18n';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-const SHARED_HUB = [
-  {
-    href: '/film/assistant',
-    icon: Sparkles,
-    titleKey: 'film.hub.assistant',
-    bodyKey: 'film.hub.assistantBody',
-  },
+type HubItem = {
+  href: string;
+  icon: LucideIcon;
+  titleKey: string;
+  bodyKey: string;
+  image?: string;
+};
+
+const SHARED_HUB: HubItem[] = [
   {
     href: '/film/locations',
     icon: MapPin,
     titleKey: 'film.hub.locations',
     bodyKey: 'film.hub.locationsBody',
+    image: '/film/hub/locations.jpg',
   },
   {
     href: '/film/halls',
     icon: Theater,
     titleKey: 'film.hub.halls',
     bodyKey: 'film.hub.hallsBody',
+    image: '/film/hub/halls.png',
   },
   {
     href: '/film/events',
     icon: CalendarDays,
     titleKey: 'film.hub.events',
     bodyKey: 'film.hub.eventsBody',
+    image: '/film/hub/events.jpg',
   },
   {
     href: '/film/procedures',
     icon: ClipboardList,
     titleKey: 'film.hub.procedures',
     bodyKey: 'film.hub.proceduresBody',
+    image: '/film/hub/procedures.jpg',
   },
   {
     href: '/film/directory',
     icon: Users,
     titleKey: 'film.hub.directory',
     bodyKey: 'film.hub.directoryBody',
+    image: '/film/hub/directory.jpg',
   },
   {
     href: '/film/equipment',
     icon: Wrench,
     titleKey: 'film.hub.equipment',
     bodyKey: 'film.hub.equipmentBody',
+    image: '/film/hub/equipment.jpg',
+  },
+  {
+    href: '/film/rentals',
+    icon: CarFront,
+    titleKey: 'film.hub.rentals',
+    bodyKey: 'film.hub.rentalsBody',
   },
   {
     href: '/film/planning',
     icon: CheckSquare,
     titleKey: 'film.hub.planning',
     bodyKey: 'film.hub.planningBody',
+    image: '/film/hub/planning.jpg',
   },
-] as const;
+];
 
 export default function FilmHomePage() {
   const { t, locale } = useLocale();
@@ -115,31 +130,22 @@ export default function FilmHomePage() {
 
   const isIntl = audience === 'international';
   const featured = FILM_LOCATIONS.filter((l) => l.alsoTourism).slice(0, 4);
-  const hub = [
+  const hub: HubItem[] = [
     ...SHARED_HUB,
-    ...(isIntl
-      ? [
-          {
-            href: '/film/locations/compare',
-            icon: Columns2,
-            titleKey: 'film.hub.compare',
-            bodyKey: 'film.hub.compareBody',
-          } as const,
-        ]
-      : [
-          {
-            href: '/film/resources',
-            icon: GraduationCap,
-            titleKey: 'film.hub.resources',
-            bodyKey: 'film.hub.resourcesBody',
-          } as const,
-          {
-            href: '/film/profile',
-            icon: UserCircle2,
-            titleKey: 'film.hub.profile',
-            bodyKey: 'film.hub.profileBody',
-          } as const,
-        ]),
+    isIntl
+      ? {
+          href: '/film/locations/compare',
+          icon: Columns2,
+          titleKey: 'film.hub.compare',
+          bodyKey: 'film.hub.compareBody',
+        }
+      : {
+          href: '/film/resources',
+          icon: GraduationCap,
+          titleKey: 'film.hub.resources',
+          bodyKey: 'film.hub.resourcesBody',
+          image: '/film/hub/resources.jpg',
+        },
   ];
 
   return (
@@ -168,13 +174,6 @@ export default function FilmHomePage() {
               {isIntl ? t('film.home.intlSub') : t('film.home.localSub')}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link
-                href="/film/assistant"
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#CE1126] px-6 py-3 text-sm font-bold text-white hover:bg-[#b50e21]"
-              >
-                {t('film.home.ctaAssistant')}
-                <Sparkles className="h-4 w-4" aria-hidden />
-              </Link>
               <Link
                 href="/film/locations"
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-bold text-[#F8F5ED] hover:border-[#FCD116] hover:text-[#FCD116]"
@@ -251,18 +250,32 @@ export default function FilmHomePage() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="group flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5 transition hover:border-[#FCD116]/40 hover:bg-white/[0.06]"
+                className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition hover:border-[#FCD116]/40 hover:bg-white/[0.06]"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#CE1126]/25 text-[#FCD116]">
-                  <Icon className="h-5 w-5" aria-hidden />
-                </span>
-                <span className="font-display text-lg font-semibold text-[#F8F5ED]">
-                  {t(item.titleKey)}
-                </span>
-                <span className="text-sm text-white/55">{t(item.bodyKey)}</span>
-                <span className="mt-auto text-xs font-semibold uppercase tracking-wider text-[#FCD116] opacity-70 group-hover:opacity-100">
-                  →
-                </span>
+                {item.image ? (
+                  <div className="relative aspect-[16/9] overflow-hidden bg-white/5">
+                    <Image
+                      src={item.image}
+                      alt=""
+                      fill
+                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      className="object-cover transition duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                  </div>
+                ) : null}
+                <div className="flex flex-1 flex-col gap-3 px-5 py-5">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#CE1126]/25 text-[#FCD116]">
+                    <Icon className="h-5 w-5" aria-hidden />
+                  </span>
+                  <span className="font-display text-lg font-semibold text-[#F8F5ED]">
+                    {t(item.titleKey)}
+                  </span>
+                  <span className="text-sm text-white/55">{t(item.bodyKey)}</span>
+                  <span className="mt-auto text-xs font-semibold uppercase tracking-wider text-[#FCD116] opacity-70 group-hover:opacity-100">
+                    →
+                  </span>
+                </div>
               </Link>
             );
           })}

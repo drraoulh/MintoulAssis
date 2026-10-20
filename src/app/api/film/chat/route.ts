@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { google } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { generateText } from 'ai';
 import { NextResponse } from 'next/server';
 
@@ -7,6 +7,13 @@ import {
   buildFilmAssistantContext,
   buildFilmSystemPrompt,
 } from '@/lib/film/assistant-context';
+import {
+  composeDossierAnswer,
+  fetchEntityDossier,
+  shouldFetchDossier,
+  type EntityDossier,
+} from '@/lib/film/filmography';
+import { createTtlCache, withTimeout } from '@/lib/film/ttl-cache';
 import {
   composeMinacAnswer,
   formatMinacForPrompt,
@@ -17,8 +24,9 @@ import {
 import {
   fetchOnlinePersonProfile,
   onlineProfileToPersonUI,
+  type OnlinePersonProfile,
 } from '@/lib/film/person-photo';
-import { researchCameroonCinema } from '@/lib/film/research-cinema';
+import { researchCameroonCinema, type CinemaResearch } from '@/lib/film/research-cinema';
 import { prepareAiMarkdown } from '@/lib/markdown/sanitize-ai-markdown';
 import type { PersonUI } from '@/lib/types';
 
@@ -26,6 +34,29 @@ export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 const CHAT_MAX_OUTPUT_TOKENS = 4_500;
+const RESEARCH_DEADLINE_MS = 6_000;
+/** Free web search is often blocked / captcha'd — don't let it hold the answer back. */
+const WEB_SEARCH_DEADLINE_MS = 4_000;
+const SIX_HOURS = 6 * 60 * 60 * 1000;
+
+type MinacLookup = Awaited<ReturnType<typeof lookupMinacOfficials>>;
+
+const minacCache = createTtlCache<MinacLookup>(SIX_HOURS);
+const researchCache = createTtlCache<CinemaResearch>(SIX_HOURS);
+const photoCache = createTtlCache<OnlinePersonProfile | null>(SIX_HOURS);
+const dossierCache = createTtlCache<EntityDossier | null>(SIX_HOURS);
+
+function emptyResearch(query: string): CinemaResearch {
+  return { hits: [], provider: 'none', query, block: '', citations: [] };
+}
+
+/** Fastest first; each model has its own free-tier quota. `minimal` is only accepted by some models. */
+const GEMINI_MODELS: { model: string; thinking: 'minimal' | 'low' }[] = [
+  { model: 'gemini-3.5-flash', thinking: 'minimal' },
+  { model: 'gemini-3.5-flash-lite', thinking: 'minimal' },
+  { model: 'gemini-3.8-flash', thinking: 'low' },
+  { model: 'gemini-flash-latest', thinking: 'low' },
+];
 
 type Incoming = {
   message?: string;
@@ -45,6 +76,69 @@ function lastUserMessage(body: Incoming): string {
     }
   }
   return '';
+}
+
+type ChatTurn = { role: 'user' | 'assistant'; content: string };
+
+const HISTORY_TURNS = 8;
+const HISTORY_CHARS = 2_000;
+
+/** Prior turns (excluding the current user message), oldest first. */
+function priorTurns(body: Incoming, lastUser: string): ChatTurn[] {
+  const msgs = (body.messages || [])
+    .filter(
+      (m): m is ChatTurn =>
+        (m?.role === 'user' || m?.role === 'assistant') &&
+        typeof m.content === 'string' &&
+        Boolean(m.content.trim()),
+    )
+    .map((m) => ({ role: m.role, content: m.content.trim().slice(0, HISTORY_CHARS) }));
+  const last = msgs[msgs.length - 1];
+  if (last?.role === 'user' && last.content === lastUser.slice(0, HISTORY_CHARS)) msgs.pop();
+  return msgs.slice(-HISTORY_TURNS);
+}
+
+const FOLLOW_UP_RE =
+  /\b(il|elle|lui|ils|elles|ses|son|sa|leurs?|cette|cet|ce\s+film|cette\s+s[ée]rie|celui|celle|he|she|him|his|her|they|their|it|its|this|that|those)\b/i;
+
+/** Follow-ups like "et ses séries ?" inherit the entity from the previous question. */
+function researchQuery(lastUser: string, history: ChatTurn[]): string {
+  const prevUser = [...history].reverse().find((t) => t.role === 'user')?.content;
+  if (!prevUser) return lastUser;
+  const words = lastUser.split(/\s+/).length;
+  const hasName = /\b[A-ZÀÂÄÉÈÊËÏÎÔÙÛÜÇ][\p{L}'’-]+\s+[A-ZÀÂÄÉÈÊËÏÎÔÙÛÜÇ][\p{L}'’-]+/u.test(lastUser);
+  if (hasName || words > 12 || !FOLLOW_UP_RE.test(lastUser)) return lastUser;
+  return `${prevUser.slice(0, 300)} — ${lastUser}`;
+}
+
+const EN_WORDS =
+  /\b(the|who|what|which|when|where|how|is|are|was|were|did|does|has|have|his|her|their|movies?|films?\s+(by|of)|series\s+(by|of)|directed|produced|played|tell|about|list|show|me|please|and|with|from)\b/gi;
+const FR_WORDS =
+  /\b(le|la|les|des|du|de|qui|quel|quels|quelle|quelles|est|sont|a-t-il|a-t-elle|ses|son|sa|leurs?|réalis\w*|realis\w*|joué|joue|dans|avec|pour|parle|moi|liste|donne|et|une?|ce|cette|merci)\b/gi;
+
+/** Answer in the language the user wrote in; fall back to the UI locale. */
+function detectLanguage(text: string, fallback: 'fr' | 'en'): 'fr' | 'en' {
+  const en = text.match(EN_WORDS)?.length ?? 0;
+  const fr = (text.match(FR_WORDS)?.length ?? 0) + (/[éèêàùçôî]/i.test(text) ? 1 : 0);
+  if (en === fr) return fallback;
+  return en > fr ? 'en' : 'fr';
+}
+
+/** Drop source / photo attribution lines and turn links into plain text. */
+function stripSourceMentions(markdown: string): string {
+  return markdown
+    .split('\n')
+    .filter(
+      (line) =>
+        !/^\s*[*_>\-\s]*(sources?|photo(\s+officielle)?|source\s*\/\s*photo|r[ée]f[ée]rences?|references?)\b[^|]*[:：]/i.test(line) &&
+        !/^\s*[*_\s]*\(?\s*photo\s*:/i.test(line),
+    )
+    .join('\n')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '$1')
+    .replace(/\s*\((?:photo\s*:\s*)?(?:https?:\/\/)?(?:www\.)?[\w.-]+\.(?:org|com|cm|tv|net)(?:\/[^\s)]*)?\)/gi, '')
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 function looksLikeGreeting(text: string): boolean {
@@ -113,7 +207,6 @@ function composeFromResearch(
       related.length ? `### Related Cameroon cinema` : '',
       ...related,
       related.length ? '' : '',
-      `**Source:** [${cleanTitle}](${primary.url})`,
       kbContext
         ? `\n### SmartMboa notes\n${kbContext.slice(0, 700)}`
         : '',
@@ -131,7 +224,6 @@ function composeFromResearch(
     related.length ? `### Liens cinéma camerounais` : '',
     ...related,
     related.length ? '' : '',
-    `**Source :** [${cleanTitle}](${primary.url})`,
     kbContext
       ? `\n### Notes SmartMboa\n${kbContext.slice(0, 700)}`
       : '',
@@ -176,16 +268,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ detail: 'Invalid JSON' }, { status: 400 });
   }
 
-  const locale = body.locale === 'en' ? 'en' : 'fr';
+  const uiLocale = body.locale === 'en' ? 'en' : 'fr';
   const conversationId = body.conversation_id?.trim() || randomUUID();
   const lastUser = lastUserMessage(body);
 
   if (!lastUser) {
     return NextResponse.json(
-      { detail: locale === 'en' ? 'Empty message.' : 'Message vide.' },
+      { detail: uiLocale === 'en' ? 'Empty message.' : 'Message vide.' },
       { status: 400 },
     );
   }
+
+  const locale = detectLanguage(lastUser, uiLocale);
 
   if (looksLikeGreeting(lastUser)) {
     const message = greeting(locale);
@@ -200,29 +294,30 @@ export async function POST(req: Request) {
     });
   }
 
-  // 1) Official MINAC organigram BEFORE general web research
-  const minac =
-    looksLikeMinacOrPersonQuery(lastUser)
-      ? await lookupMinacOfficials(lastUser)
-      : { matches: [], people: [], sourceUrl: 'https://minac.gov.cm/fr/team' };
+  const history = priorTurns(body, lastUser);
+  const query = researchQuery(lastUser, history);
+
+  // MINAC organigram, KB, filmography dossier, web research and portrait all run in
+  // parallel under a hard deadline; MINAC matches take precedence once resolved.
+  const noMinac: MinacLookup = { matches: [], people: [], sourceUrl: 'https://minac.gov.cm/fr/team' };
+  const [minacRaw, researchRaw, personRaw, dossierRaw] = await Promise.all([
+    looksLikeMinacOrPersonQuery(query)
+      ? withTimeout(minacCache(query, () => lookupMinacOfficials(query)), RESEARCH_DEADLINE_MS, noMinac)
+      : Promise.resolve(noMinac),
+    withTimeout(researchCache(query, () => researchCameroonCinema(query)), WEB_SEARCH_DEADLINE_MS, emptyResearch(query)),
+    withTimeout(photoCache(query, () => fetchOnlinePersonProfile(query)), RESEARCH_DEADLINE_MS, null),
+    shouldFetchDossier(query)
+      ? withTimeout(dossierCache(`${locale}:${query}`, () => fetchEntityDossier(query, locale)), RESEARCH_DEADLINE_MS, null)
+      : Promise.resolve(null),
+  ]);
+  const minac = minacRaw;
   const minacPeople = minacToPersonCards(minac.matches);
   const minacBlock = formatMinacForPrompt(minac.matches, locale);
-
-  // 2) KB + web + online portrait (when not on MINAC organigram)
   const runWeb = minac.matches.length === 0;
-  const [kbContext, research, onlinePerson] = await Promise.all([
-    Promise.resolve(buildFilmAssistantContext(lastUser, locale)),
-    runWeb
-      ? researchCameroonCinema(lastUser)
-      : Promise.resolve({
-          hits: [] as { title: string; url: string; snippet: string; provider: 'tavily' | 'brave' }[],
-          provider: 'none' as const,
-          query: lastUser,
-          block: '',
-          citations: [] as { title: string; url: string; type: 'WEB' }[],
-        }),
-    runWeb ? fetchOnlinePersonProfile(lastUser) : Promise.resolve(null),
-  ]);
+  const kbContext = buildFilmAssistantContext(query, locale);
+  const research = runWeb ? researchRaw : emptyResearch(query);
+  const onlinePerson = runWeb ? personRaw : null;
+  const dossier = runWeb ? dossierRaw : null;
 
   const onlinePeople: PersonUI[] = onlinePerson
     ? [onlineProfileToPersonUI(onlinePerson)]
@@ -231,12 +326,19 @@ export async function POST(req: Request) {
 
   const personPhotoBlock = onlinePerson
     ? locale === 'en'
-      ? `PERSON PHOTO / PROFILE (show this portrait to the user):\n- Name: ${onlinePerson.name}\n- Role: ${onlinePerson.title || '—'}\n- Photo: ${onlinePerson.photoUrl || '(none found)'}\n- Page: ${onlinePerson.sourceUrl || '—'}`
-      : `PHOTO / PROFIL PERSONNE (affiche ce portrait à l’utilisateur) :\n- Nom : ${onlinePerson.name}\n- Rôle : ${onlinePerson.title || '—'}\n- Photo : ${onlinePerson.photoUrl || '(aucune trouvée)'}\n- Page : ${onlinePerson.sourceUrl || '—'}`
+      ? `PERSON SHOWN IN THE UI (portrait already displayed — don't mention it):\n- Name: ${onlinePerson.name}\n- Role: ${onlinePerson.title || '—'}`
+      : `PERSONNE AFFICHÉE DANS L’UI (portrait déjà affiché — ne le mentionne pas) :\n- Nom : ${onlinePerson.name}\n- Rôle : ${onlinePerson.title || '—'}`
+    : '';
+
+  const dossierBlock = dossier?.block
+    ? locale === 'en'
+      ? `DOSSIER FILMOGRAPHIE — "${dossier.query}" (full Wikipedia pages + Wikidata credits; authoritative for titles, years, roles, cast):\n${dossier.block}`
+      : `DOSSIER FILMOGRAPHIE — « ${dossier.query} » (pages Wikipédia complètes + crédits Wikidata ; référence pour titres, années, rôles, casting) :\n${dossier.block}`
     : '';
 
   const contextWithWeb = [
     minacBlock,
+    dossierBlock,
     personPhotoBlock,
     kbContext,
     research.block
@@ -255,22 +357,30 @@ export async function POST(req: Request) {
   // Authoritative organigram answer when we have a clear MINAC match and no LLM key
   const minacAnswer = composeMinacAnswer(locale, minac.matches);
 
+  const fallback = (): { message: string; provider: string } => {
+    if (minacAnswer) return { message: minacAnswer, provider: 'minac-organigram' };
+    if (dossier) return { message: composeDossierAnswer(dossier, locale), provider: 'filmography' };
+    return {
+      message: researchFallback(locale, research, kbContext),
+      provider: research.hits.length ? 'research-fallback' : 'kb',
+    };
+  };
+
+  const chatMessages: ChatTurn[] = [...history, { role: 'user', content: lastUser }];
+
   const openRouterKey = process.env.OPENROUTER_API_KEY?.trim();
   const geminiKey = process.env.GEMINI_API_KEY?.trim();
 
   if (minac.matches.length && !openRouterKey && !geminiKey) {
     message = minacAnswer;
     provider = 'minac-organigram';
-  } else if (openRouterKey) {
+  } else if (openRouterKey && !geminiKey) {
     const callOpenRouter = async (maxTokens: number) => {
       const payload: Record<string, unknown> = {
         model: modelId,
-        temperature: 0.35,
+        temperature: 0.2,
         max_tokens: maxTokens,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: lastUser },
-        ],
+        messages: [{ role: 'system', content: system }, ...chatMessages],
       };
       const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -313,7 +423,7 @@ export async function POST(req: Request) {
         message: rawMsg,
         researchHits: research.hits.length,
       });
-      if (isCreditOrTokenError(res.status, rawMsg) && !research.block) {
+      if (isCreditOrTokenError(res.status, rawMsg) && !research.block && !dossier) {
         return NextResponse.json(
           {
             detail:
@@ -324,46 +434,54 @@ export async function POST(req: Request) {
           { status: 402 },
         );
       }
-      message =
-        minacAnswer || researchFallback(locale, research, kbContext);
-      provider = minacAnswer ? 'minac-organigram' : 'research-fallback';
+      ({ message, provider } = fallback());
     } else {
       message = data?.choices?.[0]?.message?.content?.trim() || '';
-      if (!message) {
-        message =
-          minacAnswer || researchFallback(locale, research, kbContext);
-        provider = minacAnswer ? 'minac-organigram' : 'research-fallback';
-      } else {
-        provider = 'openrouter';
-      }
+      if (!message) ({ message, provider } = fallback());
+      else provider = 'openrouter';
     }
   } else if (geminiKey) {
-    try {
-      const result = await generateText({
-        model: google('gemini-2.0-flash'),
-        system,
-        prompt: lastUser,
-        maxOutputTokens: CHAT_MAX_OUTPUT_TOKENS,
-      });
-      message = result.text;
-      provider = 'gemini';
-    } catch (err) {
-      console.error('[film-chat] Gemini error', err);
-      message =
-        minacAnswer || researchFallback(locale, research, kbContext);
-      provider = minacAnswer ? 'minac-organigram' : 'research-fallback';
+    const google = createGoogleGenerativeAI({ apiKey: geminiKey });
+    // Free-tier quotas are per model: fall through to the next one on 429 / retired models
+    const preferred = process.env.GEMINI_CHAT_MODEL?.trim();
+    const models = preferred
+      ? [
+          GEMINI_MODELS.find((m) => m.model === preferred) ?? { model: preferred, thinking: 'low' as const },
+          ...GEMINI_MODELS.filter((m) => m.model !== preferred),
+        ]
+      : GEMINI_MODELS;
+    const grounded = process.env.GEMINI_SEARCH_GROUNDING?.trim() === '1';
+    for (const { model: modelName, thinking } of models) {
+      try {
+        const result = await generateText({
+          model: google(modelName),
+          system,
+          messages: chatMessages,
+          temperature: 0.2,
+          maxOutputTokens: CHAT_MAX_OUTPUT_TOKENS,
+          maxRetries: 0,
+          abortSignal: AbortSignal.timeout(15_000),
+          providerOptions: { google: { thinkingConfig: { thinkingLevel: thinking } } },
+          ...(grounded ? { tools: { google_search: google.tools.googleSearch({}) } } : {}),
+        });
+        if (result.text.trim()) {
+          message = result.text;
+          provider = `gemini:${modelName}`;
+          break;
+        }
+      } catch (err) {
+        console.warn('[film-chat] Gemini error', {
+          model: modelName,
+          error: sanitizeProviderError(err instanceof Error ? err.message : String(err)),
+        });
+      }
     }
+    if (!message.trim()) ({ message, provider } = fallback());
   } else {
-    message =
-      minacAnswer || researchFallback(locale, research, kbContext);
-    provider = minacAnswer
-      ? 'minac-organigram'
-      : research.hits.length
-        ? 'wikipedia'
-        : 'kb';
+    ({ message, provider } = fallback());
   }
 
-  const prepared = prepareAiMarkdown(message);
+  const prepared = prepareAiMarkdown(stripSourceMentions(message));
   message = prepared.markdown;
 
   const ui_sources = (() => {
@@ -378,6 +496,7 @@ export async function POST(req: Request) {
       seen.add(minac.sourceUrl);
     }
     for (const s of [
+      ...(dossier?.citations || []),
       ...research.citations,
       ...prepared.sources.map((x) => ({ ...x, type: 'WEB' as const })),
     ]) {
@@ -413,6 +532,8 @@ export async function POST(req: Request) {
     photo: Boolean(peopleCards[0]?.photoUrl),
     research: research.provider,
     hits: research.hits.length,
+    dossier: dossier?.wiki.map((w) => `${w.lang}:${w.title}`).join(', ') || null,
+    history: history.length,
     query: (research.query || lastUser).slice(0, 100),
   });
 

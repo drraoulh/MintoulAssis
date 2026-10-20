@@ -20,36 +20,66 @@ const STOP = new Set(
     'qui', 'est', 'ce', 'que', 'quoi', 'des', 'les', 'une', 'un', 'du', 'de', 'la', 'le',
     'pour', 'avec', 'dans', 'sur', 'par', 'and', 'or', 'of', 'in', 'to', 'for', 'on',
     'please', 'peux', 'tu', 'me', 'parler', 'connais', 'savoir', 'infos', 'information',
+    // Question / intent words that must never end up in an entity search
+    'quel', 'quels', 'quelle', 'quelles', 'sont', 'ont', 'été', 'ete', 'liste', 'lister',
+    'donne', 'donner', 'moi', 'toutes', 'tous', 'tout', 'ses', 'son', 'sa', 'leur', 'leurs',
+    'combien', 'quand', 'comment', 'pourquoi', 'année', 'annee', 'années', 'annees', 'date',
+    'dates', 'filmographie', 'filmography', 'réalisation', 'realisation', 'réalisations',
+    'realisations', 'œuvre', 'oeuvre', 'œuvres', 'oeuvres', 'productions', 'production',
+    'films', 'film', 'séries', 'series', 'série', 'serie', 'rôles', 'roles', 'rôle', 'role',
+    'joué', 'joue', 'jouer', 'réalisé', 'realise', 'produit', 'produits', 'créé', 'cree',
+    'réaliser', 'realiser', 'réalisés', 'realises', 'réalisées', 'realisees', 'produire',
+    'fait', 'faits', 'faites', 'travaux', 'projets', 'projet', 'récents', 'recents',
+    'acteurs', 'actrices', 'casting', 'distribution', 'biographie', 'bio', 'carrière',
+    'carriere', 'parle', 'dis', 'raconte', 'peut', 'aussi', 'plus', 'récentes', 'recentes',
+    'which', 'list', 'movies', 'movie', 'works', 'filmmaker', 'made', 'directed', 'produced',
+    'has', 'have', 'his', 'her', 'their', 'all', 'with', 'when', 'how', 'many', 'give',
+    'show', 'year', 'years', 'cast', 'played', 'starred', 'biography', 'career', 'are',
+    'was', 'were', 'did', 'does', 'cameroun', 'cameroon', 'camerounais', 'camerounaise',
+    'cameroonian', 'cinéma', 'cinema', 'acteur', 'actrice', 'actor', 'actress',
+    'réalisateur', 'realisateur', 'réalisatrice', 'realisatrice', 'producteur',
+    'productrice', 'producer', 'director',
   ].map((s) => s.toLowerCase()),
 );
 
+function trimStopwords(phrase: string): string {
+  const words = phrase.split(/\s+/);
+  while (words.length && STOP.has(words[0].toLowerCase())) words.shift();
+  while (words.length && STOP.has(words[words.length - 1].toLowerCase())) words.pop();
+  return words.join(' ');
+}
+
 export function extractCinemaSearchTerms(userText: string): string[] {
   const text = userText.replace(/\s+/g, ' ').trim();
-  const terms: string[] = [];
+  const named: string[] = [];
 
   // Quoted names
   for (const m of text.matchAll(/[«"“]([^»"”]{2,80})[»"”]/g)) {
-    terms.push(m[1].trim());
+    named.push(m[1].trim());
   }
 
   // Capitalized multi-word names (Ebenezer Kepombia, Jean-Pierre Bekolo)
+  const capitalized: string[] = [];
   for (const m of text.matchAll(
     /\b([A-ZÀÂÄÉÈÊËÏÎÔÙÛÜÇ][\p{L}'’-]+(?:\s+[A-ZÀÂÄÉÈÊËÏÎÔÙÛÜÇ][\p{L}'’-]+){1,4})\b/gu,
   )) {
-    terms.push(m[1].trim());
+    const t = trimStopwords(m[1].trim());
+    if (t.split(/\s+/).length >= 2) capitalized.push(t);
   }
+  named.push(...capitalized.sort((a, b) => b.length - a.length));
 
-  // Remaining content words (filter stopwords)
+  // Remaining content words (filter stopwords) — handles lowercase names
   const words = text
     .split(/[^\p{L}\p{N}'’-]+/u)
     .map((w) => w.trim())
     .filter((w) => w.length >= 3 && !STOP.has(w.toLowerCase()));
+  const terms = [...named];
   if (words.length) terms.push(words.join(' '));
 
-  // Dedupe, prefer longer / named terms first
+  // Dedupe; named entities first, then the content-word fallback
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const t of [...terms].sort((a, b) => b.length - a.length)) {
+  for (const t of terms) {
     const k = t.toLowerCase();
     if (seen.has(k)) continue;
     seen.add(k);

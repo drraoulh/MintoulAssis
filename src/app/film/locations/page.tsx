@@ -3,19 +3,25 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { Columns2, MapPin, Search } from 'lucide-react';
+import { Columns2, LayoutGrid, Search } from 'lucide-react';
 
+import { KIND_ICONS } from '@/components/film/location-kind-icons';
 import { TourismMap } from '@/components/maps/TourismMap';
 import { getFilmAudience } from '@/lib/film/audience';
 import {
+  FILM_LOCATION_KINDS,
   FILM_LOOKS,
   filterFilmLocations,
   filmLocationCover,
+  filmLocationKind,
 } from '@/lib/film/locations';
-import type { AccessLevel, CostTier, FilmLook } from '@/lib/film/types';
+import { OSM_ATTRIBUTION } from '@/lib/film/osm-locations';
+import type { AccessLevel, CostTier, FilmLocationKind, FilmLook } from '@/lib/film/types';
 import { REGIONS } from '@/lib/regions';
 import { useLocale } from '@/lib/i18n';
 import type { MapMarker } from '@/lib/types';
+
+const PAGE_SIZE = 24;
 
 export default function FilmLocationsPage() {
   const { t, locale } = useLocale();
@@ -23,8 +29,10 @@ export default function FilmLocationsPage() {
   const [look, setLook] = useState<FilmLook | 'all'>('all');
   const [costTier, setCostTier] = useState<CostTier | 'all'>('all');
   const [accessLevel, setAccessLevel] = useState<AccessLevel | 'all'>('all');
+  const [kind, setKind] = useState<FilmLocationKind | 'all'>('all');
   const [q, setQ] = useState('');
   const [showLocalFilters, setShowLocalFilters] = useState(false);
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   useEffect(() => {
     setShowLocalFilters(getFilmAudience() === 'local');
@@ -35,12 +43,15 @@ export default function FilmLocationsPage() {
       filterFilmLocations({
         regionId,
         look,
+        kind,
         q,
         costTier: showLocalFilters ? costTier : 'all',
         accessLevel: showLocalFilters ? accessLevel : 'all',
       }),
-    [regionId, look, q, costTier, accessLevel, showLocalFilters],
+    [regionId, look, kind, q, costTier, accessLevel, showLocalFilters],
   );
+
+  useEffect(() => setVisible(PAGE_SIZE), [regionId, look, kind, q, costTier, accessLevel]);
 
   const markers: MapMarker[] = useMemo(
     () =>
@@ -139,7 +150,31 @@ export default function FilmLocationsPage() {
         ) : null}
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label={t('film.locations.filterKind')}>
+        {([{ id: 'all', fr: 'Tous les types', en: 'All types' }, ...FILM_LOCATION_KINDS] as const).map(
+          (k) => {
+            const Icon = k.id === 'all' ? LayoutGrid : KIND_ICONS[k.id];
+            const active = kind === k.id;
+            return (
+              <button
+                key={k.id}
+                type="button"
+                onClick={() => setKind(k.id)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold transition ${
+                  active
+                    ? 'border-[#FCD116] bg-[#FCD116] text-black'
+                    : 'border-white/15 text-white/70 hover:border-[#FCD116]/50'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" aria-hidden />
+                {locale === 'fr' ? k.fr : k.en}
+              </button>
+            );
+          },
+        )}
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => setLook('all')}
@@ -174,10 +209,13 @@ export default function FilmLocationsPage() {
       </p>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {locations.map((loc) => {
+        {locations.slice(0, visible).map((loc) => {
           const cover = filmLocationCover(loc);
           const name = locale === 'fr' ? loc.nameFr : loc.nameEn;
           const city = locale === 'fr' ? loc.cityFr : loc.cityEn;
+          const locKind = filmLocationKind(loc);
+          const KindIcon = KIND_ICONS[locKind];
+          const kindMeta = FILM_LOCATION_KINDS.find((k) => k.id === locKind);
           return (
             <Link
               key={loc.slug}
@@ -194,18 +232,27 @@ export default function FilmLocationsPage() {
                     sizes="(max-width:768px) 100vw, 33vw"
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-white/30">
-                    <MapPin className="h-8 w-8" />
+                  <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#007A5E]/35 via-[#0f0f0f] to-[#CE1126]/25 text-[#FCD116]/70">
+                    <KindIcon className="h-12 w-12" aria-hidden />
                   </div>
                 )}
+                <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#FCD116] backdrop-blur">
+                  <KindIcon className="h-3 w-3" aria-hidden />
+                  {locale === 'fr' ? kindMeta?.fr : kindMeta?.en}
+                </span>
                 {loc.alsoTourism ? (
-                  <span className="absolute left-3 top-3 rounded-full bg-[#007A5E]/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                  <span className="absolute right-3 top-3 rounded-full bg-[#007A5E]/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
                     {t('film.sharedBadge')}
                   </span>
                 ) : null}
               </div>
               <div className="px-4 py-4">
-                <h2 className="font-display text-lg font-semibold text-[#F8F5ED]">{name}</h2>
+                <h2 className="font-display text-lg font-semibold text-[#F8F5ED]">
+                  {name}
+                  {loc.stars ? (
+                    <span className="ml-2 align-middle text-xs text-[#FCD116]">{'★'.repeat(Math.min(loc.stars, 5))}</span>
+                  ) : null}
+                </h2>
                 <p className="mt-1 text-sm text-white/50">{city}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-[#FCD116]/90">
@@ -231,6 +278,22 @@ export default function FilmLocationsPage() {
           );
         })}
       </div>
+
+      {locations.length > visible ? (
+        <div className="mt-8 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setVisible((v) => v + PAGE_SIZE)}
+            className="rounded-full border border-white/20 px-6 py-2.5 text-sm font-semibold text-[#FCD116] hover:border-[#FCD116]"
+          >
+            {t('film.locations.showMore', { n: String(locations.length - visible) })}
+          </button>
+        </div>
+      ) : null}
+
+      {locations.some((l) => l.osm) ? (
+        <p className="mt-6 text-center text-[11px] text-white/35">{OSM_ATTRIBUTION}</p>
+      ) : null}
 
       {locations.length === 0 ? (
         <p className="mt-10 text-center text-sm text-white/50">{t('film.locations.empty')}</p>
