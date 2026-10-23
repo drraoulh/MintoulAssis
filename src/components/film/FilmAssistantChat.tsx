@@ -217,7 +217,7 @@ export function FilmAssistantChat({
             <button
               type="button"
               onClick={stopAllAudio}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#CE1126] px-3 py-1.5 text-xs font-semibold text-white"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#E30D13] px-3 py-1.5 text-xs font-semibold text-white"
             >
               <Square className="h-3.5 w-3.5 fill-current" aria-hidden />
               Stop
@@ -227,8 +227,8 @@ export function FilmAssistantChat({
       ) : (
         <header className="shrink-0 border-b border-white/10 bg-[#0f0f0f] px-4 py-3 sm:px-6">
           <div className="mx-auto flex max-w-5xl items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#CE1126]/20">
-              <Clapperboard className="h-5 w-5 text-[#FCD116]" aria-hidden />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#E30D13]/20">
+              <Clapperboard className="h-5 w-5 text-[#F5E80C]" aria-hidden />
             </div>
             <div className="min-w-0 flex-1">
               <h1 className="font-display text-lg font-bold text-[#F8F5ED] sm:text-xl">
@@ -242,7 +242,7 @@ export function FilmAssistantChat({
               <button
                 type="button"
                 onClick={stopAllAudio}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#CE1126] px-3 py-2 text-xs font-semibold text-white"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#E30D13] px-3 py-2 text-xs font-semibold text-white"
               >
                 <Square className="h-3.5 w-3.5 fill-current" aria-hidden />
                 Stop
@@ -262,7 +262,7 @@ export function FilmAssistantChat({
               <AssistantMark size="lg" className="mx-auto opacity-90" />
               <p className="mt-5 font-display text-2xl font-bold tracking-tight text-[#F8F5ED] sm:text-4xl">
                 {t('film.assistant.hero')}{' '}
-                <span className="text-[#FCD116]">{t('film.assistant.heroAccent')}</span>
+                <span className="text-[#F5E80C]">{t('film.assistant.heroAccent')}</span>
               </p>
               <p className="mx-auto mt-3 max-w-xl text-sm text-white/55 sm:text-base">
                 {t('film.assistant.heroSub')}
@@ -274,10 +274,10 @@ export function FilmAssistantChat({
                   key={s.labelKey}
                   type="button"
                   onClick={() => void ask(t(s.qKey))}
-                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left transition hover:border-[#FCD116]/40"
+                  className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left transition hover:border-[#F5E80C]/40"
                 >
-                  <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#CE1126]/25">
-                    <s.icon className="h-5 w-5 text-[#FCD116]" aria-hidden />
+                  <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#E30D13]/25">
+                    <s.icon className="h-5 w-5 text-[#F5E80C]" aria-hidden />
                   </span>
                   <span className="block text-sm font-semibold text-[#F8F5ED]">
                     {t(s.labelKey)}
@@ -305,7 +305,7 @@ export function FilmAssistantChat({
                 <button
                   type="button"
                   onClick={() => void speakMessage(msg)}
-                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold text-[#FCD116] hover:bg-white/5"
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold text-[#F5E80C] hover:bg-white/5"
                   aria-label={t('film.assistant.speak')}
                 >
                   {speakingMsgId === msg.id ? (
@@ -319,9 +319,9 @@ export function FilmAssistantChat({
             <div
               className={
                 msg.role === 'user'
-                  ? 'rounded-2xl rounded-br-md bg-[#CE1126] px-4 py-3 text-sm text-white'
+                  ? 'rounded-2xl rounded-br-md bg-[#E30D13] px-4 py-3 text-sm text-white'
                   : msg.isError
-                    ? 'rounded-2xl border border-[#CE1126]/40 bg-[#CE1126]/10 px-4 py-3 text-sm text-[#F8F5ED]'
+                    ? 'rounded-2xl border border-[#E30D13]/40 bg-[#E30D13]/10 px-4 py-3 text-sm text-[#F8F5ED]'
                     : 'rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-[#F8F5ED]'
               }
             >
@@ -357,7 +357,7 @@ export function FilmAssistantChat({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               rows={1}
-              className="max-h-32 min-h-[2.75rem] w-full resize-none rounded-2xl border border-white/15 bg-black/50 px-4 py-3 text-sm text-[#F8F5ED] outline-none placeholder:text-white/35 focus:border-[#FCD116]/50"
+              className="max-h-32 min-h-[2.75rem] w-full resize-none rounded-2xl border border-white/15 bg-black/50 px-4 py-3 text-sm text-[#F8F5ED] outline-none placeholder:text-white/35 focus:border-[#F5E80C]/50"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -369,7 +369,7 @@ export function FilmAssistantChat({
           <button
             type="submit"
             disabled={sending || !input.trim()}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#CE1126] text-white disabled:opacity-40"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#E30D13] text-white disabled:opacity-40"
             aria-label={t('film.assistant.send')}
           >
             <SendHorizontal className="h-5 w-5" aria-hidden />

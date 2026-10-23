@@ -70,6 +70,15 @@ body {
   font-family: var(--font-body), "Plus Jakarta Sans", sans-serif;
 }
 
+/* Home placeholder while the entry stage is resolved — matches the remembered section */
+.home-loading {
+  background: #050505;
+}
+
+html[data-entry='tourism'] .home-loading {
+  background: #f3f4f6;
+}
+
 html.intro-playing,
 html.intro-playing body {
   height: 100dvh;
@@ -373,4 +382,150 @@ select {
     min-height: 3.75rem;
     padding-bottom: 0.5rem;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Cinema section theme — poster typography, sharp frames, film grain.
+   Unlayered on purpose: it must win over Tailwind utilities inside .film-theme.
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Palette sampled from the SmartMboa Cinéma logo */
+.film-theme {
+  --logo-red: #e30d13;
+  --logo-green: #079941;
+  --logo-yellow: #f5e80c;
+  --cine-black: #070707;
+  background-color: var(--cine-black);
+}
+
+.film-theme ::selection {
+  background: var(--logo-yellow);
+  color: #000;
+}
+
+/* Poster face for every heading in the section */
+.film-theme .font-display {
+  font-family: var(--font-cine), 'Bebas Neue', 'Oswald', Impact, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.035em;
+  line-height: 0.98;
+  text-transform: uppercase;
+}
+
+.film-theme .font-cine-serif {
+  font-family: var(--font-cine-serif), 'Cormorant Garamond', Georgia, serif;
+}
+
+/* Frames, not bubbles */
+.film-theme .rounded-xl,
+.film-theme .rounded-2xl,
+.film-theme .rounded-3xl {
+  border-radius: 3px;
+}
+
+/* Film grain over the whole section (static, cheap, below the AI FAB) */
+.film-theme::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Section kicker: "Sommaire", "Repérages"… */
+.cine-kicker {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--logo-yellow);
+}
+
+/* Rectangular, tracked buttons */
+.cine-btn,
+.cine-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.95rem 1.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.cine-btn {
+  background: var(--logo-red);
+  color: #fff;
+}
+
+.cine-btn:hover {
+  background: #b80a0f;
+}
+
+.cine-btn-ghost {
+  border: 1px solid rgba(248, 245, 237, 0.28);
+  color: #f8f5ed;
+}
+
+.cine-btn-ghost:hover {
+  border-color: var(--logo-green);
+  color: #fff;
+  background: rgba(7, 153, 65, 0.18);
+}
+
+/* Camera viewfinder corner marks */
+.cine-viewfinder {
+  position: relative;
+}
+
+.cine-viewfinder > .vf-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-color: rgba(248, 245, 237, 0.55);
+  border-style: solid;
+  border-width: 0;
+}
+
+.cine-viewfinder > .vf-tl { top: 0; left: 0; border-top-width: 1.5px; border-left-width: 1.5px; }
+.cine-viewfinder > .vf-tr { top: 0; right: 0; border-top-width: 1.5px; border-right-width: 1.5px; }
+.cine-viewfinder > .vf-bl { bottom: 0; left: 0; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+.cine-viewfinder > .vf-br { bottom: 0; right: 0; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+
+@keyframes cine-rec {
+  0%, 60% { opacity: 1; }
+  61%, 100% { opacity: 0.15; }
+}
+
+.cine-rec-dot {
+  animation: cine-rec 1.4s steps(1, end) infinite;
+}
+
+/* Horizontal strip of featured locations */
+.cine-filmstrip {
+  position: relative;
+}
+
+.cine-filmstrip > * {
+  scrollbar-width: none;
+}
+
+.cine-filmstrip > *::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cine-rec-dot { animation: none; }
 }

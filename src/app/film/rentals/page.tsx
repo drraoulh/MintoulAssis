@@ -62,7 +62,7 @@ export default function FilmRentalsPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
       <header className="max-w-2xl">
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#FCD116]">
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#F5E80C]">
           {fr ? 'Location' : 'Rentals'}
         </p>
         <h1 className="mt-2 font-display text-3xl font-bold text-[#F8F5ED] sm:text-4xl">
@@ -88,8 +88,8 @@ export default function FilmRentalsPage() {
               onClick={() => setCategory(c.id)}
               className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold transition ${
                 active
-                  ? 'border-[#FCD116] bg-[#FCD116] text-black'
-                  : 'border-white/15 text-white/70 hover:border-[#FCD116]/50'
+                  ? 'border-[#F5E80C] bg-[#F5E80C] text-black'
+                  : 'border-white/15 text-white/70 hover:border-[#F5E80C]/50'
               }`}
             >
               <Icon className="h-3.5 w-3.5" aria-hidden />
@@ -107,7 +107,7 @@ export default function FilmRentalsPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={fr ? 'Nom, ville, quartier…' : 'Name, city, district…'}
-            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pl-10 pr-3 text-sm text-[#F8F5ED] outline-none placeholder:text-white/35 focus:border-[#FCD116]/50"
+            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pl-10 pr-3 text-sm text-[#F8F5ED] outline-none placeholder:text-white/35 focus:border-[#F5E80C]/50"
           />
         </label>
         <select
@@ -145,16 +145,16 @@ export default function FilmRentalsPage() {
               key={s.id}
               type="button"
               onClick={() => setSelected(s)}
-              className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition hover:border-[#FCD116]/40 hover:bg-white/[0.06]"
+              className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition hover:border-[#F5E80C]/40 hover:bg-white/[0.06]"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#CE1126]/25 text-[#FCD116]">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E30D13]/25 text-[#F5E80C]">
                 <Icon className="h-5 w-5" aria-hidden />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-display text-base font-semibold text-[#F8F5ED]">
                   {s.name}
                 </span>
-                <span className="mt-0.5 block text-xs font-semibold text-[#FCD116]/85">
+                <span className="mt-0.5 block text-xs font-semibold text-[#F5E80C]/85">
                   {fr ? cat?.fr : cat?.en}
                 </span>
                 <span className="mt-1 block truncate text-xs text-white/50">{place || '—'}</span>
@@ -165,7 +165,7 @@ export default function FilmRentalsPage() {
                   </span>
                 ) : null}
               </span>
-              <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-white/30 group-hover:text-[#FCD116]" aria-hidden />
+              <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-white/30 group-hover:text-[#F5E80C]" aria-hidden />
             </button>
           );
         })}
@@ -177,10 +177,10 @@ export default function FilmRentalsPage() {
         </p>
       ) : null}
 
-      <section className="mt-10 grid gap-3 rounded-2xl border border-[#FCD116]/25 bg-[#FCD116]/[0.06] p-5 sm:grid-cols-2">
+      <section className="mt-10 grid gap-3 rounded-2xl border border-[#F5E80C]/25 bg-[#F5E80C]/[0.06] p-5 sm:grid-cols-2">
         <div>
           <h2 className="flex items-center gap-2 font-display text-lg font-semibold text-[#F8F5ED]">
-            <KeyRound className="h-5 w-5 text-[#FCD116]" aria-hidden />
+            <KeyRound className="h-5 w-5 text-[#F5E80C]" aria-hidden />
             {fr ? 'Avant de louer' : 'Before you rent'}
           </h2>
           <ul className="mt-3 space-y-1.5 text-sm text-white/70">
@@ -199,7 +199,7 @@ export default function FilmRentalsPage() {
                 ]
             ).map((tip) => (
               <li key={tip} className="flex gap-2">
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#FCD116]" />
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#F5E80C]" />
                 {tip}
               </li>
             ))}
@@ -213,7 +213,7 @@ export default function FilmRentalsPage() {
           </p>
           <Link
             href="/film/equipment"
-            className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-[#CE1126] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#b50e21]"
+            className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-[#E30D13] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#B80A0F]"
           >
             <Store className="h-4 w-4" aria-hidden />
             {fr ? 'Matériel & studios' : 'Gear & studios'}
@@ -254,14 +254,14 @@ function RentalModal({ shop, fr, onClose }: { shop: RentalShop; fr: boolean; onC
       <button type="button" className="absolute inset-0 bg-black/75" aria-label={fr ? 'Fermer' : 'Close'} onClick={onClose} />
       <div className="relative flex max-h-[92svh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-[#111] shadow-2xl sm:rounded-3xl">
         <div className="flex items-start gap-3 border-b border-white/10 px-5 py-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#CE1126]/25 text-[#FCD116]">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E30D13]/25 text-[#F5E80C]">
             <Icon className="h-5 w-5" aria-hidden />
           </span>
           <div className="min-w-0 flex-1">
             <h2 id="rental-title" className="font-display text-xl font-bold text-[#F8F5ED]">
               {shop.name}
             </h2>
-            <p className="text-xs font-semibold text-[#FCD116]/85">
+            <p className="text-xs font-semibold text-[#F5E80C]/85">
               {fr ? cat?.fr : cat?.en}
               {shop.brand && shop.brand !== shop.name ? ` · ${shop.brand}` : ''}
             </p>
@@ -289,7 +289,7 @@ function RentalModal({ shop, fr, onClose }: { shop: RentalShop; fr: boolean; onC
           {description ? <p className="text-sm leading-relaxed text-white/75">{description}</p> : null}
           <PlaceContactCard contact={shop} city={shop.city} latitude={shop.lat} longitude={shop.lon} />
           {shop.approximate ? (
-            <p className="text-[11px] text-[#FCD116]/70">
+            <p className="text-[11px] text-[#F5E80C]/70">
               {fr
                 ? 'Position approximative (quartier / rue) — appelez la boutique pour l’adresse exacte.'
                 : 'Approximate position (district / street) — call the shop for the exact address.'}

@@ -10,7 +10,7 @@ export default function FilmProceduresPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
       <header className="max-w-2xl">
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#FCD116]">
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#F5E80C]">
           {t('film.nav.procedures')}
         </p>
         <h1 className="mt-2 font-display text-3xl font-bold text-[#F8F5ED] sm:text-4xl">
@@ -25,7 +25,7 @@ export default function FilmProceduresPage() {
             key={step.id}
             className="flex gap-4 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5 sm:gap-6"
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#CE1126] text-sm font-bold text-white">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E30D13] text-sm font-bold text-white">
               {step.order}
             </span>
             <div>
@@ -56,7 +56,7 @@ export default function FilmProceduresPage() {
               <h3 className="font-semibold text-[#F8F5ED]">
                 {locale === 'fr' ? a.nameFr : a.nameEn}
               </h3>
-              <p className="mt-1 text-xs text-[#FCD116]/85">
+              <p className="mt-1 text-xs text-[#F5E80C]/85">
                 {locale === 'fr' ? a.cityFr : a.cityEn}
               </p>
               <p className="mt-3 text-sm text-white/65">

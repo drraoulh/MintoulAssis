@@ -18,7 +18,6 @@ import {
   LayoutGrid,
   MapPin,
   Menu,
-  Sparkles,
   Theater,
   UserCircle2,
   Users,
@@ -28,12 +27,11 @@ import {
 
 import { FilmSectionSwitcher } from '@/components/entry/SectionSwitcher';
 import { FilmFloatingAssistant } from '@/components/film/FilmFloatingAssistant';
-import { APP_NAME } from '@/lib/config';
+import { FooterSignature } from '@/components/layout/FooterSignature';
 import { useLocale } from '@/lib/i18n';
 
 const FILM_LINKS = [
   { href: '/film', key: 'film.nav.home', icon: Home, exact: true },
-  { href: '/film/assistant', key: 'film.nav.assistant', icon: Sparkles },
   { href: '/film/locations', key: 'film.nav.locations', icon: MapPin },
   { href: '/film/halls', key: 'film.nav.halls', icon: Theater },
   { href: '/film/events', key: 'film.nav.events', icon: CalendarDays },
@@ -58,7 +56,7 @@ export function FilmShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className={`flex bg-[#0a0a0a] text-[#F8F5ED] ${
+      className={`film-theme flex text-[#F8F5ED] ${
         isAssistant
           ? 'h-[100dvh] min-h-[100dvh] flex-col overflow-hidden'
           : 'min-h-[100svh] flex-col'
@@ -69,11 +67,12 @@ export function FilmShell({ children }: { children: React.ReactNode }) {
         className={
           isAssistant
             ? 'flex min-h-0 flex-1 flex-col overflow-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0'
-            : 'flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0'
+            : 'flex-1'
         }
       >
         {children}
       </main>
+      {isAssistant ? null : <FilmFooter />}
       <FilmBottomNav />
       <FilmFloatingAssistant />
     </div>
@@ -89,37 +88,33 @@ function FilmHeader() {
 
   return (
     <div className="sticky top-0 z-50">
-      <div className="flex h-1.5" aria-hidden>
-        <div className="flex-1 bg-[#007A5E]" />
-        <div className="flex-1 bg-[#CE1126]" />
-        <div className="flex-1 bg-[#FCD116]" />
+      <div className="flex h-[2px]" aria-hidden>
+        <div className="flex-1 bg-[#079941]" />
+        <div className="flex-1 bg-[#E30D13]" />
+        <div className="flex-1 bg-[#F5E80C]" />
       </div>
-      <div className="bg-[#1a0a0c] px-3 py-1 text-center text-[11px] font-semibold text-[#FCD116]/90 sm:text-xs">
+      <div className="hidden border-b border-white/[0.06] bg-black py-1.5 text-center text-[9px] font-semibold uppercase tracking-[0.42em] text-[#F5E80C]/80 sm:block">
         {t('film.banner')}
       </div>
-      <header className="border-b border-white/10 bg-[#0f0f0f]/95 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-3 sm:h-16 sm:gap-3 sm:px-4 md:px-8">
-          <Link href="/film" className="flex min-w-0 items-center gap-2" aria-label={APP_NAME}>
+      <header className="border-b border-white/[0.08] bg-black/90 backdrop-blur-md">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-3 sm:h-[4.25rem] sm:gap-3 sm:px-4 md:px-8">
+          <Link href="/film" className="flex min-w-0 items-center gap-2" aria-label="SmartMboa Cinéma">
             <Image
-              src="/brand/logo.png"
+              src="/brand/logo-cinema.png"
               alt=""
-              width={475}
-              height={378}
+              width={1010}
+              height={761}
               priority
-              className="h-9 w-auto max-w-[7.5rem] object-contain sm:h-11 sm:max-w-none"
+              sizes="80px"
+              className="h-10 w-auto object-contain sm:h-12"
             />
-            <span className="hidden items-center gap-1.5 rounded-full bg-[#CE1126]/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#FCD116] sm:inline-flex">
-              <Clapperboard className="h-3 w-3" aria-hidden />
-              {t('nav.sectionFilm')}
-            </span>
           </Link>
 
           <div className="ml-auto hidden items-center gap-3 lg:flex">
-            <nav className="flex items-center gap-1" aria-label={t('film.nav.primary')}>
+            <nav className="mr-2 flex items-center gap-6" aria-label={t('film.nav.primary')}>
               {FILM_LINKS.filter((l) =>
                 [
                   '/film',
-                  '/film/assistant',
                   '/film/locations',
                   '/film/halls',
                   '/film/events',
@@ -130,10 +125,10 @@ function FilmHeader() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    className={`relative py-2 text-[11px] font-semibold uppercase tracking-[0.2em] transition after:absolute after:inset-x-0 after:-bottom-px after:h-px after:origin-left after:bg-[#F5E80C] after:transition-transform ${
                       active
-                        ? 'bg-white/10 text-[#FCD116]'
-                        : 'text-white/65 hover:bg-white/5 hover:text-white'
+                        ? 'text-[#F5E80C] after:scale-x-100'
+                        : 'text-white/60 after:scale-x-0 hover:text-white hover:after:scale-x-100'
                     }`}
                   >
                     {t(link.key)}
@@ -145,7 +140,7 @@ function FilmHeader() {
             <button
               type="button"
               onClick={toggleLocale}
-              className="rounded-full border border-white/15 px-2.5 py-1 text-[11px] font-bold uppercase text-white/80"
+              className="border border-white/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white/75 hover:border-[#F5E80C] hover:text-[#F5E80C]"
               aria-label={t('nav.lang')}
             >
               {locale === 'fr' ? 'EN' : 'FR'}
@@ -157,14 +152,14 @@ function FilmHeader() {
             <button
               type="button"
               onClick={toggleLocale}
-              className="rounded-full border border-white/15 px-2 py-1 text-[10px] font-bold uppercase text-white/80"
+              className="border border-white/20 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.15em] text-white/75"
             >
               {locale === 'fr' ? 'EN' : 'FR'}
             </button>
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white"
+              className="flex h-10 w-10 items-center justify-center border border-white/20 text-white"
               aria-label={open ? t('nav.menuClose') : t('nav.menuOpen')}
             >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -186,8 +181,10 @@ function FilmHeader() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setOpen(false)}
-                    className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${
-                      active ? 'bg-white/10 text-[#FCD116]' : 'text-white/80 hover:bg-white/5'
+                    className={`flex items-center gap-3 border-l-2 px-3 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] ${
+                      active
+                        ? 'border-[#F5E80C] bg-white/[0.04] text-[#F5E80C]'
+                        : 'border-transparent text-white/75 hover:bg-white/[0.03]'
                     }`}
                   >
                     <Icon className="h-4 w-4" aria-hidden />
@@ -207,6 +204,43 @@ function FilmHeader() {
         ) : null}
       </header>
     </div>
+  );
+}
+
+function FilmFooter() {
+  const { t } = useLocale();
+  const links = [
+    ['/film/locations', t('film.nav.locations')],
+    ['/film/halls', t('film.nav.halls')],
+    ['/film/events', t('film.nav.events')],
+    ['/?change_mode=1', t('nav.changeMode')],
+  ] as const;
+
+  return (
+    // Bottom padding keeps the footer clear of the fixed mobile tab bar
+    <footer className="border-t border-white/[0.08] bg-black pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
+      <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-5 py-8 text-center md:flex-row md:justify-between md:px-8 md:text-left">
+        <div className="flex flex-col items-center gap-3 md:flex-row md:gap-4">
+          <Image
+            src="/brand/logo-cinema.png"
+            alt="SmartMboa Cinéma"
+            width={1010}
+            height={761}
+            sizes="72px"
+            className="h-12 w-auto object-contain"
+          />
+          <p className="font-cine-serif max-w-xs text-base italic text-white/60">{t('film.home.heroCaption')}</p>
+        </div>
+        <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">
+          {links.map(([href, label]) => (
+            <Link key={href} href={href} className="hover:text-[#F5E80C]">
+              {label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+      <FooterSignature brand="SmartMboa Cinéma" accent="#F5E80C" />
+    </footer>
   );
 }
 
@@ -281,7 +315,7 @@ function FilmBottomNav() {
                 key={tab.href}
                 href={tab.href}
                 className={`flex flex-col items-center gap-0.5 rounded-lg py-2 text-[10px] font-semibold ${
-                  active ? 'text-[#FCD116]' : 'text-white/50'
+                  active ? 'text-[#F5E80C]' : 'text-white/50'
                 }`}
               >
                 <Icon className="h-5 w-5" aria-hidden />
@@ -295,7 +329,7 @@ function FilmBottomNav() {
             aria-controls={panelId}
             onClick={() => setMoreOpen((v) => !v)}
             className={`flex flex-col items-center gap-0.5 rounded-lg py-2 text-[10px] font-semibold ${
-              moreOpen || moreActive ? 'text-[#FCD116]' : 'text-white/50'
+              moreOpen || moreActive ? 'text-[#F5E80C]' : 'text-white/50'
             }`}
           >
             <LayoutGrid className="h-5 w-5" aria-hidden />
@@ -338,7 +372,7 @@ function FilmBottomNav() {
                         onClick={() => setMoreOpen(false)}
                         className="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3 text-sm font-medium text-white/90 hover:bg-white/5"
                       >
-                        <Icon className="h-5 w-5 text-[#FCD116]" aria-hidden />
+                        <Icon className="h-5 w-5 text-[#F5E80C]" aria-hidden />
                         {link.label}
                       </Link>
                     );

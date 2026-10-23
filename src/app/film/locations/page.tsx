@@ -69,7 +69,7 @@ export default function FilmLocationsPage() {
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-2xl">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#FCD116]">
+          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#F5E80C]">
             {t('film.nav.locations')}
           </p>
           <h1 className="mt-2 font-display text-3xl font-bold text-[#F8F5ED] sm:text-4xl">
@@ -79,7 +79,7 @@ export default function FilmLocationsPage() {
         </div>
         <Link
           href="/film/locations/compare"
-          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/20 px-4 py-2.5 text-xs font-semibold text-[#FCD116] hover:border-[#FCD116]"
+          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/20 px-4 py-2.5 text-xs font-semibold text-[#F5E80C] hover:border-[#F5E80C]"
         >
           <Columns2 className="h-3.5 w-3.5" aria-hidden />
           {t('film.compare.cta')}
@@ -93,7 +93,7 @@ export default function FilmLocationsPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t('film.locations.search')}
-            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pl-10 pr-3 text-sm text-[#F8F5ED] outline-none placeholder:text-white/35 focus:border-[#FCD116]/50"
+            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pl-10 pr-3 text-sm text-[#F8F5ED] outline-none placeholder:text-white/35 focus:border-[#F5E80C]/50"
           />
         </label>
         <select
@@ -162,8 +162,8 @@ export default function FilmLocationsPage() {
                 onClick={() => setKind(k.id)}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold transition ${
                   active
-                    ? 'border-[#FCD116] bg-[#FCD116] text-black'
-                    : 'border-white/15 text-white/70 hover:border-[#FCD116]/50'
+                    ? 'border-[#F5E80C] bg-[#F5E80C] text-black'
+                    : 'border-white/15 text-white/70 hover:border-[#F5E80C]/50'
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" aria-hidden />
@@ -179,7 +179,7 @@ export default function FilmLocationsPage() {
           type="button"
           onClick={() => setLook('all')}
           className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            look === 'all' ? 'bg-[#CE1126] text-white' : 'bg-white/5 text-white/60'
+            look === 'all' ? 'bg-[#E30D13] text-white' : 'bg-white/5 text-white/60'
           }`}
         >
           {t('film.locations.allLooks')}
@@ -190,7 +190,7 @@ export default function FilmLocationsPage() {
             type="button"
             onClick={() => setLook(l.id)}
             className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              look === l.id ? 'bg-[#CE1126] text-white' : 'bg-white/5 text-white/60'
+              look === l.id ? 'bg-[#E30D13] text-white' : 'bg-white/5 text-white/60'
             }`}
           >
             {locale === 'fr' ? l.fr : l.en}
@@ -220,7 +220,7 @@ export default function FilmLocationsPage() {
             <Link
               key={loc.slug}
               href={`/film/locations/${loc.slug}`}
-              className="group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition hover:border-[#FCD116]/35"
+              className="group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition hover:border-[#F5E80C]/35"
             >
               <div className="relative aspect-[16/10] bg-white/5">
                 {cover ? (
@@ -232,16 +232,16 @@ export default function FilmLocationsPage() {
                     sizes="(max-width:768px) 100vw, 33vw"
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#007A5E]/35 via-[#0f0f0f] to-[#CE1126]/25 text-[#FCD116]/70">
+                  <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#079941]/35 via-[#0f0f0f] to-[#E30D13]/25 text-[#F5E80C]/70">
                     <KindIcon className="h-12 w-12" aria-hidden />
                   </div>
                 )}
-                <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#FCD116] backdrop-blur">
+                <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#F5E80C] backdrop-blur">
                   <KindIcon className="h-3 w-3" aria-hidden />
                   {locale === 'fr' ? kindMeta?.fr : kindMeta?.en}
                 </span>
                 {loc.alsoTourism ? (
-                  <span className="absolute right-3 top-3 rounded-full bg-[#007A5E]/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                  <span className="absolute right-3 top-3 rounded-full bg-[#079941]/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
                     {t('film.sharedBadge')}
                   </span>
                 ) : null}
@@ -250,14 +250,14 @@ export default function FilmLocationsPage() {
                 <h2 className="font-display text-lg font-semibold text-[#F8F5ED]">
                   {name}
                   {loc.stars ? (
-                    <span className="ml-2 align-middle text-xs text-[#FCD116]">
+                    <span className="ml-2 align-middle text-xs text-[#F5E80C]">
                       {'★'.repeat(Math.min(loc.stars, 5))}
                     </span>
                   ) : null}
                 </h2>
                 <p className="mt-1 text-sm text-white/50">{city}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-[#FCD116]/90">
+                  <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-[#F5E80C]/90">
                     {t(`film.cost.${loc.costTier}`)}
                   </span>
                   <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-medium text-white/60">
@@ -286,7 +286,7 @@ export default function FilmLocationsPage() {
           <button
             type="button"
             onClick={() => setVisible((v) => v + PAGE_SIZE)}
-            className="rounded-full border border-white/20 px-6 py-2.5 text-sm font-semibold text-[#FCD116] hover:border-[#FCD116]"
+            className="rounded-full border border-white/20 px-6 py-2.5 text-sm font-semibold text-[#F5E80C] hover:border-[#F5E80C]"
           >
             {t('film.locations.showMore', { n: String(locations.length - visible) })}
           </button>

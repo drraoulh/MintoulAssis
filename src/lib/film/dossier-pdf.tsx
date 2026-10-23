@@ -24,10 +24,10 @@ import { translate, type Locale } from '@/lib/i18n-dict';
 import { REGIONS } from '@/lib/regions';
 
 const C = {
-  green: '#007A5E',
-  greenDeep: '#00523F',
-  red: '#CE1126',
-  yellow: '#FCD116',
+  green: '#079941',
+  greenDeep: '#05652B',
+  red: '#E30D13',
+  yellow: '#F5E80C',
   /** Readable on white, unlike the flag yellow */
   gold: '#C99A00',
   ink: '#111827',
@@ -88,7 +88,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: C.line,
   },
-  logo: { width: 64, height: 50, objectFit: 'contain' },
+  logo: { width: 76, height: 57, objectFit: 'contain' },
   brandBlock: { flexDirection: 'row', alignItems: 'center' },
   brandText: { marginLeft: 10 },
   brandName: { fontFamily: 'Helvetica-Bold', fontSize: 12, color: C.green, letterSpacing: 0.5 },
@@ -316,14 +316,14 @@ function Tricolor() {
 }
 
 function Header({ l, docType, reference, date }: { l: L; docType: string; reference: string; date: string }) {
-  const logo = publicImage('/brand/logo.png');
+  const logo = publicImage('/brand/logo-cinema.png');
   return (
     <View style={s.header}>
       <View style={s.brandBlock}>
         {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
         {logo ? <Image src={logo} style={s.logo} /> : null}
         <View style={s.brandText}>
-          <Text style={s.brandName}>SmartMboa Film</Text>
+          <Text style={s.brandName}>SmartMboa Cinéma</Text>
           <Text style={s.brandSub}>
             {l.fr ? 'Bureau de production · Cameroun' : 'Production office · Cameroon'}
           </Text>
@@ -344,7 +344,7 @@ function Footer({ l }: { l: L }) {
   return (
     // Static text in a fixed view inside the page padding is dropped by react-pdf; render() text is not
     <View style={s.footer} fixed>
-      <Text style={[s.footerCol, s.footerBrand]} render={() => `SmartMboa Film · ${SITE}`} />
+      <Text style={[s.footerCol, s.footerBrand]} render={() => `SmartMboa Cinéma · ${SITE}`} />
       <Text
         style={[s.footerCol, s.footerMid]}
         render={() =>

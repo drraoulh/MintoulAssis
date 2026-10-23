@@ -10,7 +10,7 @@ export function PersonProfileCard({ person }: { person: PersonUI }) {
   const [broken, setBroken] = useState(false);
   const photo = broken ? undefined : person.photoUrl?.trim();
   return (
-    <article className="overflow-hidden rounded-2xl border border-[#FCD116]/25 bg-black/40">
+    <article className="overflow-hidden rounded-2xl border border-[#F5E80C]/25 bg-black/40">
       <div className="flex items-center gap-3 p-3 sm:gap-4 sm:p-4">
         <div className="relative h-28 w-[5.5rem] shrink-0 overflow-hidden rounded-xl bg-white/5 sm:h-36 sm:w-28">
           {photo ? (

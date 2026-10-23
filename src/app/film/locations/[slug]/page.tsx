@@ -35,7 +35,7 @@ export default function FilmLocationDetailPage() {
         </h1>
         <Link
           href="/film/locations"
-          className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#FCD116]"
+          className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#F5E80C]"
         >
           <ArrowLeft className="h-4 w-4" />
           {t('film.locations.back')}
@@ -58,15 +58,15 @@ export default function FilmLocationDetailPage() {
         {cover ? (
           <Image src={cover} alt="" fill priority className="object-cover" sizes="100vw" />
         ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#007A5E]/40 via-[#0f0f0f] to-[#CE1126]/30">
-            <KindIcon className="h-14 w-14 text-[#FCD116]/70" aria-hidden />
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#079941]/40 via-[#0f0f0f] to-[#E30D13]/30">
+            <KindIcon className="h-14 w-14 text-[#F5E80C]/70" aria-hidden />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 mx-auto max-w-6xl px-4 pb-6 sm:px-8">
           <Link
             href="/film/locations"
-            className="mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-white/70 hover:text-[#FCD116]"
+            className="mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-white/70 hover:text-[#F5E80C]"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             {t('film.locations.back')}
@@ -82,7 +82,7 @@ export default function FilmLocationDetailPage() {
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 sm:px-8 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6">
           <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FCD116] px-3 py-1 text-xs font-bold text-black">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F5E80C] px-3 py-1 text-xs font-bold text-black">
               <KindIcon className="h-3.5 w-3.5" aria-hidden />
               {locale === 'fr' ? kindMeta?.fr : kindMeta?.en}
               {loc.stars ? ` · ${'★'.repeat(Math.min(loc.stars, 5))}` : ''}
@@ -92,14 +92,14 @@ export default function FilmLocationDetailPage() {
               return (
                 <span
                   key={lk}
-                  className="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold text-[#FCD116]"
+                  className="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold text-[#F5E80C]"
                 >
                   {locale === 'fr' ? meta?.fr : meta?.en}
                 </span>
               );
             })}
             {loc.alsoTourism ? (
-              <span className="rounded-full bg-[#007A5E]/90 px-3 py-1 text-xs font-bold text-white">
+              <span className="rounded-full bg-[#079941]/90 px-3 py-1 text-xs font-bold text-white">
                 {t('film.sharedBadge')}
               </span>
             ) : null}
@@ -119,7 +119,7 @@ export default function FilmLocationDetailPage() {
           </DetailBlock>
 
           {loc.alsoTourism ? (
-            <div className="rounded-2xl border border-[#007A5E]/40 bg-[#007A5E]/10 px-5 py-5">
+            <div className="rounded-2xl border border-[#079941]/40 bg-[#079941]/10 px-5 py-5">
               <h2 className="font-display text-lg font-semibold text-[#F8F5ED]">
                 {t('film.detail.tourismLinkTitle')}
               </h2>
@@ -127,7 +127,7 @@ export default function FilmLocationDetailPage() {
               <Link
                 href={tourismHref}
                 onClick={() => setEntryMode('tourism')}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#007A5E] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#00614b]"
+                className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#079941] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#067a34]"
               >
                 <Compass className="h-4 w-4" aria-hidden />
                 {t('film.detail.openTourism')}
@@ -185,7 +185,7 @@ export default function FilmLocationDetailPage() {
           <a
             href={dossierPdfUrl([loc.slug], locale)}
             download
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#CE1126] px-5 py-3 text-sm font-bold text-white hover:bg-[#b50e21]"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#E30D13] px-5 py-3 text-sm font-bold text-white hover:bg-[#B80A0F]"
           >
             <Download className="h-4 w-4" aria-hidden />
             {t('film.dossier.download')}
@@ -203,7 +203,7 @@ export default function FilmLocationDetailPage() {
 function DetailBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
-      <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-[#FCD116]">{title}</h2>
+      <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-[#F5E80C]">{title}</h2>
       <p className="mt-2 text-sm leading-relaxed text-white/75">{children}</p>
     </section>
   );

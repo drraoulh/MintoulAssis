@@ -25,6 +25,7 @@ import {
   setEntryMode,
   type EntryMode,
 } from '@/lib/entry-mode';
+import { isHydrated } from '@/lib/hydration';
 import { clearIntroSeen } from '@/lib/intro';
 import { listTouristSites } from '@/lib/api/client';
 import { APP_NAME } from '@/lib/config';
@@ -37,6 +38,23 @@ import type { TouristSite } from '@/lib/types';
 
 /** Home entry stages: decide → cinematic → gateway → tourism home */
 type HomeStage = 'loading' | 'intro' | 'gateway' | 'tourism';
+
+/**
+ * On client-side navigations (e.g. Cinéma → Tourisme) pick the stage on the first render so
+ * the black "loading" cover and the hidden header never flash. The server render (and the
+ * hydration pass) must stay on 'loading' because localStorage is unknown there.
+ */
+function initialStage(): HomeStage {
+  if (typeof window === 'undefined' || !isHydrated()) return 'loading';
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('reset_intro')) return 'intro';
+  if (params.has('change_mode')) return 'gateway';
+  if (!hasSeenIntro()) return 'intro';
+  const mode = getEntryMode();
+  if (mode === 'tourism') return 'tourism';
+  if (mode === 'film') return 'loading';
+  return 'gateway';
+}
 
 const INTENTS = [
   {
@@ -68,7 +86,7 @@ const INTENTS = [
 export default function HomePage() {
   const { t } = useLocale();
   const router = useRouter();
-  const [stage, setStage] = useState<HomeStage>('loading');
+  const [stage, setStage] = useState<HomeStage>(initialStage);
   const [q, setQ] = useState('');
   const [allPlaces, setAllPlaces] = useState<TouristSite[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -186,7 +204,7 @@ export default function HomePage() {
   }
 
   if (stage === 'loading') {
-    return <div className="fixed inset-0 z-[100] bg-[#050505]" aria-hidden />;
+    return <div className="home-loading fixed inset-0 z-[100]" aria-hidden />;
   }
 
   if (stage === 'intro') {

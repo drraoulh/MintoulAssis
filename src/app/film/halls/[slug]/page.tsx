@@ -44,7 +44,7 @@ export default function FilmHallDetailPage() {
         </h1>
         <Link
           href="/film/halls"
-          className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#FCD116]"
+          className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#F5E80C]"
         >
           <ArrowLeft className="h-4 w-4" />
           {t('film.halls.back')}
@@ -75,7 +75,7 @@ export default function FilmHallDetailPage() {
         <div className="absolute inset-x-0 bottom-0 mx-auto max-w-6xl px-4 pb-6 sm:px-8">
           <Link
             href="/film/halls"
-            className="mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-white/70 hover:text-[#FCD116]"
+            className="mb-3 inline-flex items-center gap-1.5 text-xs font-semibold text-white/70 hover:text-[#F5E80C]"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             {t('film.halls.back')}
@@ -84,14 +84,14 @@ export default function FilmHallDetailPage() {
             <span
               className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
                 hall.status === 'verify'
-                  ? 'bg-[#FCD116] text-black'
-                  : 'bg-[#007A5E] text-white'
+                  ? 'bg-[#F5E80C] text-black'
+                  : 'bg-[#079941] text-white'
               }`}
             >
               {t(`film.halls.status.${hall.status}`)}
             </span>
             {hall.suitableFor.includes('premiere') ? (
-              <span className="rounded-full border border-[#FCD116]/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#FCD116]">
+              <span className="rounded-full border border-[#F5E80C]/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#F5E80C]">
                 {t('film.halls.suitable.premiere')}
               </span>
             ) : null}
@@ -112,7 +112,7 @@ export default function FilmHallDetailPage() {
         <div className="space-y-5">
           {gallery.length > 1 ? (
             <section className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5">
-              <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#FCD116]">
+              <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#F5E80C]">
                 <Images className="h-3.5 w-3.5" aria-hidden />
                 {t('film.halls.gallery')}
               </h2>
@@ -127,7 +127,7 @@ export default function FilmHallDetailPage() {
                       aria-pressed={selected}
                       className={`relative aspect-[4/3] overflow-hidden rounded-xl border transition ${
                         selected
-                          ? 'border-[#FCD116] ring-1 ring-[#FCD116]/50'
+                          ? 'border-[#F5E80C] ring-1 ring-[#F5E80C]/50'
                           : 'border-white/10 hover:border-white/30'
                       }`}
                     >
@@ -146,7 +146,7 @@ export default function FilmHallDetailPage() {
           ) : null}
 
           <section className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5">
-            <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#FCD116]">
+            <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#F5E80C]">
               <Theater className="h-3.5 w-3.5" aria-hidden />
               {t('film.halls.about')}
             </h2>
@@ -154,7 +154,7 @@ export default function FilmHallDetailPage() {
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5">
-            <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#FCD116]">
+            <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#F5E80C]">
               <Armchair className="h-3.5 w-3.5" aria-hidden />
               {t('film.halls.capacity')}
             </h2>
@@ -170,7 +170,7 @@ export default function FilmHallDetailPage() {
           </section>
 
           <section className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5">
-            <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#FCD116]">
+            <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#F5E80C]">
               <MapPin className="h-3.5 w-3.5" aria-hidden />
               {t('film.halls.location')}
             </h2>
@@ -179,12 +179,12 @@ export default function FilmHallDetailPage() {
               {hall.latitude.toFixed(5)}, {hall.longitude.toFixed(5)}
             </p>
             {statusNote ? (
-              <p className="mt-3 text-sm text-[#FCD116]/85">{statusNote}</p>
+              <p className="mt-3 text-sm text-[#F5E80C]/85">{statusNote}</p>
             ) : null}
           </section>
 
-          <section className="rounded-2xl border border-[#CE1126]/35 bg-[#CE1126]/10 px-5 py-5">
-            <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-[#FCD116]">
+          <section className="rounded-2xl border border-[#E30D13]/35 bg-[#E30D13]/10 px-5 py-5">
+            <h2 className="text-xs font-bold uppercase tracking-[0.16em] text-[#F5E80C]">
               {t('film.halls.booking')}
             </h2>
             <p className="mt-3 text-sm text-white/75">{booking}</p>
@@ -193,7 +193,7 @@ export default function FilmHallDetailPage() {
                 href={hall.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#FCD116] hover:underline"
+                className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#F5E80C] hover:underline"
               >
                 {t('film.halls.website')}
                 <ExternalLink className="h-3.5 w-3.5" aria-hidden />

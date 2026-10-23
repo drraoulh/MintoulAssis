@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { AssistantMark } from '@/components/brand/AssistantMark';
+import { FooterSignature } from '@/components/layout/FooterSignature';
 import { SectionSwitcher } from '@/components/entry/SectionSwitcher';
 import { fetchHealth } from '@/lib/api/client';
 import { APP_NAME } from '@/lib/config';
@@ -253,84 +254,37 @@ export function SiteHeader() {
 export function SiteFooter() {
   const { t } = useLocale();
   return (
-    <footer className="mt-auto bg-[#1a1a1a] text-white">
-      <div className="flex h-1.5" aria-hidden>
+    <footer className="mt-auto bg-[#141414] text-white">
+      <div className="flex h-[3px]" aria-hidden>
         <div className="flex-1 bg-[#007A5E]" />
         <div className="flex-1 bg-[#CE1126]" />
         <div className="flex-1 bg-[#FCD116]" />
       </div>
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-4 md:px-8">
-        <div>
+      <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-4 py-8 text-center md:flex-row md:justify-between md:px-8 md:text-left">
+        <div className="flex flex-col items-center gap-3 md:flex-row md:gap-4">
           <Image
             src="/brand/logo.png"
             alt={APP_NAME}
             width={475}
             height={378}
-            className="h-20 w-auto rounded-xl bg-white px-2 py-1"
+            className="h-12 w-auto rounded-lg bg-white px-1.5 py-1"
           />
-          <p className="mt-3 max-w-xs text-sm text-white/70">
-            {t('footer.tagline')}
-          </p>
+          <p className="max-w-xs text-sm text-white/65">{t('footer.tagline')}</p>
         </div>
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-[#FCD116]">
-            {t('footer.discover')}
-          </p>
-          <div className="mt-3 flex flex-col gap-2 text-sm text-white/80">
-            {[
-              ['/explorer', t('footer.placesRegions')],
-              ['/culture', t('nav.culture')],
-              ['/hotels', t('nav.hotels')],
-              ['/vision', t('nav.vision')],
-            ].map(([href, label]) => (
-              <Link key={href} href={href} className="hover:text-[#FCD116]">
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-[#FCD116]">
-            {t('footer.trip')}
-          </p>
-          <div className="mt-3 flex flex-col gap-2 text-sm text-white/80">
-            {[
-              ['/planifier', t('nav.planifier')],
-              ['/assistant', t('nav.assistantAi')],
-              ['/wishlist', t('nav.wishlist')],
-              ['/mon-voyage', t('nav.trip')],
-              ['/groupe', t('nav.group')],
-            ].map(([href, label]) => (
-              <Link key={href} href={href} className="hover:text-[#FCD116]">
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-[#FCD116]">
-            {t('footer.hours')}
-          </p>
-          <p className="mt-3 text-sm leading-relaxed text-white/80">
-            {t('footer.hoursBody')}
-          </p>
-          <Link
-            href="/?change_mode=1"
-            className="mt-4 inline-block text-sm text-white/70 underline-offset-4 hover:text-[#FCD116] hover:underline"
-          >
-            {t('nav.changeMode')}
-          </Link>
-          <Link
-            href="/?reset_intro=1"
-            className="mt-2 inline-block text-sm text-white/70 underline-offset-4 hover:text-[#FCD116] hover:underline"
-          >
-            {t('footer.replayIntro')}
-          </Link>
-        </div>
+        <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-white/75" aria-label={APP_NAME}>
+          {[
+            ['/explorer', t('footer.placesRegions')],
+            ['/planifier', t('nav.planifier')],
+            ['/assistant', t('nav.assistantAi')],
+            ['/?change_mode=1', t('nav.changeMode')],
+          ].map(([href, label]) => (
+            <Link key={href} href={href} className="hover:text-[#FCD116]">
+              {label}
+            </Link>
+          ))}
+        </nav>
       </div>
-      <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-white/50 md:px-6">
-        © 2026 {APP_NAME}. {t('footer.rights')}
-      </div>
+      <FooterSignature brand={APP_NAME} accent="#FCD116" />
     </footer>
   );
 }

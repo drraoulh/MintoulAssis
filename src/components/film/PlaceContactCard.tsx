@@ -40,7 +40,7 @@ function Row({
 }) {
   return (
     <div className="flex items-start gap-3 border-b border-white/10 py-2.5 last:border-b-0">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#FCD116]" aria-hidden />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#F5E80C]" aria-hidden />
       <div className="min-w-0">
         <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40">{label}</p>
         {href ? (
@@ -48,7 +48,7 @@ function Row({
             href={href}
             target={href.startsWith('http') ? '_blank' : undefined}
             rel="noopener noreferrer"
-            className="break-words text-sm font-medium text-[#F8F5ED] hover:text-[#FCD116]"
+            className="break-words text-sm font-medium text-[#F8F5ED] hover:text-[#F5E80C]"
           >
             {value}
           </a>
@@ -113,7 +113,7 @@ export function PlaceContactCard({
         href={`https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="my-2 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#007A5E] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#00614b]"
+        className="my-2 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#079941] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#067a34]"
       >
         <Navigation className="h-4 w-4" aria-hidden />
         {fr ? 'Itinéraire' : 'Directions'}

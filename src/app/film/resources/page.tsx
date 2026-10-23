@@ -17,14 +17,14 @@ export default function FilmResourcesPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
       <header className="max-w-2xl">
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#FCD116]">
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#F5E80C]">
           {t('film.nav.resources')}
         </p>
         <h1 className="mt-2 font-display text-3xl font-bold text-[#F8F5ED] sm:text-4xl">
           {t('film.resources.title')}
         </h1>
         <p className="mt-3 text-sm text-white/60 sm:text-base">{t('film.resources.sub')}</p>
-        <p className="mt-2 text-xs text-[#FCD116]/80">{t('film.resources.verifiedNote')}</p>
+        <p className="mt-2 text-xs text-[#F5E80C]/80">{t('film.resources.verifiedNote')}</p>
       </header>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -59,7 +59,7 @@ export default function FilmResourcesPage() {
               className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5"
             >
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-[#007A5E]/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#FCD116]">
+                <span className="rounded-full bg-[#079941]/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#F5E80C]">
                   {locale === 'fr' ? kindMeta?.fr : kindMeta?.en}
                 </span>
                 <span className="text-[10px] font-semibold uppercase tracking-wide text-white/35">
@@ -83,7 +83,7 @@ export default function FilmResourcesPage() {
                   href={r.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#FCD116] hover:underline"
+                  className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#F5E80C] hover:underline"
                 >
                   {t('film.resources.open')}
                   <ExternalLink className="h-3.5 w-3.5" aria-hidden />
@@ -119,7 +119,7 @@ function Chip({
       type="button"
       onClick={onClick}
       className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-        active ? 'bg-[#007A5E] text-white' : 'bg-white/5 text-white/60'
+        active ? 'bg-[#079941] text-white' : 'bg-white/5 text-white/60'
       }`}
     >
       {children}

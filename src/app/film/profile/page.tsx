@@ -72,7 +72,7 @@ export default function FilmProfilePage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-8 sm:py-10">
       <header>
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#FCD116]">
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#F5E80C]">
           {t('film.nav.profile')}
         </p>
         <h1 className="mt-2 font-display text-3xl font-bold text-[#F8F5ED] sm:text-4xl">
@@ -82,14 +82,14 @@ export default function FilmProfilePage() {
       </header>
 
       {saved ? (
-        <div className="mt-8 rounded-2xl border border-[#007A5E]/40 bg-[#007A5E]/10 px-5 py-5">
+        <div className="mt-8 rounded-2xl border border-[#079941]/40 bg-[#079941]/10 px-5 py-5">
           <div className="flex items-start gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#007A5E] text-white">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#079941] text-white">
               <UserCircle2 className="h-6 w-6" aria-hidden />
             </span>
             <div>
               <p className="font-display text-xl font-bold text-[#F8F5ED]">{saved.name}</p>
-              <p className="text-sm text-[#FCD116]">
+              <p className="text-sm text-[#F5E80C]">
                 {saved.role}
                 {saved.city ? ` · ${saved.city}` : ''}
               </p>
@@ -146,7 +146,7 @@ export default function FilmProfilePage() {
             value={form.bio}
             onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
             rows={4}
-            className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm font-normal normal-case text-[#F8F5ED] outline-none focus:border-[#FCD116]/50"
+            className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm font-normal normal-case text-[#F8F5ED] outline-none focus:border-[#F5E80C]/50"
           />
         </label>
         <Field
@@ -156,12 +156,12 @@ export default function FilmProfilePage() {
           placeholder={t('film.profile.contactPlaceholder')}
         />
 
-        {message ? <p className="text-sm text-[#FCD116]">{message}</p> : null}
+        {message ? <p className="text-sm text-[#F5E80C]">{message}</p> : null}
 
         <div className="flex flex-col gap-3 pt-2 sm:flex-row">
           <button
             type="submit"
-            className="rounded-full bg-[#007A5E] px-6 py-3 text-sm font-bold text-white hover:bg-[#00614b]"
+            className="rounded-full bg-[#079941] px-6 py-3 text-sm font-bold text-white hover:bg-[#067a34]"
           >
             {t('film.profile.save')}
           </button>
@@ -203,7 +203,7 @@ function Field({
         required={required}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm font-normal normal-case text-[#F8F5ED] outline-none placeholder:text-white/30 focus:border-[#FCD116]/50"
+        className="mt-1.5 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm font-normal normal-case text-[#F8F5ED] outline-none placeholder:text-white/30 focus:border-[#F5E80C]/50"
       />
     </label>
   );

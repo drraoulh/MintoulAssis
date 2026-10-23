@@ -25,7 +25,7 @@ export default function FilmDirectoryPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
       <header className="max-w-2xl">
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#FCD116]">
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#F5E80C]">
           {t('film.nav.directory')}
         </p>
         <h1 className="mt-2 font-display text-3xl font-bold text-[#F8F5ED] sm:text-4xl">
@@ -41,7 +41,7 @@ export default function FilmDirectoryPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t('film.directory.search')}
-            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pl-10 pr-3 text-sm text-[#F8F5ED] outline-none placeholder:text-white/35 focus:border-[#FCD116]/50"
+            className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pl-10 pr-3 text-sm text-[#F8F5ED] outline-none placeholder:text-white/35 focus:border-[#F5E80C]/50"
           />
         </label>
         <select
@@ -94,7 +94,7 @@ export default function FilmDirectoryPage() {
               key={e.id}
               className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5"
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#FCD116]">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#F5E80C]">
                 {locale === 'fr' ? cat?.fr : cat?.en}
               </p>
               <h2 className="mt-1 font-display text-lg font-semibold text-[#F8F5ED]">
@@ -136,7 +136,7 @@ function Chip({
       type="button"
       onClick={onClick}
       className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${
-        active ? 'bg-[#CE1126] text-white' : 'bg-white/5 text-white/60'
+        active ? 'bg-[#E30D13] text-white' : 'bg-white/5 text-white/60'
       }`}
     >
       {children}

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
+  ArrowUpRight,
   CalendarDays,
   CarFront,
   CheckSquare,
@@ -20,7 +21,6 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
 import { FilmAudienceGateway } from '@/components/film/FilmAudienceGateway';
-import { APP_NAME } from '@/lib/config';
 import { setEntryMode } from '@/lib/entry-mode';
 import {
   clearFilmAudience,
@@ -99,9 +99,28 @@ const SHARED_HUB: HubItem[] = [
   },
 ];
 
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/** Running SMPTE-style timecode for the viewfinder overlay. */
+function useTimecode() {
+  const [tc, setTc] = useState('00:00:00:00');
+  useEffect(() => {
+    const start = Date.now();
+    const id = setInterval(() => {
+      const ms = Date.now() - start;
+      const frames = Math.floor((ms % 1000) / (1000 / 24));
+      const s = Math.floor(ms / 1000);
+      setTc(`${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}:${pad(frames)}`);
+    }, 1000 / 24);
+    return () => clearInterval(id);
+  }, []);
+  return tc;
+}
+
 export default function FilmHomePage() {
   const { t, locale } = useLocale();
   const [audience, setAudience] = useState<FilmAudience | null | 'loading'>('loading');
+  const timecode = useTimecode();
 
   useEffect(() => {
     setEntryMode('film');
@@ -121,15 +140,16 @@ export default function FilmHomePage() {
   }, []);
 
   if (audience === 'loading') {
-    return <div className="min-h-[100svh] bg-[#050505]" aria-hidden />;
+    return <div className="min-h-[100svh] bg-[#070707]" aria-hidden />;
   }
 
   if (!audience) {
     return <FilmAudienceGateway onSelect={onAudienceSelect} />;
   }
 
+  const fr = locale === 'fr';
   const isIntl = audience === 'international';
-  const featured = FILM_LOCATIONS.filter((l) => l.alsoTourism).slice(0, 4);
+  const featured = FILM_LOCATIONS.filter((l) => l.alsoTourism).slice(0, 6);
   const hub: HubItem[] = [
     ...SHARED_HUB,
     isIntl
@@ -150,58 +170,56 @@ export default function FilmHomePage() {
 
   return (
     <div>
-      <section
-        className="relative overflow-hidden border-b border-white/10"
-        style={{
-          background: isIntl
-            ? 'radial-gradient(ellipse 80% 60% at 20% 0%, rgba(206,17,38,0.35), transparent 50%), radial-gradient(ellipse 60% 50% at 90% 30%, rgba(252,209,22,0.12), transparent 45%), #0a0a0a'
-            : 'radial-gradient(ellipse 80% 60% at 20% 0%, rgba(0,122,94,0.35), transparent 50%), radial-gradient(ellipse 60% 50% at 90% 30%, rgba(252,209,22,0.1), transparent 45%), #0a0a0a',
-        }}
-      >
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-8 sm:py-16 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+      {/* ── Opening title: logo framed in a camera viewfinder, letterboxed ── */}
+      <section className="relative isolate overflow-hidden bg-black">
+        <Image
+          src="/film/hub/equipment.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="-z-20 object-cover opacity-35 grayscale-[35%]"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              'radial-gradient(ellipse 75% 70% at 70% 50%, transparent 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.95) 100%), linear-gradient(90deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.25) 100%)',
+          }}
+        />
+        {/* Letterbox bars */}
+        <div aria-hidden className="h-6 bg-black sm:h-10" />
+
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-10 sm:px-8 sm:py-16 md:grid-cols-[1.05fr_0.95fr] md:py-20">
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: EASE }}
+            transition={{ duration: 0.9, ease: EASE }}
           >
-            <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-[#FCD116]">
-              {APP_NAME} · {isIntl ? t('film.audience.intl') : t('film.audience.local')}
+            <p className="cine-kicker">
+              {isIntl ? t('film.audience.intl') : t('film.audience.local')}
             </p>
-            <h1 className="font-display text-3xl font-bold leading-tight text-[#F8F5ED] sm:text-5xl">
+            <h1 className="font-display mt-5 text-[2.9rem] text-[#F8F5ED] min-[400px]:text-[3.4rem] sm:text-7xl lg:text-[5.4rem]">
               {isIntl ? t('film.home.intlTitle') : t('film.home.localTitle')}
             </h1>
-            <p className="mt-4 max-w-xl text-base text-[#F8F5ED]/72 sm:text-lg">
+            <p className="font-cine-serif mt-5 max-w-xl text-xl italic leading-snug text-[#F8F5ED]/80 sm:text-2xl">
               {isIntl ? t('film.home.intlSub') : t('film.home.localSub')}
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link
-                href="/film/locations"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/25 px-6 py-3 text-sm font-bold text-[#F8F5ED] hover:border-[#FCD116] hover:text-[#FCD116]"
-              >
+            <div className="mt-9 flex flex-col gap-3 min-[460px]:flex-row min-[460px]:flex-wrap">
+              <Link href="/film/locations" className="cine-btn">
                 {t('film.home.ctaLocations')}
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
-              <Link
-                href="/film/procedures"
-                className="inline-flex items-center justify-center rounded-full border border-white/25 px-6 py-3 text-sm font-bold text-[#F8F5ED] hover:border-[#FCD116] hover:text-[#FCD116]"
-              >
+              <Link href="/film/procedures" className="cine-btn-ghost">
                 {t('film.home.ctaProcedures')}
               </Link>
-              {isIntl ? (
-                <Link
-                  href="/film/locations/compare"
-                  className="inline-flex items-center justify-center rounded-full border border-white/25 px-6 py-3 text-sm font-bold text-[#F8F5ED] hover:border-[#FCD116]"
-                >
-                  {t('film.home.ctaCompare')}
-                </Link>
-              ) : (
-                <Link
-                  href="/film/resources"
-                  className="inline-flex items-center justify-center rounded-full border border-white/25 px-6 py-3 text-sm font-bold text-[#F8F5ED] hover:border-[#FCD116]"
-                >
-                  {t('film.home.ctaResources')}
-                </Link>
-              )}
+              <Link
+                href={isIntl ? '/film/locations/compare' : '/film/resources'}
+                className="cine-btn-ghost"
+              >
+                {isIntl ? t('film.home.ctaCompare') : t('film.home.ctaResources')}
+              </Link>
             </div>
             <button
               type="button"
@@ -209,72 +227,102 @@ export default function FilmHomePage() {
                 clearFilmAudience();
                 setAudience(null);
               }}
-              className="mt-5 text-xs text-white/40 underline-offset-2 hover:text-[#FCD116] hover:underline"
+              className="mt-6 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/40 hover:text-[#F5E80C]"
             >
               {t('film.audience.switch')}
             </button>
           </motion.div>
 
           <motion.div
-            className="relative mx-auto w-full max-w-md"
-            initial={{ opacity: 0, scale: 0.96 }}
+            className="order-first md:order-none"
+            initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
+            transition={{ duration: 1.1, delay: 0.15, ease: EASE }}
           >
-            <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-white/10">
-              <Image
-                src="/places/chutes-de-la-lobe.jpg"
-                alt=""
-                width={800}
-                height={600}
-                className="h-full w-full object-cover"
-                priority
-              />
+            <div className="cine-viewfinder mx-auto aspect-[4/3] w-full max-w-[22rem] sm:max-w-md">
+              <span className="vf-corner vf-tl" />
+              <span className="vf-corner vf-tr" />
+              <span className="vf-corner vf-bl" />
+              <span className="vf-corner vf-br" />
+              <div className="absolute inset-x-4 top-3 flex items-center justify-between font-mono text-[10px] tracking-[0.18em] text-white/70">
+                <span className="flex items-center gap-1.5">
+                  <span className="cine-rec-dot h-2 w-2 rounded-full bg-[#E30D13]" />
+                  REC
+                </span>
+                <span>4K · 24 FPS</span>
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center px-10 py-10">
+                <Image
+                  src="/brand/logo-cinema.png"
+                  alt="SmartMboa Cinéma"
+                  width={1010}
+                  height={761}
+                  priority
+                  sizes="(min-width: 768px) 380px, 280px"
+                  className="h-auto max-h-full w-full object-contain drop-shadow-[0_18px_40px_rgba(0,0,0,0.85)]"
+                />
+              </div>
+              <div className="absolute inset-x-4 bottom-3 flex items-center justify-between font-mono text-[10px] tracking-[0.18em] text-white/60">
+                <span>TC {timecode}</span>
+                <span>ISO 800 · 5600K</span>
+              </div>
             </div>
-            <p className="mt-2 text-center text-xs text-white/45">{t('film.home.heroCaption')}</p>
           </motion.div>
         </div>
+
+        <div aria-hidden className="h-6 bg-black sm:h-10" />
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-12 sm:px-8 sm:py-14">
-        <h2 className="font-display text-2xl font-bold text-[#F8F5ED] sm:text-3xl">
-          {t('film.home.toolsTitle')}
-        </h2>
-        <p className="mt-2 max-w-2xl text-sm text-white/55 sm:text-base">
-          {t('film.home.oneSystem')}
-        </p>
-        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {hub.map((item) => {
+      {/* ── Production desk: numbered poster cards ── */}
+      <section className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-20">
+        <div className="flex flex-col gap-4 border-b border-white/10 pb-8 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="cine-kicker">{fr ? 'Sommaire' : 'Contents'}</p>
+            <h2 className="font-display mt-4 text-5xl text-[#F8F5ED] sm:text-6xl">
+              {t('film.home.toolsTitle')}
+            </h2>
+          </div>
+          <p className="font-cine-serif max-w-md text-lg italic text-white/60 md:text-right">
+            {t('film.home.oneSystem')}
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-px overflow-hidden border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
+          {hub.map((item, index) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition hover:border-[#FCD116]/40 hover:bg-white/[0.06]"
+                className="group relative flex min-h-[19rem] flex-col justify-end overflow-hidden bg-[#0b0b0b] p-6 sm:min-h-[21rem]"
               >
                 {item.image ? (
-                  <div className="relative aspect-[16/9] overflow-hidden bg-white/5">
-                    <Image
-                      src={item.image}
-                      alt=""
-                      fill
-                      sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                      className="object-cover transition duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                  </div>
-                ) : null}
-                <div className="flex flex-1 flex-col gap-3 px-5 py-5">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#CE1126]/25 text-[#FCD116]">
-                    <Icon className="h-5 w-5" aria-hidden />
-                  </span>
-                  <span className="font-display text-lg font-semibold text-[#F8F5ED]">
-                    {t(item.titleKey)}
-                  </span>
-                  <span className="text-sm text-white/55">{t(item.bodyKey)}</span>
-                  <span className="mt-auto text-xs font-semibold uppercase tracking-wider text-[#FCD116] opacity-70 group-hover:opacity-100">
-                    →
-                  </span>
+                  <Image
+                    src={item.image}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    loading={index < 3 ? 'eager' : 'lazy'}
+                    className="object-cover opacity-55 grayscale-[45%] transition duration-700 group-hover:scale-105 group-hover:opacity-75 group-hover:grayscale-0"
+                  />
+                ) : (
+                  <Icon
+                    className="absolute right-6 top-6 h-24 w-24 stroke-[0.8] text-white/[0.07] transition group-hover:text-[#F5E80C]/20"
+                    aria-hidden
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/10" />
+                <span className="font-display absolute left-6 top-5 text-2xl text-[#F5E80C]/90">
+                  {pad(index + 1)}
+                </span>
+                <ArrowUpRight
+                  className="absolute right-5 top-5 h-5 w-5 text-white/40 transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#F5E80C]"
+                  aria-hidden
+                />
+                <div className="relative">
+                  <span className="mb-3 block h-px w-10 bg-[#F5E80C] transition-all duration-500 group-hover:w-20" />
+                  <h3 className="font-display text-3xl text-[#F8F5ED]">{t(item.titleKey)}</h3>
+                  <p className="mt-2 max-w-xs text-sm leading-relaxed text-white/65">{t(item.bodyKey)}</p>
                 </div>
               </Link>
             );
@@ -282,49 +330,52 @@ export default function FilmHomePage() {
         </div>
       </section>
 
-      <section className="border-t border-white/10 bg-[#0f0f0f] py-12 sm:py-14">
-        <div className="mx-auto max-w-6xl px-4 sm:px-8">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="font-display text-2xl font-bold text-[#F8F5ED] sm:text-3xl">
-                {t('film.home.sharedTitle')}
-              </h2>
-              <p className="mt-2 max-w-xl text-sm text-white/55 sm:text-base">
-                {t('film.home.sharedSub')}
-              </p>
-            </div>
-            <Link
-              href="/film/locations"
-              className="text-sm font-semibold text-[#FCD116] hover:underline"
-            >
-              {t('film.home.seeAllLocations')}
-            </Link>
+      {/* ── Featured locations on a 35mm strip ── */}
+      <section className="border-t border-white/10 py-16 sm:py-20">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 sm:px-8 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="cine-kicker">{fr ? 'Repérages' : 'Scouting'}</p>
+            <h2 className="font-display mt-4 text-5xl text-[#F8F5ED] sm:text-6xl">
+              {t('film.home.sharedTitle')}
+            </h2>
+            <p className="font-cine-serif mt-3 max-w-xl text-lg italic text-white/60">
+              {t('film.home.sharedSub')}
+            </p>
           </div>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {featured.map((loc) => {
+          <Link href="/film/locations" className="cine-btn-ghost self-start md:self-auto">
+            {t('film.home.seeAllLocations')}
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </Link>
+        </div>
+
+        <div className="cine-filmstrip mt-10">
+          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 sm:px-8">
+            {featured.map((loc, i) => {
               const cover = filmLocationCover(loc);
-              const name = locale === 'fr' ? loc.nameFr : loc.nameEn;
+              const name = fr ? loc.nameFr : loc.nameEn;
               return (
                 <Link
                   key={loc.slug}
                   href={`/film/locations/${loc.slug}`}
-                  className="group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]"
+                  className="group relative aspect-[3/2] w-[78vw] max-w-[26rem] shrink-0 snap-start overflow-hidden bg-black sm:w-[22rem]"
                 >
-                  <div className="aspect-[4/3] overflow-hidden bg-white/5">
-                    {cover ? (
-                      <Image
-                        src={cover}
-                        alt=""
-                        width={480}
-                        height={360}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                      />
-                    ) : null}
-                  </div>
-                  <div className="px-4 py-3">
-                    <p className="font-semibold text-[#F8F5ED]">{name}</p>
-                    <p className="mt-1 text-xs text-white/45">
-                      {locale === 'fr' ? loc.cityFr : loc.cityEn} · {t('film.sharedBadge')}
+                  {cover ? (
+                    <Image
+                      src={cover}
+                      alt=""
+                      fill
+                      sizes="(min-width: 640px) 352px, 78vw"
+                      className="object-cover grayscale-[30%] transition duration-700 group-hover:scale-105 group-hover:grayscale-0"
+                    />
+                  ) : null}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                  <span className="absolute left-3 top-2 font-mono text-[10px] tracking-[0.2em] text-[#F5E80C]/80">
+                    {`SC ${pad(i + 1)}`}
+                  </span>
+                  <div className="absolute inset-x-4 bottom-3">
+                    <p className="font-display text-2xl text-[#F8F5ED]">{name}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/55">
+                      {fr ? loc.cityFr : loc.cityEn} · {t('film.sharedBadge')}
                     </p>
                   </div>
                 </Link>

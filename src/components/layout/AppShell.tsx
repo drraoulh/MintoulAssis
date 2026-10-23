@@ -7,6 +7,7 @@ import { FilmShell } from '@/components/film/FilmShell';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { SiteFooter, SiteHeader } from '@/components/layout/SiteHeader';
 import { ScrollToTop } from '@/components/layout/ScrollToTop';
+import { markHydrated } from '@/lib/hydration';
 
 /**
  * App chrome — tourism shell by default; film world gets its own menus.
@@ -21,6 +22,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isFullHeight = isAssistant || isGroupRoom || introPlaying;
 
   useEffect(() => {
+    markHydrated();
     const sync = () =>
       setIntroPlaying(document.documentElement.classList.contains('intro-playing'));
     sync();

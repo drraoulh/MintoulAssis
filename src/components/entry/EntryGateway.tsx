@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Clapperboard, Compass } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 
 import { APP_NAME } from '@/lib/config';
@@ -21,8 +21,10 @@ export function EntryGateway({ onSelect }: Props) {
     <div
       className="intro-shell"
       style={{
+        // .intro-shell clips overflow; let short / landscape screens scroll instead
+        overflowY: 'auto',
         background:
-          'radial-gradient(ellipse 90% 55% at 50% 0%, rgba(0,122,94,0.3), transparent 55%), radial-gradient(ellipse 70% 40% at 80% 100%, rgba(206,17,38,0.18), transparent 50%), #050505',
+          'radial-gradient(ellipse 90% 55% at 20% 0%, rgba(0,122,94,0.32), transparent 55%), radial-gradient(ellipse 80% 50% at 85% 100%, rgba(206,17,38,0.24), transparent 55%), #050505',
       }}
       role="dialog"
       aria-modal="true"
@@ -34,27 +36,19 @@ export function EntryGateway({ onSelect }: Props) {
         <div className="flex-1 bg-[#FCD116]" />
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col px-4 py-6 sm:px-8 sm:py-10">
+      <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-4 py-6 sm:px-8 sm:py-10 lg:py-14">
         <motion.div
-          className="mx-auto flex w-full max-w-3xl shrink-0 flex-col items-center text-center"
+          className="flex flex-col items-center text-center"
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, ease: EASE }}
         >
-          <Image
-            src="/brand/logo.png"
-            alt={APP_NAME}
-            width={475}
-            height={378}
-            priority
-            className="mb-4 h-14 w-auto object-contain sm:mb-5 sm:h-20"
-          />
-          <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-[0.28em] text-[#FCD116]/90 sm:text-[0.7rem]">
+          <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-[#FCD116]/90 sm:text-xs">
             {APP_NAME}
           </p>
           <h1
             id="entry-gateway-title"
-            className="font-display text-[1.55rem] font-bold leading-tight text-[#F8F5ED] sm:text-4xl"
+            className="font-display text-[1.6rem] font-bold leading-tight text-[#F8F5ED] min-[380px]:text-3xl sm:text-4xl lg:text-5xl"
           >
             {t('gateway.title')}
           </h1>
@@ -63,22 +57,25 @@ export function EntryGateway({ onSelect }: Props) {
           </p>
         </motion.div>
 
-        {/* Mobile: full-height stacked chooser; desktop: side by side */}
-        <div className="mx-auto mt-6 flex w-full max-w-3xl min-h-0 flex-1 flex-col gap-3 sm:mt-10 sm:grid sm:flex-none sm:grid-cols-2 sm:gap-5">
+        <div className="mt-6 grid w-full gap-3 sm:mt-10 sm:grid-cols-2 sm:gap-5 lg:gap-8">
           <GatewayOption
             delay={0.12}
             accent="tourism"
-            icon={Compass}
+            logo="/brand/logo.png"
+            logoSize={{ width: 475, height: 378 }}
             title={t('gateway.tourism')}
             hint={t('gateway.tourismHint')}
+            cta={t('gateway.enter')}
             onClick={() => onSelect('tourism')}
           />
           <GatewayOption
             delay={0.22}
             accent="film"
-            icon={Clapperboard}
+            logo="/brand/logo-cinema.png"
+            logoSize={{ width: 1010, height: 761 }}
             title={t('gateway.film')}
             hint={t('gateway.filmHint')}
+            cta={t('gateway.enter')}
             onClick={() => onSelect('film')}
           />
         </div>
@@ -90,16 +87,20 @@ export function EntryGateway({ onSelect }: Props) {
 function GatewayOption({
   delay,
   accent,
-  icon: Icon,
+  logo,
+  logoSize,
   title,
   hint,
+  cta,
   onClick,
 }: {
   delay: number;
   accent: 'tourism' | 'film';
-  icon: typeof Compass;
+  logo: string;
+  logoSize: { width: number; height: number };
   title: string;
   hint: string;
+  cta: string;
   onClick: () => void;
 }) {
   const isTourism = accent === 'tourism';
@@ -110,34 +111,52 @@ function GatewayOption({
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay, ease: EASE }}
-      whileHover={{ y: -3, scale: 1.01 }}
+      whileHover={{ y: -4 }}
       whileTap={{ scale: 0.985 }}
-      className={
+      className={`group relative flex items-center gap-4 overflow-hidden rounded-3xl border px-4 py-4 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-[#FCD116] sm:flex-col sm:items-center sm:gap-5 sm:px-7 sm:py-8 sm:text-center lg:py-10 ${
         isTourism
-          ? 'group flex min-h-0 flex-1 flex-col items-start justify-center gap-3 rounded-2xl border border-[#007A5E]/45 bg-[#007A5E]/14 px-5 py-6 text-left outline-none transition hover:border-[#007A5E] hover:bg-[#007A5E]/22 focus-visible:ring-2 focus-visible:ring-[#FCD116] sm:min-h-[13rem] sm:flex-none sm:justify-start sm:gap-4 sm:px-6 sm:py-7'
-          : 'group flex min-h-0 flex-1 flex-col items-start justify-center gap-3 rounded-2xl border border-[#FCD116]/35 bg-[#CE1126]/12 px-5 py-6 text-left outline-none transition hover:border-[#FCD116] hover:bg-[#CE1126]/18 focus-visible:ring-2 focus-visible:ring-[#FCD116] sm:min-h-[13rem] sm:flex-none sm:justify-start sm:gap-4 sm:px-6 sm:py-7'
-      }
+          ? 'border-[#007A5E]/50 bg-[#007A5E]/[0.12] hover:border-[#00a37d] hover:bg-[#007A5E]/[0.2]'
+          : 'border-[#CE1126]/45 bg-[#CE1126]/[0.1] hover:border-[#FCD116] hover:bg-[#CE1126]/[0.16]'
+      }`}
     >
+      {/* Soft halo behind the logo */}
       <span
-        className={
-          isTourism
-            ? 'flex h-11 w-11 items-center justify-center rounded-full bg-[#007A5E] text-white shadow-[0_0_24px_rgba(0,122,94,0.45)] sm:h-12 sm:w-12'
-            : 'flex h-11 w-11 items-center justify-center rounded-full bg-[#CE1126] text-white shadow-[0_0_24px_rgba(206,17,38,0.4)] sm:h-12 sm:w-12'
-        }
-      >
-        <Icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
+        aria-hidden
+        className={`pointer-events-none absolute left-10 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl sm:left-1/2 sm:top-24 sm:h-56 sm:w-56 ${
+          isTourism ? 'bg-[#007A5E]/35' : 'bg-[#CE1126]/30'
+        }`}
+      />
+      <span className="relative flex h-20 w-24 shrink-0 items-center justify-center min-[400px]:h-24 min-[400px]:w-28 sm:h-36 sm:w-auto lg:h-44">
+        <Image
+          src={logo}
+          alt=""
+          width={logoSize.width}
+          height={logoSize.height}
+          priority
+          sizes="(min-width: 1024px) 240px, (min-width: 640px) 200px, 112px"
+          className="h-full w-auto object-contain drop-shadow-[0_6px_24px_rgba(0,0,0,0.55)] transition duration-500 group-hover:scale-[1.04]"
+        />
       </span>
-      <span className="block">
-        <span className="font-display block text-lg font-bold text-[#F8F5ED] sm:text-2xl">
+      <span className="relative min-w-0 flex-1 sm:flex-none">
+        <span className="font-display block text-base font-bold leading-snug text-[#F8F5ED] min-[400px]:text-lg sm:text-2xl">
           {title}
         </span>
-        <span className="mt-1.5 block text-sm leading-relaxed text-[#F8F5ED]/65 sm:mt-2">
+        <span className="mt-1 block text-xs leading-relaxed text-[#F8F5ED]/65 min-[400px]:text-sm sm:mt-2">
           {hint}
         </span>
+        <span
+          className={`mt-3 hidden items-center gap-2 rounded-full px-5 py-2 text-sm font-bold sm:inline-flex ${
+            isTourism ? 'bg-[#007A5E] text-white' : 'bg-[#CE1126] text-white'
+          }`}
+        >
+          {cta}
+          <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" aria-hidden />
+        </span>
       </span>
-      <span className="mt-auto text-xs font-semibold uppercase tracking-[0.16em] text-[#FCD116] opacity-80 group-hover:opacity-100">
-        {isTourism ? '→' : '→'}
-      </span>
+      <ArrowRight
+        className="relative h-5 w-5 shrink-0 text-[#FCD116] transition group-hover:translate-x-0.5 sm:hidden"
+        aria-hidden
+      />
     </motion.button>
   );
 }

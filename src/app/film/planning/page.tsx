@@ -33,7 +33,7 @@ export default function FilmPlanningPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
       <header className="max-w-2xl">
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#FCD116]">
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#F5E80C]">
           {t('film.nav.planning')}
         </p>
         <h1 className="mt-2 font-display text-3xl font-bold text-[#F8F5ED] sm:text-4xl">
@@ -60,7 +60,7 @@ export default function FilmPlanningPage() {
               <button
                 type="button"
                 onClick={() => download(list.id)}
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-[#FCD116] hover:border-[#FCD116]"
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-[#F5E80C] hover:border-[#F5E80C]"
               >
                 <Download className="h-3.5 w-3.5" aria-hidden />
                 {t('film.planning.download')}
@@ -77,7 +77,7 @@ export default function FilmPlanningPage() {
                         type="checkbox"
                         checked={on}
                         onChange={() => toggle(id)}
-                        className="mt-1 h-4 w-4 accent-[#CE1126]"
+                        className="mt-1 h-4 w-4 accent-[#E30D13]"
                       />
                       <span
                         className={`text-sm ${on ? 'text-white/40 line-through' : 'text-white/80'}`}

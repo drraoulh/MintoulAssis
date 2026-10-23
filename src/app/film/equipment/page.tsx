@@ -17,7 +17,7 @@ export default function FilmEquipmentPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
       <header className="max-w-2xl">
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#FCD116]">
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#F5E80C]">
           {t('film.nav.equipment')}
         </p>
         <h1 className="mt-2 font-display text-3xl font-bold text-[#F8F5ED] sm:text-4xl">
@@ -31,7 +31,7 @@ export default function FilmEquipmentPage() {
           type="button"
           onClick={() => setKind('all')}
           className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-            kind === 'all' ? 'bg-[#CE1126] text-white' : 'bg-white/5 text-white/60'
+            kind === 'all' ? 'bg-[#E30D13] text-white' : 'bg-white/5 text-white/60'
           }`}
         >
           {t('film.equipment.all')}
@@ -42,7 +42,7 @@ export default function FilmEquipmentPage() {
             type="button"
             onClick={() => setKind(k.id)}
             className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-              kind === k.id ? 'bg-[#CE1126] text-white' : 'bg-white/5 text-white/60'
+              kind === k.id ? 'bg-[#E30D13] text-white' : 'bg-white/5 text-white/60'
             }`}
           >
             {locale === 'fr' ? k.fr : k.en}
@@ -58,7 +58,7 @@ export default function FilmEquipmentPage() {
               key={item.id}
               className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5"
             >
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#FCD116]">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#F5E80C]">
                 {locale === 'fr' ? meta?.fr : meta?.en}
               </p>
               <h2 className="mt-1 font-display text-lg font-semibold text-[#F8F5ED]">

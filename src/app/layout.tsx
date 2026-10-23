@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
+import { Bebas_Neue, Cormorant_Garamond, Plus_Jakarta_Sans } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 
 import { AppShell } from '@/components/layout/AppShell';
+import { freshStartScript } from '@/lib/boot-id';
 import { LocaleProvider } from '@/lib/i18n';
 import {
   APP_DESCRIPTION_FR,
@@ -19,6 +20,22 @@ const body = Plus_Jakarta_Sans({
   variable: '--font-body',
   display: 'swap',
   weight: ['400', '500', '600', '700'],
+});
+
+/** Cinema section: condensed title face + serif italic for taglines. */
+const cine = Bebas_Neue({
+  subsets: ['latin'],
+  variable: '--font-cine',
+  display: 'swap',
+  weight: '400',
+});
+
+const cineSerif = Cormorant_Garamond({
+  subsets: ['latin'],
+  variable: '--font-cine-serif',
+  display: 'swap',
+  weight: ['500', '600'],
+  style: ['italic', 'normal'],
 });
 
 const siteUrl = getSiteUrl();
@@ -162,8 +179,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
-      <body className={`${body.variable} antialiased`}>
+    <html lang="fr" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: freshStartScript() }} />
+      </head>
+      <body className={`${body.variable} ${cine.variable} ${cineSerif.variable} antialiased`}>
         <JsonLd />
         <LocaleProvider>
           <AppShell>{children}</AppShell>

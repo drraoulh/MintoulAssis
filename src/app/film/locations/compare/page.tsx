@@ -28,7 +28,7 @@ export default function FilmComparePage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
       <header className="max-w-2xl">
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#FCD116]">
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#F5E80C]">
           {t('film.compare.eyebrow')}
         </p>
         <h1 className="mt-2 font-display text-3xl font-bold text-[#F8F5ED] sm:text-4xl">
@@ -61,7 +61,7 @@ export default function FilmComparePage() {
         <a
           href={dossierPdfUrl(bothSlugs, locale)}
           download
-          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#CE1126] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#b50e21]"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#E30D13] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#B80A0F]"
         >
           <Download className="h-4 w-4" aria-hidden />
           {t('film.compare.download')}
@@ -110,7 +110,7 @@ function CompareCard({
           </div>
           <Link
             href={`/film/locations/${loc.slug}`}
-            className="text-xs font-semibold text-[#FCD116] hover:underline"
+            className="text-xs font-semibold text-[#F5E80C] hover:underline"
           >
             {t('film.compare.open')}
           </Link>
@@ -145,7 +145,7 @@ function CompareCard({
         <a
           href={dossierPdfUrl([loc.slug], locale)}
           download
-          className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-4 py-2.5 text-xs font-semibold text-[#FCD116] hover:border-[#FCD116]"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/20 px-4 py-2.5 text-xs font-semibold text-[#F5E80C] hover:border-[#F5E80C]"
         >
           <Download className="h-3.5 w-3.5" aria-hidden />
           {t('film.dossier.download')}
@@ -179,7 +179,7 @@ function LocationOptions({ locale }: { locale: 'fr' | 'en' }) {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="border-t border-white/10 pt-2">
-      <dt className="text-[10px] font-bold uppercase tracking-wider text-[#FCD116]/80">
+      <dt className="text-[10px] font-bold uppercase tracking-wider text-[#F5E80C]/80">
         {label}
       </dt>
       <dd className="mt-0.5 text-white/75">{value}</dd>
