@@ -3,6 +3,7 @@
  * shaped as filming locations. Practical notes are per-type guidance to confirm on site.
  */
 
+import { ayilaaNameKey, AYILAA_COVER_BY_NAME } from '@/lib/film/ayilaa-locations';
 import osm from '@/lib/film/data/osm-places.json';
 import type {
   AccessLevel,
@@ -50,7 +51,7 @@ type Notes = Pick<
   'accessFr' | 'accessEn' | 'powerFr' | 'powerEn' | 'permitFr' | 'permitEn' | 'practicalFr' | 'practicalEn'
 >;
 
-const NOTES: Record<Exclude<FilmLocationKind, 'site'>, Notes> = {
+const NOTES: Record<Exclude<FilmLocationKind, 'site' | 'restaurant'>, Notes> = {
   hotel: {
     accessFr: 'Accès routier en ville — parking et zone de déchargement à réserver auprès de l’établissement.',
     accessEn: 'Urban road access — book parking and a loading area with the property.',
@@ -113,25 +114,26 @@ function slugify(s: string): string {
 }
 
 function villageLooks(regionId?: string, city?: string): FilmLook[] {
-  if (city && COASTAL.test(city)) return ['cultural', 'coast'];
+  // Primary look first — used for exact ambiance filtering.
+  if (city && COASTAL.test(city)) return ['coast', 'cultural'];
   switch (regionId) {
     case 'extreme-nord':
     case 'nord':
-      return ['cultural', 'savanna'];
+      return ['savanna', 'cultural'];
     case 'adamaoua':
-      return ['cultural', 'savanna', 'mountain'];
+      return ['savanna', 'mountain', 'cultural'];
     case 'ouest':
     case 'nord-ouest':
-      return ['cultural', 'mountain'];
+      return ['mountain', 'cultural'];
     case 'littoral':
     case 'sud-ouest':
-      return ['cultural', 'forest', 'coast'];
+      return ['coast', 'forest', 'cultural'];
     default:
-      return ['cultural', 'forest'];
+      return ['forest', 'cultural'];
   }
 }
 
-function kindOf(raw: string): Exclude<FilmLocationKind, 'site'> {
+function kindOf(raw: string): Exclude<FilmLocationKind, 'site' | 'restaurant'> {
   return raw === 'villa' || raw === 'house' || raw === 'village' ? raw : 'hotel';
 }
 
@@ -143,7 +145,7 @@ function toLocation(rec: OsmStay): FilmLocationMeta {
   const north = rec.regionId === 'extreme-nord' || rec.regionId === 'nord';
 
   const looks: FilmLook[] =
-    kind === 'village' ? villageLooks(rec.regionId, city) : coastal ? ['urban', 'coast'] : ['urban'];
+    kind === 'village' ? villageLooks(rec.regionId, city) : coastal ? ['coast', 'urban'] : ['urban'];
   const season: FilmSeason = kind === 'village' && north ? 'dry' : 'year-round';
   const costTier: CostTier =
     kind === 'village'
@@ -171,7 +173,7 @@ function toLocation(rec: OsmStay): FilmLocationMeta {
     season,
     latitude: rec.lat,
     longitude: rec.lon,
-    coverHint: rec.image,
+    coverHint: rec.image || AYILAA_COVER_BY_NAME.get(ayilaaNameKey(rec.name)),
     stars: rec.stars,
     contact: {
       phone: rec.phone,
@@ -191,7 +193,13 @@ function toLocation(rec: OsmStay): FilmLocationMeta {
 
 export const OSM_FILM_LOCATIONS: FilmLocationMeta[] = [...DATA.stays, ...DATA.villages]
   .filter((r) => r.name && Number.isFinite(r.lat) && Number.isFinite(r.lon))
-  .map(toLocation);
+  .map(toLocation)
+  // Stays without a cover stay hidden — Ayila'a catalog already covers them with photos.
+  .filter(
+    (loc) =>
+      (loc.kind !== 'hotel' && loc.kind !== 'house' && loc.kind !== 'villa') ||
+      Boolean(loc.coverHint),
+  );
 
 export const OSM_RENTALS: RentalShop[] = DATA.rentals.filter(
   (r) => r.name && Number.isFinite(r.lat) && Number.isFinite(r.lon),

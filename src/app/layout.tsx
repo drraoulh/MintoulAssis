@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Bebas_Neue, Cormorant_Garamond, Plus_Jakarta_Sans } from 'next/font/google';
+import localFont from 'next/font/local';
 import { Analytics } from '@vercel/analytics/next';
 
 import { AppShell } from '@/components/layout/AppShell';
@@ -15,27 +15,29 @@ import {
 
 import './globals.css';
 
-const body = Plus_Jakarta_Sans({
-  subsets: ['latin'],
+/** Self-hosted to avoid Turbopack next/font/google `/l/font?kit=` failures. */
+const body = localFont({
+  src: [
+    { path: '../fonts/plus-jakarta-400.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/plus-jakarta-500.woff2', weight: '500', style: 'normal' },
+    { path: '../fonts/plus-jakarta-600.woff2', weight: '600', style: 'normal' },
+    { path: '../fonts/plus-jakarta-700.woff2', weight: '700', style: 'normal' },
+  ],
   variable: '--font-body',
   display: 'swap',
-  weight: ['400', '500', '600', '700'],
 });
 
 /** Cinema section: condensed title face + serif italic for taglines. */
-const cine = Bebas_Neue({
-  subsets: ['latin'],
+const cine = localFont({
+  src: [{ path: '../fonts/bebas-neue-400.woff2', weight: '400', style: 'normal' }],
   variable: '--font-cine',
   display: 'swap',
-  weight: '400',
 });
 
-const cineSerif = Cormorant_Garamond({
-  subsets: ['latin'],
+const cineSerif = localFont({
+  src: [{ path: '../fonts/cormorant-garamond-600i.woff2', weight: '600', style: 'italic' }],
   variable: '--font-cine-serif',
   display: 'swap',
-  weight: ['500', '600'],
-  style: ['italic', 'normal'],
 });
 
 const siteUrl = getSiteUrl();
@@ -183,7 +185,10 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: freshStartScript() }} />
       </head>
-      <body className={`${body.variable} ${cine.variable} ${cineSerif.variable} antialiased`}>
+      <body
+        className={`${body.variable} ${cine.variable} ${cineSerif.variable} antialiased`}
+        suppressHydrationWarning
+      >
         <JsonLd />
         <LocaleProvider>
           <AppShell>{children}</AppShell>

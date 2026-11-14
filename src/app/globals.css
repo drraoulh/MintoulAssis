@@ -529,3 +529,156 @@ select {
 @media (prefers-reduced-motion: reduce) {
   .cine-rec-dot { animation: none; }
 }
+
+/* ── Cameroon heritage fabric (Toghu / Ndop) around cinema ── */
+.cine-heritage-strip {
+  position: relative;
+  display: block;
+  height: clamp(40px, 6vw, 56px);
+  width: 100%;
+  overflow: hidden;
+  background-color: #000;
+  border-top: 1px solid rgba(245, 232, 12, 0.35);
+  border-bottom: 1px solid rgba(227, 13, 19, 0.4);
+}
+
+.cine-heritage-strip__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  filter: saturate(1.25) contrast(1.12) brightness(1.05);
+}
+
+.cine-heritage-strip--ndop .cine-heritage-strip__img {
+  object-position: center;
+  filter: saturate(1.1) contrast(1.08) brightness(1.02);
+}
+
+.cine-heritage-rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 36px;
+  background-color: #050505;
+  background-image: url('/film/culture/toghu-tile.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.85;
+  filter: saturate(1.05) brightness(0.78);
+  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.45);
+}
+
+.cine-heritage-rail--left {
+  left: 0;
+  border-right: 1px solid rgba(245, 232, 12, 0.28);
+}
+
+.cine-heritage-rail--right {
+  right: 0;
+  border-left: 1px solid rgba(227, 13, 19, 0.32);
+  background-image: url('/film/culture/ndop-tile.jpg');
+  opacity: 0.8;
+}
+
+.cine-heritage-wash {
+  pointer-events: none;
+  background-image:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.72)),
+    url('/film/culture/toghu-tile.jpg');
+  background-size: auto, 380px;
+  background-repeat: no-repeat, repeat;
+  mix-blend-mode: normal;
+  opacity: 0.55;
+}
+
+.cine-heritage-wash--medium {
+  opacity: 0.62;
+  background-image:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.75)),
+    url('/film/culture/ndop-tile.jpg');
+  background-size: auto, 340px;
+}
+
+.cine-heritage-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.cine-heritage-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: url('/film/culture/toghu-motif.png');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.42;
+  filter: brightness(0.75) contrast(1.15);
+}
+
+.cine-heritage-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.cine-heritage-frame {
+  position: relative;
+  border: 1px solid rgba(245, 232, 12, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(227, 13, 19, 0.2),
+    inset 0 0 40px rgba(0, 0, 0, 0.35);
+}
+
+.cine-heritage-frame::before,
+.cine-heritage-frame::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  height: 18px;
+  pointer-events: none;
+  background-image: url('/film/culture/toghu-footer.png');
+  background-size: cover;
+  background-position: center 15%;
+  background-repeat: no-repeat;
+  opacity: 1;
+  z-index: 2;
+}
+
+.cine-heritage-frame::before {
+  top: 6px;
+}
+
+.cine-heritage-frame::after {
+  bottom: 6px;
+  transform: scaleY(-1);
+}
+
+/* Full-width Toghu banner for cinema footer */
+.cine-heritage-footer-band {
+  position: relative;
+  width: 100%;
+  height: clamp(72px, 14vw, 128px);
+  overflow: hidden;
+  background-color: #000;
+  border-top: 1px solid rgba(245, 232, 12, 0.25);
+  border-bottom: 1px solid rgba(227, 13, 19, 0.3);
+}
+
+.cine-heritage-footer-band img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+@media (max-width: 1023px) {
+  .cine-heritage-rail {
+    display: none;
+  }
+}

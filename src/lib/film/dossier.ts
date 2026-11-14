@@ -1,5 +1,5 @@
 import type { FilmLocationMeta } from '@/lib/film/types';
-import { FILM_LOOKS } from '@/lib/film/locations';
+import { FILM_LOOK_LABELS } from '@/lib/film/locations';
 import { REGIONS } from '@/lib/regions';
 
 /** Build a preliminary location dossier as Markdown for producers. */
@@ -17,7 +17,7 @@ export function locationDossierMarkdown(
     : loc.regionId;
   const looks = loc.looks
     .map((id) => {
-      const m = FILM_LOOKS.find((x) => x.id === id);
+      const m = FILM_LOOK_LABELS.find((x) => x.id === id);
       return locale === 'fr' ? m?.fr : m?.en;
     })
     .filter(Boolean)

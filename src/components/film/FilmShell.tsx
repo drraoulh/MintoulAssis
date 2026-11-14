@@ -27,6 +27,11 @@ import {
 
 import { FilmSectionSwitcher } from '@/components/entry/SectionSwitcher';
 import { FilmFloatingAssistant } from '@/components/film/FilmFloatingAssistant';
+import {
+  FilmHeritageFooterBand,
+  FilmHeritageRails,
+  FilmHeritageStrip,
+} from '@/components/film/FilmHeritageFrame';
 import { FooterSignature } from '@/components/layout/FooterSignature';
 import { useLocale } from '@/lib/i18n';
 
@@ -56,25 +61,28 @@ export function FilmShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className={`film-theme flex text-[#F8F5ED] ${
+      className={`film-theme relative flex text-[#F8F5ED] ${
         isAssistant
           ? 'h-[100dvh] min-h-[100dvh] flex-col overflow-hidden'
           : 'min-h-[100svh] flex-col'
       }`}
     >
-      <FilmHeader />
-      <main
-        className={
-          isAssistant
-            ? 'flex min-h-0 flex-1 flex-col overflow-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0'
-            : 'flex-1'
-        }
-      >
-        {children}
-      </main>
-      {isAssistant ? null : <FilmFooter />}
-      <FilmBottomNav />
-      <FilmFloatingAssistant />
+      {!isAssistant ? <FilmHeritageRails /> : null}
+      <div className="relative z-[2] flex min-h-0 flex-1 flex-col">
+        <FilmHeader />
+        <main
+          className={
+            isAssistant
+              ? 'flex min-h-0 flex-1 flex-col overflow-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0'
+              : 'flex-1 lg:px-7'
+          }
+        >
+          {children}
+        </main>
+        {isAssistant ? null : <FilmFooter />}
+        <FilmBottomNav />
+        <FilmFloatingAssistant />
+      </div>
     </div>
   );
 }
@@ -88,6 +96,7 @@ function FilmHeader() {
 
   return (
     <div className="sticky top-0 z-50">
+      <FilmHeritageStrip />
       <div className="flex h-[2px]" aria-hidden>
         <div className="flex-1 bg-[#079941]" />
         <div className="flex-1 bg-[#E30D13]" />
@@ -219,6 +228,7 @@ function FilmFooter() {
   return (
     // Bottom padding keeps the footer clear of the fixed mobile tab bar
     <footer className="border-t border-white/[0.08] bg-black pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0">
+      <FilmHeritageFooterBand />
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-5 py-8 text-center md:flex-row md:justify-between md:px-8 md:text-left">
         <div className="flex flex-col items-center gap-3 md:flex-row md:gap-4">
           <Image
@@ -239,6 +249,7 @@ function FilmFooter() {
           ))}
         </nav>
       </div>
+      <FilmHeritageStrip />
       <FooterSignature brand="SmartMboa Cinéma" accent="#F5E80C" />
     </footer>
   );

@@ -17,7 +17,7 @@ import {
   renderToBuffer,
 } from '@react-pdf/renderer';
 
-import { FILM_LOOKS, filmLocationCover } from '@/lib/film/locations';
+import { FILM_LOOK_LABELS, filmLocationCover } from '@/lib/film/locations';
 import { FILM_PROCEDURE_STEPS } from '@/lib/film/procedures';
 import type { FilmLocationMeta } from '@/lib/film/types';
 import { translate, type Locale } from '@/lib/i18n-dict';
@@ -275,7 +275,7 @@ function regionName(loc: FilmLocationMeta, l: L) {
 function looksOf(loc: FilmLocationMeta, l: L): string[] {
   return loc.looks
     .map((id) => {
-      const m = FILM_LOOKS.find((x) => x.id === id);
+      const m = FILM_LOOK_LABELS.find((x) => x.id === id);
       return l.fr ? m?.fr : m?.en;
     })
     .filter((x): x is string => Boolean(x));

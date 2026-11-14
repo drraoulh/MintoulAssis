@@ -1,3 +1,4 @@
+import { AYILAA_FILM_LOCATIONS } from '@/lib/film/ayilaa-locations';
 import { practicalFor } from '@/lib/film/location-practical';
 import { OSM_FILM_LOCATIONS } from '@/lib/film/osm-locations';
 import type {
@@ -294,7 +295,7 @@ const FILM_LOCATION_SEEDS: FilmLocationSeed[] = [
   },
 ];
 
-export const FILM_LOCATIONS: FilmLocationMeta[] = [
+const FILM_LOCATIONS_RAW: FilmLocationMeta[] = [
   ...FILM_LOCATION_SEEDS.map((seed) => ({
     ...seed,
     kind: 'site' as const,
@@ -304,11 +305,26 @@ export const FILM_LOCATIONS: FilmLocationMeta[] = [
   ...OSM_FILM_LOCATIONS.filter(
     (o) => !FILM_LOCATION_SEEDS.some((s) => o.slug.startsWith(`${s.slug}-`)),
   ),
+  // Ayila'a hotels / restaurants / sites (images + contact) — skip name collisions with curated seeds
+  ...AYILAA_FILM_LOCATIONS.filter(
+    (a) =>
+      !FILM_LOCATION_SEEDS.some(
+        (s) =>
+          a.slug === s.slug ||
+          a.slug.startsWith(`${s.slug}-`) ||
+          a.nameFr.toLowerCase() === s.nameFr.toLowerCase(),
+      ),
+  ),
+];
+
+/** First occurrence wins — prevents React duplicate-key warnings on the grid. */
+export const FILM_LOCATIONS: FilmLocationMeta[] = [
+  ...new Map(FILM_LOCATIONS_RAW.map((loc) => [loc.slug, loc])).values(),
 ];
 
 export const FILM_LOCATION_KINDS: { id: FilmLocationKind; fr: string; en: string }[] = [
-  { id: 'site', fr: 'Sites & patrimoine', en: 'Sites & heritage' },
   { id: 'hotel', fr: 'Hôtels', en: 'Hotels' },
+  { id: 'restaurant', fr: 'Restaurants', en: 'Restaurants' },
   { id: 'villa', fr: 'Villas', en: 'Villas' },
   { id: 'house', fr: 'Maisons & résidences', en: 'Houses & residences' },
   { id: 'village', fr: 'Villages', en: 'Villages' },
@@ -318,15 +334,21 @@ export function filmLocationKind(loc: FilmLocationMeta): FilmLocationKind {
   return loc.kind ?? 'site';
 }
 
+/** Ambiance chips shown in the locations filter bar. */
 export const FILM_LOOKS: { id: FilmLook; fr: string; en: string }[] = [
   { id: 'coast', fr: 'Côte', en: 'Coast' },
+  { id: 'mountain', fr: 'Montagne', en: 'Mountain' },
+  { id: 'waterfall', fr: 'Chutes', en: 'Waterfalls' },
+  { id: 'lake', fr: 'Lacs', en: 'Lakes' },
+];
+
+/** Full look labels (detail badges, etc.). */
+export const FILM_LOOK_LABELS: { id: FilmLook; fr: string; en: string }[] = [
+  ...FILM_LOOKS,
   { id: 'savanna', fr: 'Savane', en: 'Savanna' },
   { id: 'forest', fr: 'Forêt', en: 'Forest' },
   { id: 'urban', fr: 'Urbain', en: 'Urban' },
-  { id: 'mountain', fr: 'Montagne', en: 'Mountain' },
   { id: 'cultural', fr: 'Patrimoine', en: 'Heritage' },
-  { id: 'waterfall', fr: 'Chutes', en: 'Waterfalls' },
-  { id: 'lake', fr: 'Lacs', en: 'Lakes' },
 ];
 
 export function getFilmLocation(slugOrId: string): FilmLocationMeta | undefined {
@@ -348,7 +370,8 @@ export function filterFilmLocations(opts: {
     if (opts.regionId && opts.regionId !== 'all' && loc.regionId !== opts.regionId) {
       return false;
     }
-    if (opts.look && opts.look !== 'all' && !loc.looks.includes(opts.look)) return false;
+    // Exact ambiance: primary look only (coast → only coast leads, not multi-tagged hotels/sites).
+    if (opts.look && opts.look !== 'all' && loc.looks[0] !== opts.look) return false;
     if (opts.costTier && opts.costTier !== 'all' && loc.costTier !== opts.costTier) {
       return false;
     }

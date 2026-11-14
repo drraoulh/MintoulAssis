@@ -7,36 +7,37 @@ import { Columns2, LayoutGrid, Search } from 'lucide-react';
 
 import { KIND_ICONS } from '@/components/film/location-kind-icons';
 import { TourismMap } from '@/components/maps/TourismMap';
-import { getFilmAudience } from '@/lib/film/audience';
 import {
   FILM_LOCATION_KINDS,
   FILM_LOOKS,
+  FILM_LOOK_LABELS,
   filterFilmLocations,
   filmLocationCover,
   filmLocationKind,
 } from '@/lib/film/locations';
+import { AYILAA_ATTRIBUTION } from '@/lib/film/ayilaa-locations';
 import { OSM_ATTRIBUTION } from '@/lib/film/osm-locations';
-import type { AccessLevel, CostTier, FilmLocationKind, FilmLook } from '@/lib/film/types';
+import type { FilmLocationKind, FilmLook } from '@/lib/film/types';
 import { REGIONS } from '@/lib/regions';
 import { useLocale } from '@/lib/i18n';
 import type { MapMarker } from '@/lib/types';
 
 const PAGE_SIZE = 24;
 
+type Category =
+  | { type: 'all' }
+  | { type: 'kind'; id: FilmLocationKind }
+  | { type: 'look'; id: FilmLook };
+
 export default function FilmLocationsPage() {
   const { t, locale } = useLocale();
   const [regionId, setRegionId] = useState('all');
-  const [look, setLook] = useState<FilmLook | 'all'>('all');
-  const [costTier, setCostTier] = useState<CostTier | 'all'>('all');
-  const [accessLevel, setAccessLevel] = useState<AccessLevel | 'all'>('all');
-  const [kind, setKind] = useState<FilmLocationKind | 'all'>('all');
+  const [category, setCategory] = useState<Category>({ type: 'all' });
   const [q, setQ] = useState('');
-  const [showLocalFilters, setShowLocalFilters] = useState(false);
   const [visible, setVisible] = useState(PAGE_SIZE);
 
-  useEffect(() => {
-    setShowLocalFilters(getFilmAudience() === 'local');
-  }, []);
+  const kind = category.type === 'kind' ? category.id : 'all';
+  const look = category.type === 'look' ? category.id : 'all';
 
   const locations = useMemo(
     () =>
@@ -45,13 +46,11 @@ export default function FilmLocationsPage() {
         look,
         kind,
         q,
-        costTier: showLocalFilters ? costTier : 'all',
-        accessLevel: showLocalFilters ? accessLevel : 'all',
       }),
-    [regionId, look, kind, q, costTier, accessLevel, showLocalFilters],
+    [regionId, look, kind, q],
   );
 
-  useEffect(() => setVisible(PAGE_SIZE), [regionId, look, kind, q, costTier, accessLevel]);
+  useEffect(() => setVisible(PAGE_SIZE), [regionId, look, kind, q]);
 
   const markers: MapMarker[] = useMemo(
     () =>
@@ -109,93 +108,57 @@ export default function FilmLocationsPage() {
             </option>
           ))}
         </select>
-        <select
-          value={look}
-          onChange={(e) => setLook(e.target.value as FilmLook | 'all')}
-          className="rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-[#F8F5ED]"
-          aria-label={t('film.locations.filterLook')}
-        >
-          <option value="all">{t('film.locations.allLooks')}</option>
-          {FILM_LOOKS.map((l) => (
-            <option key={l.id} value={l.id}>
-              {locale === 'fr' ? l.fr : l.en}
-            </option>
-          ))}
-        </select>
-        {showLocalFilters ? (
-          <>
-            <select
-              value={costTier}
-              onChange={(e) => setCostTier(e.target.value as CostTier | 'all')}
-              className="rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-[#F8F5ED]"
-              aria-label={t('film.cost.label')}
-            >
-              <option value="all">{t('film.cost.all')}</option>
-              <option value="budget">{t('film.cost.budget')}</option>
-              <option value="moderate">{t('film.cost.moderate')}</option>
-              <option value="premium">{t('film.cost.premium')}</option>
-            </select>
-            <select
-              value={accessLevel}
-              onChange={(e) => setAccessLevel(e.target.value as AccessLevel | 'all')}
-              className="rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-sm text-[#F8F5ED]"
-              aria-label={t('film.access.label')}
-            >
-              <option value="all">{t('film.access.all')}</option>
-              <option value="easy">{t('film.access.easy')}</option>
-              <option value="moderate">{t('film.access.moderate')}</option>
-              <option value="demanding">{t('film.access.demanding')}</option>
-            </select>
-          </>
-        ) : null}
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label={t('film.locations.filterKind')}>
-        {([{ id: 'all', fr: 'Tous les types', en: 'All types' }, ...FILM_LOCATION_KINDS] as const).map(
-          (k) => {
-            const Icon = k.id === 'all' ? LayoutGrid : KIND_ICONS[k.id];
-            const active = kind === k.id;
-            return (
-              <button
-                key={k.id}
-                type="button"
-                onClick={() => setKind(k.id)}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold transition ${
-                  active
-                    ? 'border-[#F5E80C] bg-[#F5E80C] text-black'
-                    : 'border-white/15 text-white/70 hover:border-[#F5E80C]/50'
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" aria-hidden />
-                {locale === 'fr' ? k.fr : k.en}
-              </button>
-            );
-          },
-        )}
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
-          onClick={() => setLook('all')}
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            look === 'all' ? 'bg-[#E30D13] text-white' : 'bg-white/5 text-white/60'
+          onClick={() => setCategory({ type: 'all' })}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold transition ${
+            category.type === 'all'
+              ? 'border-[#F5E80C] bg-[#F5E80C] text-black'
+              : 'border-white/15 text-white/70 hover:border-[#F5E80C]/50'
           }`}
         >
-          {t('film.locations.allLooks')}
+          <LayoutGrid className="h-3.5 w-3.5" aria-hidden />
+          {locale === 'fr' ? 'Toutes les catégories' : 'All categories'}
         </button>
-        {FILM_LOOKS.map((l) => (
-          <button
-            key={l.id}
-            type="button"
-            onClick={() => setLook(l.id)}
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              look === l.id ? 'bg-[#E30D13] text-white' : 'bg-white/5 text-white/60'
-            }`}
-          >
-            {locale === 'fr' ? l.fr : l.en}
-          </button>
-        ))}
+        {FILM_LOCATION_KINDS.map((k) => {
+          const Icon = KIND_ICONS[k.id];
+          const active = category.type === 'kind' && category.id === k.id;
+          return (
+            <button
+              key={`kind-${k.id}`}
+              type="button"
+              onClick={() => setCategory({ type: 'kind', id: k.id })}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold transition ${
+                active
+                  ? 'border-[#F5E80C] bg-[#F5E80C] text-black'
+                  : 'border-white/15 text-white/70 hover:border-[#F5E80C]/50'
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" aria-hidden />
+              {locale === 'fr' ? k.fr : k.en}
+            </button>
+          );
+        })}
+        {FILM_LOOKS.map((l) => {
+          const active = category.type === 'look' && category.id === l.id;
+          return (
+            <button
+              key={`look-${l.id}`}
+              type="button"
+              onClick={() => setCategory({ type: 'look', id: l.id })}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-bold transition ${
+                active
+                  ? 'border-[#E30D13] bg-[#E30D13] text-white'
+                  : 'border-white/15 text-white/70 hover:border-[#E30D13]/50'
+              }`}
+            >
+              {locale === 'fr' ? l.fr : l.en}
+            </button>
+          );
+        })}
       </div>
 
       {markers.length > 0 ? (
@@ -264,7 +227,7 @@ export default function FilmLocationsPage() {
                     {t(`film.access.${loc.accessLevel}`)}
                   </span>
                   {loc.looks.slice(0, 2).map((lk) => {
-                    const meta = FILM_LOOKS.find((x) => x.id === lk);
+                    const meta = FILM_LOOK_LABELS.find((x) => x.id === lk);
                     return (
                       <span
                         key={lk}
@@ -298,7 +261,9 @@ export default function FilmLocationsPage() {
       ) : null}
 
       {locations.some((l) => l.osm) ? (
-        <p className="mt-6 text-center text-[11px] text-white/35">{OSM_ATTRIBUTION}</p>
+        <p className="mt-6 text-center text-[11px] text-white/35">
+          {OSM_ATTRIBUTION} · {AYILAA_ATTRIBUTION}
+        </p>
       ) : null}
     </div>
   );

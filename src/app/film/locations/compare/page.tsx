@@ -9,7 +9,7 @@ import { dossierPdfUrl } from '@/lib/film/dossier';
 import {
   FILM_LOCATION_KINDS,
   FILM_LOCATIONS,
-  FILM_LOOKS,
+  FILM_LOOK_LABELS,
   filmLocationCover,
   filmLocationKind,
 } from '@/lib/film/locations';
@@ -123,7 +123,7 @@ function CompareCard({
             label={t('film.compare.looks')}
             value={loc.looks
               .map((id) => {
-                const m = FILM_LOOKS.find((x) => x.id === id);
+                const m = FILM_LOOK_LABELS.find((x) => x.id === id);
                 return locale === 'fr' ? m?.fr : m?.en;
               })
               .filter(Boolean)

@@ -4,6 +4,10 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 
+import {
+  FilmHeritageStrip,
+  FilmHeritageWash,
+} from '@/components/film/FilmHeritageFrame';
 import type { FilmAudience } from '@/lib/film/audience';
 import { useLocale } from '@/lib/i18n';
 
@@ -24,29 +28,31 @@ export function FilmAudienceGateway({ onSelect }: Props) {
       aria-labelledby="film-audience-title"
     >
       <Image
-        src="/film/hub/directory.jpg"
+        src="/film/culture/drums.jpg"
         alt=""
         fill
         priority
         sizes="100vw"
-        className="pointer-events-none object-cover opacity-25 grayscale-[40%]"
+        className="pointer-events-none object-cover opacity-[0.38] saturate-[0.9]"
       />
+      <FilmHeritageWash intensity="soft" className="z-0" />
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0"
+        className="pointer-events-none fixed inset-0 z-0"
         style={{
           background:
-            'radial-gradient(ellipse 70% 60% at 50% 40%, rgba(0,0,0,0.35), rgba(0,0,0,0.92) 75%), linear-gradient(180deg, rgba(0,0,0,0.6), rgba(0,0,0,0.85))',
+            'radial-gradient(ellipse 70% 60% at 50% 40%, rgba(0,0,0,0.4), rgba(0,0,0,0.94) 75%), linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.9))',
         }}
       />
 
-      <div className="relative flex h-[2px] w-full shrink-0" aria-hidden>
+      <FilmHeritageStrip className="relative z-[1] shrink-0" />
+      <div className="relative z-[1] flex h-[2px] w-full shrink-0" aria-hidden>
         <div className="flex-1 bg-[#079941]" />
         <div className="flex-1 bg-[#E30D13]" />
         <div className="flex-1 bg-[#F5E80C]" />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-5 py-10 sm:px-8 sm:py-14">
+      <div className="relative z-[1] mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-5 py-10 sm:px-8 sm:py-14">
         <motion.div
           className="flex flex-col items-center text-center"
           initial={{ opacity: 0, y: 14 }}
@@ -96,6 +102,7 @@ export function FilmAudienceGateway({ onSelect }: Props) {
             title={t('film.audience.intl')}
             tagline={t('film.audience.intlTag')}
             hint={t('film.audience.intlHint')}
+            variant="intl"
             onClick={() => onSelect('international')}
           />
           <AudienceCard
@@ -104,10 +111,13 @@ export function FilmAudienceGateway({ onSelect }: Props) {
             title={t('film.audience.local')}
             tagline={t('film.audience.localTag')}
             hint={t('film.audience.localHint')}
+            variant="local"
             onClick={() => onSelect('local')}
           />
         </div>
       </div>
+
+      <FilmHeritageStrip className="relative z-[1] shrink-0 opacity-90" />
     </div>
   );
 }
@@ -118,6 +128,7 @@ function AudienceCard({
   title,
   tagline,
   hint,
+  variant,
   onClick,
 }: {
   delay: number;
@@ -125,8 +136,11 @@ function AudienceCard({
   title: string;
   tagline: string;
   hint: string;
+  variant: 'intl' | 'local';
   onClick: () => void;
 }) {
+  const local = variant === 'local';
+
   return (
     <motion.button
       type="button"
@@ -134,8 +148,18 @@ function AudienceCard({
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, delay, ease: EASE }}
-      className="group relative flex flex-col items-start gap-3 bg-black/80 px-6 py-7 text-left outline-none backdrop-blur-sm transition hover:bg-[#0f0d08] focus-visible:ring-2 focus-visible:ring-[#F5E80C] sm:min-h-[15rem] sm:px-8 sm:py-9"
+      className={`group relative flex flex-col items-start gap-3 px-6 py-7 text-left outline-none backdrop-blur-sm transition focus-visible:ring-2 focus-visible:ring-[#F5E80C] sm:min-h-[15rem] sm:px-8 sm:py-9 ${
+        local
+          ? 'cine-heritage-card bg-black/85 hover:bg-black/75'
+          : 'bg-black/80 hover:bg-[#0f0d08]'
+      }`}
     >
+      {local ? (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-4 bg-[url('/film/culture/toghu-footer.png')] bg-cover bg-[position:center_15%]"
+        />
+      ) : null}
       <span className="font-display text-3xl text-[#F5E80C]">{index}</span>
       <span className="block h-px w-10 bg-[#F5E80C] transition-all duration-500 group-hover:w-24" />
       <span className="font-display block text-3xl text-[#F8F5ED] sm:text-4xl">{title}</span>

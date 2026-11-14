@@ -21,6 +21,11 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
 import { FilmAudienceGateway } from '@/components/film/FilmAudienceGateway';
+import { FilmAuthGateway } from '@/components/film/FilmAuthGateway';
+import {
+  FilmHeritageStrip,
+  FilmHeritageWash,
+} from '@/components/film/FilmHeritageFrame';
 import { setEntryMode } from '@/lib/entry-mode';
 import {
   clearFilmAudience,
@@ -29,6 +34,7 @@ import {
   type FilmAudience,
 } from '@/lib/film/audience';
 import { FILM_LOCATIONS, filmLocationCover } from '@/lib/film/locations';
+import { isProducerAuthSubmitted } from '@/lib/film/profile';
 import { useLocale } from '@/lib/i18n';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -89,6 +95,7 @@ const SHARED_HUB: HubItem[] = [
     icon: CarFront,
     titleKey: 'film.hub.rentals',
     bodyKey: 'film.hub.rentalsBody',
+    image: '/film/hub/rentals.jpg',
   },
   {
     href: '/film/planning',
@@ -120,6 +127,7 @@ function useTimecode() {
 export default function FilmHomePage() {
   const { t, locale } = useLocale();
   const [audience, setAudience] = useState<FilmAudience | null | 'loading'>('loading');
+  const [authReady, setAuthReady] = useState(false);
   const timecode = useTimecode();
 
   useEffect(() => {
@@ -128,15 +136,28 @@ export default function FilmHomePage() {
     if (params.has('change_audience')) {
       clearFilmAudience();
       setAudience(null);
+      setAuthReady(isProducerAuthSubmitted());
       window.history.replaceState({}, '', '/film');
       return;
     }
     setAudience(getFilmAudience());
+    setAuthReady(isProducerAuthSubmitted());
   }, []);
 
   const onAudienceSelect = useCallback((next: FilmAudience) => {
     setFilmAudience(next);
     setAudience(next);
+    // Always show KYC right after picking international / local filmmaker.
+    setAuthReady(false);
+  }, []);
+
+  const onAuthBack = useCallback(() => {
+    clearFilmAudience();
+    setAudience(null);
+  }, []);
+
+  const onAuthSubmitted = useCallback(() => {
+    setAuthReady(true);
   }, []);
 
   if (audience === 'loading') {
@@ -145,6 +166,16 @@ export default function FilmHomePage() {
 
   if (!audience) {
     return <FilmAudienceGateway onSelect={onAudienceSelect} />;
+  }
+
+  if (!authReady) {
+    return (
+      <FilmAuthGateway
+        audience={audience}
+        onSubmitted={onAuthSubmitted}
+        onBack={onAuthBack}
+      />
+    );
   }
 
   const fr = locale === 'fr';
@@ -173,13 +204,16 @@ export default function FilmHomePage() {
       {/* ── Opening title: logo framed in a camera viewfinder, letterboxed ── */}
       <section className="relative isolate overflow-hidden bg-black">
         <Image
-          src="/film/hub/equipment.jpg"
+          src={isIntl ? '/film/hub/equipment.jpg' : '/film/culture/drums.jpg'}
           alt=""
           fill
           priority
           sizes="100vw"
-          className="-z-20 object-cover opacity-35 grayscale-[35%]"
+          className={`-z-20 object-cover ${
+            isIntl ? 'opacity-35 grayscale-[35%]' : 'opacity-[0.4] saturate-[0.9]'
+          }`}
         />
+        {!isIntl ? <FilmHeritageWash intensity="soft" className="-z-10" /> : null}
         <div
           aria-hidden
           className="absolute inset-0 -z-10"
@@ -188,6 +222,7 @@ export default function FilmHomePage() {
               'radial-gradient(ellipse 75% 70% at 70% 50%, transparent 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.95) 100%), linear-gradient(90deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.25) 100%)',
           }}
         />
+        {!isIntl ? <FilmHeritageStrip className="relative z-[1]" /> : null}
         {/* Letterbox bars */}
         <div aria-hidden className="h-6 bg-black sm:h-10" />
 

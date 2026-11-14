@@ -3,7 +3,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Compass, Download } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ArrowLeft, Compass, Download, Images } from 'lucide-react';
 
 import { KIND_ICONS } from '@/components/film/location-kind-icons';
 import { PlaceContactCard } from '@/components/film/PlaceContactCard';
@@ -12,11 +13,12 @@ import { setEntryMode } from '@/lib/entry-mode';
 import { dossierPdfUrl } from '@/lib/film/dossier';
 import {
   FILM_LOCATION_KINDS,
-  FILM_LOOKS,
+  FILM_LOOK_LABELS,
   filmLocationCover,
   filmLocationKind,
   getFilmLocation,
 } from '@/lib/film/locations';
+import { AYILAA_ATTRIBUTION } from '@/lib/film/ayilaa-locations';
 import { OSM_ATTRIBUTION } from '@/lib/film/osm-locations';
 import { REGIONS } from '@/lib/regions';
 import { useLocale } from '@/lib/i18n';
@@ -26,6 +28,17 @@ export default function FilmLocationDetailPage() {
   const slug = String(params.slug ?? '');
   const { t, locale } = useLocale();
   const loc = getFilmLocation(slug);
+
+  const cover = loc ? filmLocationCover(loc) : null;
+  const gallery = useMemo(() => {
+    if (!loc) return [] as string[];
+    const items = [...(loc.gallery || [])];
+    if (cover && !items.includes(cover)) items.unshift(cover);
+    return items;
+  }, [loc, cover]);
+
+  const [activeSrc, setActiveSrc] = useState<string | null>(null);
+  const heroSrc = activeSrc && gallery.includes(activeSrc) ? activeSrc : gallery[0] || cover;
 
   if (!loc) {
     return (
@@ -47,16 +60,23 @@ export default function FilmLocationDetailPage() {
   const name = locale === 'fr' ? loc.nameFr : loc.nameEn;
   const city = locale === 'fr' ? loc.cityFr : loc.cityEn;
   const region = REGIONS.find((r) => r.id === loc.regionId);
-  const cover = filmLocationCover(loc);
   const KindIcon = KIND_ICONS[filmLocationKind(loc)];
   const kindMeta = FILM_LOCATION_KINDS.find((k) => k.id === filmLocationKind(loc));
   const tourismHref = loc.tourismHref ?? `/destinations/${loc.placeId}`;
+  const showContact = Boolean(
+    loc.contact?.phone ||
+      loc.contact?.whatsapp ||
+      loc.contact?.email ||
+      loc.contact?.website ||
+      loc.contact?.address ||
+      loc.osm,
+  );
 
   return (
     <div>
       <div className="relative h-56 overflow-hidden sm:h-72 md:h-80">
-        {cover ? (
-          <Image src={cover} alt="" fill priority className="object-cover" sizes="100vw" />
+        {heroSrc ? (
+          <Image src={heroSrc} alt="" fill priority className="object-cover" sizes="100vw" />
         ) : (
           <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#079941]/40 via-[#0f0f0f] to-[#E30D13]/30">
             <KindIcon className="h-14 w-14 text-[#F5E80C]/70" aria-hidden />
@@ -88,7 +108,7 @@ export default function FilmLocationDetailPage() {
               {loc.stars ? ` · ${'★'.repeat(Math.min(loc.stars, 5))}` : ''}
             </span>
             {loc.looks.map((lk) => {
-              const meta = FILM_LOOKS.find((x) => x.id === lk);
+              const meta = FILM_LOOK_LABELS.find((x) => x.id === lk);
               return (
                 <span
                   key={lk}
@@ -104,6 +124,41 @@ export default function FilmLocationDetailPage() {
               </span>
             ) : null}
           </div>
+
+          {gallery.length > 1 ? (
+            <section className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5">
+              <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#F5E80C]">
+                <Images className="h-3.5 w-3.5" aria-hidden />
+                {t('film.detail.gallery')}
+              </h2>
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {gallery.map((src) => {
+                  const selected = src === heroSrc;
+                  return (
+                    <button
+                      key={src}
+                      type="button"
+                      onClick={() => setActiveSrc(src)}
+                      aria-pressed={selected}
+                      className={`relative aspect-[4/3] overflow-hidden rounded-xl border transition ${
+                        selected
+                          ? 'border-[#F5E80C] ring-1 ring-[#F5E80C]/50'
+                          : 'border-white/10 hover:border-white/30'
+                      }`}
+                    >
+                      <Image
+                        src={src}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="(max-width:640px) 50vw, 220px"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
 
           <DetailBlock title={t('film.detail.access')}>
             {locale === 'fr' ? loc.accessFr : loc.accessEn}
@@ -150,7 +205,7 @@ export default function FilmLocationDetailPage() {
               className="h-64"
             />
           </div>
-          {loc.osm ? (
+          {showContact ? (
             <PlaceContactCard
               contact={loc.contact}
               city={city}
@@ -191,9 +246,10 @@ export default function FilmLocationDetailPage() {
             {t('film.dossier.download')}
           </a>
           <p className="text-center text-[11px] text-white/40">{t('film.dossier.hint')}</p>
-          {loc.osm ? (
-            <p className="text-center text-[10px] text-white/30">{OSM_ATTRIBUTION}</p>
-          ) : null}
+          <p className="text-center text-[10px] text-white/30">
+            {loc.osm ? `${OSM_ATTRIBUTION} · ` : ''}
+            {AYILAA_ATTRIBUTION}
+          </p>
         </aside>
       </div>
     </div>

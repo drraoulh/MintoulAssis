@@ -41,6 +41,8 @@ tmp-*.html
 tmp-*.json
 tmp-*.js
 
+# Ayila'a downloaded covers (~1GB+) — regenerate with scripts/download-ayilaa-*.mjs
+/public/film/covers/
 
 # scrape data / progress
 /data/

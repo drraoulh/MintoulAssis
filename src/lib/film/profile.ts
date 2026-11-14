@@ -1,4 +1,5 @@
-import type { LocalFilmProfile } from '@/lib/film/types';
+import { clearAllAuthFiles } from '@/lib/film/producer-auth';
+import type { LocalFilmProfile, ProducerAuthentication } from '@/lib/film/types';
 
 export const FILM_PROFILE_KEY = 'smartmboa_film_profile';
 
@@ -26,10 +27,39 @@ export function saveLocalProfile(profile: Omit<LocalFilmProfile, 'updatedAt'>): 
   return next;
 }
 
+/** Persist authentication metadata without wiping other profile fields. */
+export function saveProfileAuthentication(
+  authentication: ProducerAuthentication | undefined,
+): LocalFilmProfile | null {
+  const existing = getLocalProfile();
+  if (!existing) {
+    const stub = saveLocalProfile({
+      name: '',
+      role: '',
+      city: '',
+      bio: '',
+      specialties: '',
+      contact: '',
+      authentication,
+    });
+    return stub;
+  }
+  return saveLocalProfile({
+    ...existing,
+    authentication,
+  });
+}
+
 export function clearLocalProfile(): void {
   try {
     localStorage.removeItem(FILM_PROFILE_KEY);
   } catch {
     /* ignore */
   }
+  void clearAllAuthFiles();
+}
+
+/** True once the producer auth form was successfully submitted. */
+export function isProducerAuthSubmitted(): boolean {
+  return Boolean(getLocalProfile()?.authentication?.submittedAt);
 }
