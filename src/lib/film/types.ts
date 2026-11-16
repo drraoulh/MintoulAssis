@@ -8,7 +8,8 @@ export type FilmLook =
   | 'mountain'
   | 'cultural'
   | 'waterfall'
-  | 'lake';
+  | 'lake'
+  | 'museum';
 
 export type FilmSeason = 'dry' | 'rainy' | 'year-round';
 
@@ -109,57 +110,6 @@ export interface FilmResource {
   periodEn?: string;
 }
 
-/** Producer KYC entity: company vs natural person. */
-export type ProducerEntityType = 'company' | 'individual';
-
-/**
- * Document slots aligned with MINAC / DCPA producer authentication.
- * Company: RCCM + NIU + statutes. Individual: CNI + NIU.
- * Optional agrément: production authorisation or recent quittance.
- */
-export type ProducerAuthDocKind =
-  | 'rccm'
-  | 'niu'
-  | 'statutes'
-  | 'cni'
-  | 'autorisation'
-  | 'quittance';
-
-export interface ProducerAuthDocumentMeta {
-  kind: ProducerAuthDocKind;
-  fileName: string;
-  mimeType: string;
-  size: number;
-  uploadedAt: string;
-}
-
-/** Typed identity fields collected with the KYC document pack. */
-export interface ProducerAuthFields {
-  /** Raison sociale — company producers. */
-  companyName?: string;
-  /** Legal representative — company producers. */
-  legalRepName?: string;
-  /** RCCM registration number — company. */
-  rccmNumber?: string;
-  /** National ID number — individual. */
-  cniNumber?: string;
-  /** Tax ID — required for both. */
-  niuNumber?: string;
-  /** Phone or email for authentication follow-up. */
-  authContact?: string;
-}
-
-export interface ProducerAuthentication {
-  entityType: ProducerEntityType;
-  fields: ProducerAuthFields;
-  documents: ProducerAuthDocumentMeta[];
-  /** Set when required fields + docs for the entity type are present. */
-  status: 'incomplete' | 'ready' | 'agreed';
-  /** Last time the producer explicitly submitted the auth form. */
-  submittedAt?: string;
-  updatedAt: string;
-}
-
 export interface LocalFilmProfile {
   name: string;
   role: string;
@@ -168,7 +118,6 @@ export interface LocalFilmProfile {
   specialties: string;
   contact: string;
   projectTitle?: string;
-  authentication?: ProducerAuthentication;
   updatedAt: string;
 }
 

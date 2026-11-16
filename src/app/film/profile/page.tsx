@@ -1,8 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { BadgeCheck, ShieldCheck, UserCircle2 } from 'lucide-react';
-import Link from 'next/link';
+import { UserCircle2 } from 'lucide-react';
 
 import {
   clearLocalProfile,
@@ -23,7 +22,7 @@ const empty = {
 };
 
 export default function FilmProfilePage() {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const [form, setForm] = useState(empty);
   const [saved, setSaved] = useState<LocalFilmProfile | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -50,7 +49,6 @@ export default function FilmProfilePage() {
       setMessage(t('film.profile.required'));
       return;
     }
-    const existing = getLocalProfile();
     const next = saveLocalProfile({
       name: form.name.trim(),
       role: form.role.trim(),
@@ -59,7 +57,6 @@ export default function FilmProfilePage() {
       specialties: form.specialties.trim(),
       contact: form.contact.trim(),
       projectTitle: form.projectTitle?.trim() || undefined,
-      authentication: existing?.authentication,
     });
     setSaved(next);
     setMessage(t('film.profile.saved'));
@@ -71,25 +68,6 @@ export default function FilmProfilePage() {
     setForm(empty);
     setMessage(t('film.profile.cleared'));
   }
-
-  const auth = saved?.authentication;
-  const statusLabel =
-    auth?.status === 'agreed'
-      ? t('film.profile.auth.status.agreed')
-      : auth?.status === 'ready'
-        ? t('film.profile.auth.status.ready')
-        : auth
-          ? t('film.profile.auth.status.incomplete')
-          : null;
-
-  const submittedLabel = auth?.submittedAt
-    ? t('film.profile.auth.submittedAt', {
-        date: new Date(auth.submittedAt).toLocaleDateString(
-          locale === 'fr' ? 'fr-CM' : 'en-GB',
-          { day: 'numeric', month: 'short', year: 'numeric' },
-        ),
-      })
-    : null;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-8 sm:py-10">
@@ -127,52 +105,10 @@ export default function FilmProfilePage() {
               {saved.contact ? (
                 <p className="mt-2 text-xs text-white/45">{saved.contact}</p>
               ) : null}
-              {statusLabel && auth?.status !== 'incomplete' ? (
-                <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#F5E80C]">
-                  {auth?.status === 'agreed' ? (
-                    <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
-                  ) : (
-                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-                  )}
-                  {statusLabel}
-                  {submittedLabel ? ` · ${submittedLabel}` : ''}
-                </p>
-              ) : null}
             </div>
           </div>
         </div>
       ) : null}
-
-      <section className="mt-8 rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5">
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-[#F5E80C]">
-          KYC · MINAC / DCPA
-        </p>
-        <h2 className="mt-2 font-display text-xl font-bold text-[#F8F5ED]">
-          {t('film.profile.authTitle')}
-        </h2>
-        <p className="mt-2 text-sm text-white/55">{t('film.profile.auth.entryHint')}</p>
-        {statusLabel ? (
-          <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#F5E80C]">
-            {auth?.status === 'agreed' ? (
-              <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
-            ) : (
-              <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-            )}
-            {statusLabel}
-            {submittedLabel ? ` · ${submittedLabel}` : ''}
-          </p>
-        ) : (
-          <p className="mt-3 text-xs text-white/40">{t('film.profile.auth.status.incomplete')}</p>
-        )}
-        <Link
-          href="/film?change_audience=1"
-          className="mt-4 inline-flex rounded-full border border-[#F5E80C]/40 px-4 py-2 text-xs font-bold uppercase tracking-wide text-[#F5E80C] hover:bg-[#F5E80C]/10"
-        >
-          {auth?.submittedAt
-            ? t('film.profile.auth.updateViaEntry')
-            : t('film.profile.auth.goToEntry')}
-        </Link>
-      </section>
 
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
         <Field

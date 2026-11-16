@@ -35,6 +35,33 @@ const CATEGORIES = [
   },
   {
     kind: 'site',
+    forceLook: 'waterfall',
+    path: '/fr/categorie/635/chutte-deau',
+    schema: 'TouristAttraction',
+    slug: 'chutte-deau',
+    pages: 2,
+    maxDetails: 80,
+  },
+  {
+    kind: 'site',
+    forceLook: 'coast',
+    path: '/fr/categorie/34/plage',
+    schema: 'TouristAttraction',
+    slug: 'plage',
+    pages: 1,
+    maxDetails: 40,
+  },
+  {
+    kind: 'site',
+    forceLook: 'museum',
+    path: '/fr/categorie/897/musee',
+    schema: 'TouristAttraction',
+    slug: 'musee',
+    pages: 2,
+    maxDetails: 80,
+  },
+  {
+    kind: 'site',
     path: '/fr/categorie/14/sites-touristiques',
     schema: 'TouristAttraction',
     slug: 'sites-touristiques',
@@ -75,12 +102,15 @@ const CATEGORIES = [
   },
 ];
 
-const ONLY = process.env.AYILAA_ONLY?.trim();
-const ACTIVE_CATEGORIES = ONLY
-  ? CATEGORIES.filter((c) => c.slug === ONLY || c.kind === ONLY)
+const ONLY_TOKENS = (process.env.AYILAA_ONLY || '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+const ACTIVE_CATEGORIES = ONLY_TOKENS.length
+  ? CATEGORIES.filter((c) => ONLY_TOKENS.includes(c.slug) || ONLY_TOKENS.includes(c.kind))
   : CATEGORIES;
-if (ONLY && !ACTIVE_CATEGORIES.length) {
-  console.error(`Unknown AYILAA_ONLY=${ONLY}`);
+if (ONLY_TOKENS.length && !ACTIVE_CATEGORIES.length) {
+  console.error(`Unknown AYILAA_ONLY=${ONLY_TOKENS.join(',')}`);
   process.exit(1);
 }
 
@@ -497,16 +527,17 @@ for (const cat of ACTIVE_CATEGORIES) {
   scraped.push(...places);
 }
 
-/** Merge with existing catalog when running a single-category refresh. */
+/** Merge with existing catalog when running a category refresh. */
 const existing = existsSync(OUT) ? JSON.parse(readFileSync(OUT, 'utf8')).places || [] : [];
-const incomingKinds = new Set(ACTIVE_CATEGORIES.map((c) => c.kind));
 const incomingSlugs = new Set(ACTIVE_CATEGORIES.map((c) => c.slug));
-const kept = ONLY
-  ? existing.filter(
-      (p) => !(incomingKinds.has(p.kind) && (!p.category || incomingSlugs.has(p.category))),
-    )
+const kept = ONLY_TOKENS.length
+  ? existing.filter((p) => !incomingSlugs.has(p.category))
   : [];
-const allPlaces = ONLY ? [...kept, ...scraped] : scraped;
+const allPlaces = ONLY_TOKENS.length ? [...kept, ...scraped] : scraped;
+
+function isLocalCover(u) {
+  return String(u || '').startsWith('/film/covers/');
+}
 
 /** Prefer mont/hotel/house-enriched records when the same Ayila'a id appears twice. */
 const byId = new Map();
@@ -519,14 +550,30 @@ for (const p of allPlaces) {
   const score = (x) =>
     (x.forceLook === 'mountain' || x.category === 'mont' ? 4 : 0) +
     (x.forceLook === 'lake' || x.category === 'lac' ? 4 : 0) +
+    (x.forceLook === 'waterfall' || x.category === 'chutte-deau' ? 4 : 0) +
+    (x.forceLook === 'coast' || x.category === 'plage' ? 4 : 0) +
+    (x.forceLook === 'museum' || x.category === 'musee' ? 4 : 0) +
     (x.kind === 'hotel' && x.category === 'hotel' ? 3 : 0) +
     (x.kind === 'house' || x.kind === 'villa' ? 3 : 0) +
     (x.kind === 'restaurant' && x.category === 'restaurant' ? 2 : 0) +
-    (x.local_cover || String(x.image || '').startsWith('/film/') ? 3 : 0) +
+    (x.local_cover || isLocalCover(x.image) ? 3 : 0) +
     (x.image || x.images?.length ? 2 : 0) +
     (x.phone ? 1 : 0) +
     (x.description ? 1 : 0);
-  if (score(p) >= score(prev)) byId.set(p.external_id, { ...prev, ...p });
+  if (score(p) >= score(prev)) {
+    const merged = { ...prev, ...p };
+    const prevLocalGallery = [...(prev.gallery || []), ...(prev.images || [])].filter(isLocalCover);
+    if (prevLocalGallery.length && !(p.gallery || []).some(isLocalCover)) {
+      merged.gallery = [...new Set(prevLocalGallery)];
+      merged.images = merged.gallery;
+      merged.image = prev.image && isLocalCover(prev.image) ? prev.image : merged.gallery[0];
+      merged.local_cover = prev.local_cover || merged.image;
+      if ((p.images || []).some((u) => String(u).includes('ayilaa.s3'))) {
+        merged.remote_images = p.images;
+      }
+    }
+    byId.set(p.external_id, merged);
+  }
 }
 const deduped = [...byId.values()];
 
@@ -547,9 +594,22 @@ const payload = {
     house: usable.filter((p) => p.kind === 'house').length,
     villa: usable.filter((p) => p.kind === 'villa').length,
     restaurant: usable.filter((p) => p.kind === 'restaurant').length,
-    site: usable.filter((p) => p.kind === 'site' && p.category !== 'mont').length,
+    site: usable.filter(
+      (p) =>
+        p.kind === 'site' &&
+        p.category !== 'mont' &&
+        p.category !== 'lac' &&
+        p.category !== 'chutte-deau' &&
+        p.category !== 'plage' &&
+        p.category !== 'musee',
+    ).length,
     mountain: usable.filter((p) => p.forceLook === 'mountain' || p.category === 'mont').length,
     lake: usable.filter((p) => p.forceLook === 'lake' || p.category === 'lac').length,
+    waterfall: usable.filter(
+      (p) => p.forceLook === 'waterfall' || p.category === 'chutte-deau',
+    ).length,
+    coast: usable.filter((p) => p.forceLook === 'coast' || p.category === 'plage').length,
+    museum: usable.filter((p) => p.forceLook === 'museum' || p.category === 'musee').length,
   },
   places: usable.map((p) => ({
     id: p.id,

@@ -21,7 +21,6 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
 import { FilmAudienceGateway } from '@/components/film/FilmAudienceGateway';
-import { FilmAuthGateway } from '@/components/film/FilmAuthGateway';
 import {
   FilmHeritageStrip,
   FilmHeritageWash,
@@ -34,7 +33,6 @@ import {
   type FilmAudience,
 } from '@/lib/film/audience';
 import { FILM_LOCATIONS, filmLocationCover } from '@/lib/film/locations';
-import { isProducerAuthSubmitted } from '@/lib/film/profile';
 import { useLocale } from '@/lib/i18n';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -127,7 +125,6 @@ function useTimecode() {
 export default function FilmHomePage() {
   const { t, locale } = useLocale();
   const [audience, setAudience] = useState<FilmAudience | null | 'loading'>('loading');
-  const [authReady, setAuthReady] = useState(false);
   const timecode = useTimecode();
 
   useEffect(() => {
@@ -136,28 +133,15 @@ export default function FilmHomePage() {
     if (params.has('change_audience')) {
       clearFilmAudience();
       setAudience(null);
-      setAuthReady(isProducerAuthSubmitted());
       window.history.replaceState({}, '', '/film');
       return;
     }
     setAudience(getFilmAudience());
-    setAuthReady(isProducerAuthSubmitted());
   }, []);
 
   const onAudienceSelect = useCallback((next: FilmAudience) => {
     setFilmAudience(next);
     setAudience(next);
-    // Always show KYC right after picking international / local filmmaker.
-    setAuthReady(false);
-  }, []);
-
-  const onAuthBack = useCallback(() => {
-    clearFilmAudience();
-    setAudience(null);
-  }, []);
-
-  const onAuthSubmitted = useCallback(() => {
-    setAuthReady(true);
   }, []);
 
   if (audience === 'loading') {
@@ -166,16 +150,6 @@ export default function FilmHomePage() {
 
   if (!audience) {
     return <FilmAudienceGateway onSelect={onAudienceSelect} />;
-  }
-
-  if (!authReady) {
-    return (
-      <FilmAuthGateway
-        audience={audience}
-        onSubmitted={onAuthSubmitted}
-        onBack={onAuthBack}
-      />
-    );
   }
 
   const fr = locale === 'fr';

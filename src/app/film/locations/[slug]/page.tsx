@@ -15,6 +15,7 @@ import {
   FILM_LOCATION_KINDS,
   FILM_LOOK_LABELS,
   filmLocationCover,
+  filmLocationGallery,
   filmLocationKind,
   getFilmLocation,
 } from '@/lib/film/locations';
@@ -30,12 +31,7 @@ export default function FilmLocationDetailPage() {
   const loc = getFilmLocation(slug);
 
   const cover = loc ? filmLocationCover(loc) : null;
-  const gallery = useMemo(() => {
-    if (!loc) return [] as string[];
-    const items = [...(loc.gallery || [])];
-    if (cover && !items.includes(cover)) items.unshift(cover);
-    return items;
-  }, [loc, cover]);
+  const gallery = useMemo(() => (loc ? filmLocationGallery(loc) : []), [loc]);
 
   const [activeSrc, setActiveSrc] = useState<string | null>(null);
   const heroSrc = activeSrc && gallery.includes(activeSrc) ? activeSrc : gallery[0] || cover;

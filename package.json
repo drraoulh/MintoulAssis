@@ -11,7 +11,8 @@
     "scrape:tourisme": "node scripts/scrape-ayilaa-sites-touristiques.mjs",
     "scrape:hotels": "node scripts/scrape-ayilaa-hotels.mjs",
     "scrape:transports": "node scripts/scrape-ayilaa-transports.mjs",
-    "db:schema": "node scripts/apply-schema.mjs"
+    "db:schema": "node scripts/apply-schema.mjs",
+    "film:covers:upload": "node scripts/upload-film-covers-supabase.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.80",

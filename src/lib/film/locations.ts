@@ -8,6 +8,7 @@ import type {
   FilmLocationMeta,
   FilmLook,
 } from '@/lib/film/types';
+import { resolveFilmCoverUrl } from '@/lib/film/cover-url';
 import { LOCAL_PLACE_COVERS } from '@/lib/place-images';
 
 type FilmLocationSeed = Omit<FilmLocationMeta, 'costTier' | 'accessLevel'>;
@@ -340,6 +341,7 @@ export const FILM_LOOKS: { id: FilmLook; fr: string; en: string }[] = [
   { id: 'mountain', fr: 'Montagne', en: 'Mountain' },
   { id: 'waterfall', fr: 'Chutes', en: 'Waterfalls' },
   { id: 'lake', fr: 'Lacs', en: 'Lakes' },
+  { id: 'museum', fr: 'Musées', en: 'Museums' },
 ];
 
 /** Full look labels (detail badges, etc.). */
@@ -391,10 +393,31 @@ export function filterFilmLocations(opts: {
 }
 
 export function filmLocationCover(loc: FilmLocationMeta): string | null {
-  return (
+  return resolveFilmCoverUrl(
     LOCAL_PLACE_COVERS[loc.placeId] ||
-    LOCAL_PLACE_COVERS[loc.slug] ||
-    loc.coverHint ||
-    null
+      LOCAL_PLACE_COVERS[loc.slug] ||
+      loc.coverHint ||
+      loc.gallery?.[0] ||
+      null,
   );
+}
+
+/** Gallery URLs for detail pages (local paths resolved via Supabase base URL when set). */
+export function filmLocationGallery(loc: FilmLocationMeta): string[] {
+  const raw = loc.gallery?.length
+    ? loc.gallery
+    : loc.coverHint
+      ? [loc.coverHint]
+      : [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const u of raw) {
+    const resolved = resolveFilmCoverUrl(u);
+    if (!resolved || seen.has(resolved)) continue;
+    seen.add(resolved);
+    out.push(resolved);
+  }
+  const cover = filmLocationCover(loc);
+  if (cover && !seen.has(cover)) out.unshift(cover);
+  return out;
 }

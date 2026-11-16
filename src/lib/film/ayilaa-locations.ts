@@ -28,6 +28,7 @@ type AyilaaPlace = {
   images: string[];
   gallery?: string[];
   local_cover?: string | null;
+  remote_image?: string | null;
   phone: string | null;
   whatsapp: string | null;
   website: string | null;
@@ -143,21 +144,41 @@ function slugify(s: string): string {
     .slice(0, 72);
 }
 
+/** Urban monuments wrongly caught by a naive /lac/ match on "Place". */
+const NEVER_LAKE =
+  /place\s+charles\s+atangana|place\s+de\s+l['’]?ind[eé]pendance/i;
+
 function looksFor(rec: AyilaaPlace): FilmLook[] {
   if (rec.forceLook === 'mountain' || rec.category === 'mont') {
     return ['mountain'];
   }
+  if (rec.forceLook === 'waterfall' || rec.category === 'chutte-deau') {
+    return ['waterfall'];
+  }
+  if (rec.forceLook === 'coast' || rec.category === 'plage') {
+    return ['coast'];
+  }
+  if (rec.forceLook === 'museum' || rec.category === 'musee') {
+    return ['museum'];
+  }
+  const hay = `${rec.city} ${rec.name}`;
+  if (NEVER_LAKE.test(hay) || NEVER_LAKE.test(rec.name)) {
+    return ['cultural'];
+  }
   if (rec.forceLook === 'lake' || rec.category === 'lac') {
     return ['lake'];
   }
-  const hay = `${rec.city} ${rec.name}`;
   if (rec.kind === 'site') {
     // Primary look first — used for exact ambiance filtering.
     if (/chute|fall|cascade/i.test(hay)) return ['waterfall', 'forest'];
-    if (/lac|lake|crat[eè]re/i.test(hay)) return ['lake', 'mountain'];
+    // Word-boundary: avoid matching the "lac" inside "Place".
+    if (/\blacs?\b|\blake\b|\bcrat[eè]res?\b/i.test(hay)) return ['lake', 'mountain'];
+    if (/mus[eé]e|blackitude/i.test(hay)) return ['museum'];
+    if (/chefferie|palais|monument|patrimoine|place\b/i.test(hay)) {
+      return ['cultural'];
+    }
     if (/plage|beach|côte|coast/i.test(hay)) return ['coast'];
     if (/mont|mountain|colline/i.test(hay)) return ['mountain', 'forest'];
-    if (/mus[eé]e|chefferie|palais|monument|patrimoine/i.test(hay)) return ['cultural'];
     if (COASTAL.test(hay)) return ['coast', 'cultural'];
     return ['cultural', 'forest'];
   }
@@ -189,15 +210,26 @@ function pickGallery(rec: AyilaaPlace): string[] {
     Boolean,
   ) as string[];
   const seen = new Set<string>();
-  const out: string[] = [];
+  const locals: string[] = [];
+  const remotes: string[] = [];
   for (const u of candidates) {
-    // Prefer local paths; skip remote S3 that often 403 through next/image.
-    if (!u.startsWith('/film/covers/') && /^https?:\/\//i.test(u)) continue;
     if (seen.has(u)) continue;
     seen.add(u);
-    out.push(u);
+    // Prefer locally downloaded / Storage-backed paths.
+    if (u.startsWith('/film/covers/')) {
+      locals.push(u);
+      continue;
+    }
+    // Keep non-Ayila'a remotes (e.g. Supabase). Ayila'a S3 often 403s via next/image.
+    if (/^https?:\/\//i.test(u) && !/ayilaa\.s3/i.test(u)) {
+      remotes.push(u);
+    }
   }
-  return out;
+  if (locals.length || remotes.length) return [...locals, ...remotes];
+
+  // Last resort: single Ayila'a remote cover if nothing else exists.
+  const fallback = rec.remote_image;
+  return fallback && /^https?:\/\//i.test(fallback) ? [fallback] : [];
 }
 
 function pickCover(rec: AyilaaPlace): string | undefined {
@@ -273,9 +305,20 @@ export const AYILAA_FILM_LOCATIONS: FilmLocationMeta[] = (() => {
       byExt.set(r.external_id, r);
       continue;
     }
-    const prefer =
-      (r.forceLook === 'mountain' || r.category === 'mont' ? 1 : 0) -
-      (prev.forceLook === 'mountain' || prev.category === 'mont' ? 1 : 0);
+    const lookScore = (x: AyilaaPlace) =>
+      x.forceLook === 'mountain' ||
+      x.category === 'mont' ||
+      x.forceLook === 'lake' ||
+      x.category === 'lac' ||
+      x.forceLook === 'waterfall' ||
+      x.category === 'chutte-deau' ||
+      x.forceLook === 'coast' ||
+      x.category === 'plage' ||
+      x.forceLook === 'museum' ||
+      x.category === 'musee'
+        ? 3
+        : 0;
+    const prefer = lookScore(r) - lookScore(prev);
     if (prefer > 0 || (prefer === 0 && (r.images?.length || 0) >= (prev.images?.length || 0))) {
       byExt.set(r.external_id, r);
     }
