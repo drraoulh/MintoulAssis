@@ -10,7 +10,6 @@ import {
   Columns2,
   MapPin,
   Theater,
-  Users,
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
@@ -44,13 +43,6 @@ type HubItem = {
 };
 
 const SHARED_HUB: HubItem[] = [
-  {
-    href: '/film/directory',
-    icon: Users,
-    titleKey: 'film.hub.directory',
-    bodyKey: 'film.hub.directoryBody',
-    image: '/film/hub/directory.jpg',
-  },
   {
     href: '/film/equipment',
     icon: Wrench,
@@ -211,10 +203,10 @@ export default function FilmHomePage() {
                 {t('film.home.ctaProcedures')}
               </Link>
               <Link
-                href={isIntl ? '/film/locations/compare' : '/film/directory'}
+                href={isIntl ? '/film/locations/compare' : '/film/equipment'}
                 className="cine-btn-ghost"
               >
-                {isIntl ? t('film.home.ctaCompare') : t('film.home.ctaDirectory')}
+                {isIntl ? t('film.home.ctaCompare') : t('film.nav.equipment')}
               </Link>
             </div>
             <button

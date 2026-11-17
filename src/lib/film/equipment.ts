@@ -26,13 +26,17 @@ type Scraped = {
   image?: string | null;
 };
 
+function normalizeKind(kind: FilmEquipmentItem['kind']): 'camera' | 'studio' {
+  return kind === 'studio' ? 'studio' : 'camera';
+}
+
 /** Live studios & matériel scraped from their websites. */
 export const FILM_EQUIPMENT: FilmEquipmentItem[] = (studiosData.items as Scraped[]).map(
   (item) => ({
     id: item.id,
     nameFr: item.name,
     nameEn: item.name,
-    kind: item.kind,
+    kind: normalizeKind(item.kind),
     cityFr: item.cityFr,
     cityEn: item.cityEn,
     notesFr: item.specialtyFr || item.notesFr || '',
@@ -45,12 +49,8 @@ export const FILM_EQUIPMENT: FilmEquipmentItem[] = (studiosData.items as Scraped
   }),
 );
 
+/** Filters kept on the Matériel page (drone / son / équipe / grip / lumière removed). */
 export const EQUIPMENT_KINDS = [
   { id: 'camera' as const, fr: 'Caméra', en: 'Camera' },
-  { id: 'lighting' as const, fr: 'Lumière', en: 'Lighting' },
-  { id: 'grip' as const, fr: 'Grip / engins', en: 'Grip / plant' },
-  { id: 'sound' as const, fr: 'Son', en: 'Sound' },
-  { id: 'drone' as const, fr: 'Drone', en: 'Drone' },
   { id: 'studio' as const, fr: 'Studio', en: 'Studio' },
-  { id: 'crew' as const, fr: 'Équipe', en: 'Crew' },
 ];

@@ -37,7 +37,14 @@ const CATEGORY_ICONS: Record<RentalCategory, LucideIcon> = {
   event: PartyPopper,
 };
 
-const FALLBACK = '/film/hub/rentals.jpg';
+/** Category-specific fallbacks — never reuse one image across all shops. */
+const CATEGORY_FALLBACK: Record<RentalCategory, string> = {
+  vehicle: '/film/hub/rentals.jpg',
+  'two-wheel': '/film/hub/rentals.jpg',
+  boat: '/film/hub/locations.jpg',
+  equipment: '/film/hub/equipment.jpg',
+  event: '/film/hub/directory.jpg',
+};
 
 function regionLabel(id: string | undefined, fr: boolean) {
   const r = REGIONS.find((x) => x.id === id);
@@ -45,7 +52,7 @@ function regionLabel(id: string | undefined, fr: boolean) {
 }
 
 function shopCover(shop: RentalShop): string {
-  return resolveFilmCoverUrl(shop.image) || FALLBACK;
+  return resolveFilmCoverUrl(shop.image) || CATEGORY_FALLBACK[shop.category];
 }
 
 export default function FilmRentalsPage() {

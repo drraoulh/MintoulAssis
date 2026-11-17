@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useId, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  Building2,
   CalendarDays,
   CarFront,
   Clapperboard,
@@ -15,10 +14,8 @@ import {
   Home,
   LayoutGrid,
   MapPin,
-  Menu,
   Theater,
   UserCircle2,
-  Users,
   Wrench,
   X,
 } from 'lucide-react';
@@ -35,7 +32,6 @@ import { useLocale } from '@/lib/i18n';
 
 const FILM_LINKS = [
   { href: '/film', key: 'film.nav.home', icon: Home, exact: true },
-  { href: '/film/directory', key: 'film.nav.directory', icon: Users },
   { href: '/film/locations', key: 'film.nav.locations', icon: MapPin },
   { href: '/film/halls', key: 'film.nav.halls', icon: Theater },
   { href: '/film/events', key: 'film.nav.events', icon: CalendarDays },
@@ -86,9 +82,6 @@ export function FilmShell({ children }: { children: React.ReactNode }) {
 function FilmHeader() {
   const { t, locale, toggleLocale } = useLocale();
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => setOpen(false), [pathname]);
 
   return (
     <div className="sticky top-0 z-50">
@@ -161,52 +154,8 @@ function FilmHeader() {
             >
               {locale === 'fr' ? 'EN' : 'FR'}
             </button>
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              className="flex h-10 w-10 items-center justify-center border border-white/20 text-white"
-              aria-label={open ? t('nav.menuClose') : t('nav.menuOpen')}
-            >
-              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
           </div>
         </div>
-
-        {open ? (
-          <div className="border-t border-white/10 bg-[#0f0f0f] px-3 py-3 lg:hidden">
-            <div className="mb-3 min-[420px]:hidden">
-              <FilmSectionSwitcher size="md" className="w-full justify-center" />
-            </div>
-            <div className="flex flex-col gap-1">
-              {FILM_LINKS.map((link) => {
-                const Icon = link.icon;
-                const active = isActive(pathname, link.href, 'exact' in link ? link.exact : false);
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className={`flex items-center gap-3 border-l-2 px-3 py-2.5 text-xs font-semibold uppercase tracking-[0.16em] ${
-                      active
-                        ? 'border-[#F5E80C] bg-white/[0.04] text-[#F5E80C]'
-                        : 'border-transparent text-white/75 hover:bg-white/[0.03]'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" aria-hidden />
-                    {t(link.key)}
-                  </Link>
-                );
-              })}
-              <Link
-                href="/?change_mode=1"
-                onClick={() => setOpen(false)}
-                className="mt-1 rounded-xl px-3 py-2 text-xs text-white/50"
-              >
-                {t('nav.changeMode')}
-              </Link>
-            </div>
-          </div>
-        ) : null}
       </header>
     </div>
   );
@@ -271,7 +220,6 @@ function FilmBottomNav() {
   const moreLinks = useMemo(
     () =>
       [
-        { href: '/film/directory', label: t('film.nav.directory'), icon: Building2 },
         { href: '/film/locations', label: t('film.nav.locations'), icon: MapPin },
         { href: '/film/procedures', label: t('film.nav.procedures'), icon: ClipboardList },
         { href: '/film/equipment', label: t('film.nav.equipment'), icon: Wrench },

@@ -1,5 +1,5 @@
 {
-  "scrapedAt": "2026-11-17T14:54:35.966Z",
+  "scrapedAt": "2026-11-17T15:14:59.397Z",
   "byId": {
     "avis-douala-airport": {
       "id": "avis-douala-airport",
@@ -13,33 +13,33 @@
     },
     "loxea-cfao-douala": {
       "id": "loxea-cfao-douala",
-      "image": null,
+      "image": "/film/covers/rentals/loxea-cfao-douala.jpg",
       "phone": "+237 686 069 707",
       "email": null,
       "whatsapp": null,
       "address": "35 avenue des Cocotiers (CAMI Équipement)",
       "city": "Douala",
-      "scrapedAt": "2026-11-17T14:53:37.358Z"
+      "scrapedAt": "2026-11-17T15:09:38.995Z"
     },
     "hertz-douala": {
       "id": "hertz-douala",
-      "image": null,
+      "image": "/film/covers/rentals/hertz-douala.jpg",
       "phone": "+237 233 439 968",
       "email": null,
       "whatsapp": null,
       "address": "57 Joss Street, Bonanjo",
       "city": "Douala",
-      "scrapedAt": "2026-11-17T14:53:37.358Z"
+      "scrapedAt": "2026-11-17T15:09:47.500Z"
     },
     "business-cars-douala": {
       "id": "business-cars-douala",
-      "image": null,
+      "image": "/film/covers/rentals/business-cars-douala.jpg",
       "phone": "+237 659 102 663",
       "email": null,
       "whatsapp": null,
       "address": "Face lycée Mongo Joseph, rue Koloko",
       "city": "Douala",
-      "scrapedAt": "2026-11-17T14:53:48.005Z"
+      "scrapedAt": "2026-11-17T15:10:05.176Z"
     },
     "rental-square-douala": {
       "id": "rental-square-douala",
@@ -53,23 +53,23 @@
     },
     "autorent-douala": {
       "id": "autorent-douala",
-      "image": null,
+      "image": "/film/covers/rentals/autorent-douala.jpg",
       "phone": "+237 699 413 273",
       "email": null,
       "whatsapp": null,
       "address": "Avenue du Général de Gaulle",
       "city": "Douala",
-      "scrapedAt": "2026-11-17T14:53:51.020Z"
+      "scrapedAt": "2026-11-17T15:10:12.417Z"
     },
     "marxstein-douala": {
       "id": "marxstein-douala",
-      "image": null,
+      "image": "/film/covers/rentals/marxstein-douala.jpg",
       "phone": "+237 651 536 837",
       "email": null,
       "whatsapp": null,
       "address": "Château d’eau, Bonabéri",
       "city": "Douala",
-      "scrapedAt": "2026-11-17T14:53:52.049Z"
+      "scrapedAt": "2026-11-17T15:10:22.348Z"
     },
     "easyride-yaounde": {
       "id": "easyride-yaounde",
@@ -83,53 +83,53 @@
     },
     "amb-yaounde": {
       "id": "amb-yaounde",
-      "image": null,
+      "image": "/film/covers/rentals/amb-yaounde.png",
       "phone": "+237 222 207 337",
       "email": "contact@amb-cm.net",
       "whatsapp": null,
       "address": "Carrefour Bastos",
       "city": "Yaoundé",
-      "scrapedAt": "2026-11-17T14:54:13.813Z"
+      "scrapedAt": "2026-11-17T15:10:47.715Z"
     },
     "ana-lynn-yaounde": {
       "id": "ana-lynn-yaounde",
-      "image": null,
+      "image": "/film/covers/rentals/ana-lynn-yaounde.jpg",
       "phone": "+237 698 813 445",
       "email": null,
       "whatsapp": null,
       "address": "Bastos",
       "city": "Yaoundé",
-      "scrapedAt": "2026-11-17T14:54:13.814Z"
+      "scrapedAt": "2026-11-17T15:10:53.802Z"
     },
     "noun-global-yaounde": {
       "id": "noun-global-yaounde",
-      "image": null,
+      "image": "/film/covers/rentals/noun-global-yaounde.jpg",
       "phone": "+237 699 148 199",
       "email": null,
       "whatsapp": null,
       "address": "Bastos",
       "city": "Yaoundé",
-      "scrapedAt": "2026-11-17T14:54:13.814Z"
+      "scrapedAt": "2026-11-17T15:10:58.308Z"
     },
     "macom-mobility-yaounde": {
       "id": "macom-mobility-yaounde",
-      "image": null,
+      "image": "/film/covers/rentals/macom-mobility-yaounde.jpg",
       "phone": "+237 699 929 988",
       "email": null,
       "whatsapp": null,
       "address": null,
       "city": "Yaoundé",
-      "scrapedAt": "2026-11-17T14:54:13.814Z"
+      "scrapedAt": "2026-11-17T15:14:58.899Z"
     },
     "imperial-one-yaounde": {
       "id": "imperial-one-yaounde",
-      "image": null,
+      "image": "/film/covers/rentals/imperial-one-yaounde.jpg",
       "phone": "+237 222 21 96 51 / +237 691 42 59 81",
       "email": null,
       "whatsapp": null,
       "address": "Bastos, BP 1609",
       "city": "Yaoundé",
-      "scrapedAt": "2026-11-17T14:54:13.814Z"
+      "scrapedAt": "2026-11-17T15:11:11.545Z"
     },
     "watch-auto-medom": {
       "id": "watch-auto-medom",
@@ -163,13 +163,13 @@
     },
     "nice-communication-douala": {
       "id": "nice-communication-douala",
-      "image": "/film/covers/rentals/nice-communication-douala.png",
+      "image": "/film/covers/rentals/nice-communication-douala.jpg",
       "phone": "+237 695 558 018",
       "email": "contact@nicecommunication.net",
       "whatsapp": null,
       "address": "345 rue Sylvani, derrière Zepol, Akwa",
       "city": "Douala",
-      "scrapedAt": "2026-11-17T14:54:22.892Z"
+      "scrapedAt": "2026-11-17T15:14:59.397Z"
     },
     "fahrenheit-pictures-yaounde": {
       "id": "fahrenheit-pictures-yaounde",
@@ -183,23 +183,23 @@
     },
     "electro-plomb-douala": {
       "id": "electro-plomb-douala",
-      "image": null,
+      "image": "/film/covers/rentals/electro-plomb-douala.jpg",
       "phone": "+237 676 822 306 / +237 233 432 901",
       "email": "info@electro-plomb.com",
       "whatsapp": null,
       "address": "Avenue du Dr Jamot, face à l’ancienne porte de Laquintinie",
       "city": "Douala",
-      "scrapedAt": "2026-11-17T14:54:24.184Z"
+      "scrapedAt": "2026-11-17T15:14:57.422Z"
     },
     "electro-plomb-yaounde": {
       "id": "electro-plomb-yaounde",
-      "image": null,
+      "image": "/film/covers/rentals/electro-plomb-yaounde.jpg",
       "phone": "+237 222 22 55 30",
       "email": "info@electro-plomb.com",
       "whatsapp": null,
       "address": "Carrefour Abbia, sous-sol immeuble AXA, face à la direction des impôts",
       "city": "Yaoundé",
-      "scrapedAt": "2026-11-17T14:54:25.342Z"
+      "scrapedAt": "2026-11-17T15:14:58.089Z"
     },
     "vivaterra-generators": {
       "id": "vivaterra-generators",
@@ -213,13 +213,13 @@
     },
     "adri-solutions-yaounde": {
       "id": "adri-solutions-yaounde",
-      "image": null,
+      "image": "/film/covers/rentals/adri-solutions-yaounde.jpg",
       "phone": "+237 695 434 661",
       "email": "contact@adrisolutions.com",
       "whatsapp": null,
       "address": "Immeuble CCA, en face de la pharmacie du Soleil",
       "city": "Yaoundé",
-      "scrapedAt": "2026-11-17T14:54:26.397Z"
+      "scrapedAt": "2026-11-17T15:14:56.245Z"
     },
     "tikay-events-douala": {
       "id": "tikay-events-douala",
@@ -233,13 +233,13 @@
     },
     "canopy-house-yaounde": {
       "id": "canopy-house-yaounde",
-      "image": null,
+      "image": "/film/covers/rentals/canopy-house-yaounde.jpg",
       "phone": "+237 653 28 64 75 / +237 698 80 63 25",
       "email": null,
       "whatsapp": "+237 653 28 64 75",
       "address": "Essomba",
       "city": "Yaoundé",
-      "scrapedAt": "2026-11-17T14:54:31.145Z"
+      "scrapedAt": "2026-11-17T15:14:58.598Z"
     },
     "kribi-paradise": {
       "id": "kribi-paradise",
