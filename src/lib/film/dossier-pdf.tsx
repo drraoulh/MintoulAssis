@@ -427,7 +427,7 @@ function LocationPage({
   ];
   const steps = FILM_PROCEDURE_STEPS.filter((st) =>
     st.id === 'parks' ? loc.looks.some((x) => ['forest', 'savanna', 'lake'].includes(x)) : true,
-  ).slice(0, 4);
+  ).slice(0, 3);
 
   return (
     <Page size="A4" style={s.page}>

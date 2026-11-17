@@ -22,9 +22,20 @@ export function resolveFilmCoverUrl(src: string | null | undefined): string | nu
 
   if (trimmed.startsWith(`${LOCAL_PREFIX}/`) || trimmed === LOCAL_PREFIX) {
     const base = filmCoversBaseUrl();
+    // When Storage base is configured (prod / staging), always rewrite so
+    // redeploys without gitignored public/film/covers/ still resolve.
+    // Local-only paths are kept when the env var is unset (pure offline dev).
     if (base) {
       const rest = trimmed.slice(LOCAL_PREFIX.length); // keeps leading /
       return `${base}${rest}`;
+    }
+    if (
+      process.env.NODE_ENV === 'production' &&
+      typeof console !== 'undefined'
+    ) {
+      console.warn(
+        '[film-covers] NEXT_PUBLIC_FILM_COVERS_BASE_URL is unset — local /film/covers paths will 404 after redeploy.',
+      );
     }
     return trimmed;
   }

@@ -1,7 +1,9 @@
 import {
   CINEMA_EVENT_QUERIES,
   CURATED_CINEMA_EVENTS,
+  FESTIVAL_BRAND_IMAGES,
   extractDateHint,
+  festivalFamilyKey,
   isOrganisedInCameroon,
   type CinemaEvent,
   type CinemaEventKind,
@@ -11,8 +13,10 @@ import { fetchIcicineFestivalEvents } from '@/lib/film/fetch-icicine-events';
 import { fetchOfficialCinemaEvents } from '@/lib/film/fetch-official-events';
 import { searchWeb, webSearchEnvEnabled, type WebSearchHit } from '@/lib/web-search';
 
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours fresh
+const STALE_TTL_MS = 24 * 60 * 60 * 1000; // serve stale up to 24h while refreshing
 let cache: { at: number; payload: CinemaEventsResponse } | null = null;
+let refreshing: Promise<CinemaEventsResponse> | null = null;
 
 function slugId(input: string): string {
   return input
@@ -54,7 +58,6 @@ function isLikelyCinema(text: string): boolean {
 }
 
 function isLikelyCameroonHosted(text: string): boolean {
-  // Must mention a Cameroon venue — not merely a Cameroonian film abroad
   return /yaound|douala|limb[eé]|kribi|buea|bamenda|au\s+cameroun|en\s+cameroun|in\s+cameroon|cameroun\s*—|cameroon\s*—|écrans?\s*noirs|ecrans?\s*noirs|mis\s*me\s*binga|institut\s*fran[cç]ais\s*(du\s*)?cameroun/i.test(
     text,
   );
@@ -66,10 +69,12 @@ export function hitToEvent(hit: WebSearchHit, index: number): CinemaEvent | null
   if (!isLikelyCameroonHosted(blob)) return null;
 
   const { startDate, whenLabel } = extractDateHint(blob);
+  const family = festivalFamilyKey(hit.title);
   const event: CinemaEvent = {
     id: `web-${slugId(hit.title) || index}`,
     title: hit.title,
     summary: hit.snippet || hit.title,
+    body: hit.snippet || hit.title,
     kind: inferKind(blob),
     city: inferCity(blob),
     startDate,
@@ -77,22 +82,10 @@ export function hitToEvent(hit: WebSearchHit, index: number): CinemaEvent | null
     url: hit.url,
     source: 'web',
     provider: hit.provider,
+    family,
   };
   if (!isOrganisedInCameroon(event)) return null;
   return event;
-}
-
-function dedupeKey(e: CinemaEvent): string {
-  const host = e.url
-    ? (() => {
-        try {
-          return new URL(e.url).hostname.replace(/^www\./, '');
-        } catch {
-          return e.url;
-        }
-      })()
-    : '';
-  return `${slugId(e.title)}|${host}|${e.startDate || e.whenLabel || ''}`;
 }
 
 function sortEvents(events: CinemaEvent[]): CinemaEvent[] {
@@ -111,59 +104,101 @@ function sortEvents(events: CinemaEvent[]): CinemaEvent[] {
   });
 }
 
+function scoreEvent(e: CinemaEvent): number {
+  return (
+    (e.imageUrl ? 4 : 0) +
+    (e.body && e.body.length > 120 ? 3 : 0) +
+    (e.startDate ? 2 : 0) +
+    (e.endDate ? 1 : 0) +
+    (e.venue ? 1 : 0) +
+    (e.source === 'official' ? 3 : e.source === 'web' ? 1 : 0) +
+    (e.provider === 'official' ? 2 : e.provider === 'icicine' ? 1 : 0) +
+    Math.min(2, Math.floor((e.summary?.length || 0) / 160))
+  );
+}
+
 function mergeEvents(parts: CinemaEvent[][]): CinemaEvent[] {
   const map = new Map<string, CinemaEvent>();
+
   for (const list of parts) {
     for (const e of list) {
-      const key = dedupeKey(e);
+      const family = e.family || festivalFamilyKey(e.title);
+      const year = (e.startDate || e.whenLabel || '').toString().slice(0, 4);
+      const key =
+        family && !family.includes(' ')
+          ? `${family}|${/^\d{4}$/.test(year) ? year : 'open'}`
+          : `${slugId(e.title)}|${e.startDate || e.whenLabel || ''}`;
+
+      const incoming = { ...e, family };
       const existing = map.get(key);
       if (!existing) {
-        map.set(key, e);
+        map.set(key, incoming);
         continue;
       }
-      // Prefer official > web > curated; keep best date/url
-      const rank = (s: CinemaEvent['source']) =>
-        s === 'official' ? 0 : s === 'web' ? 1 : 2;
-      const winner = rank(e.source) <= rank(existing.source) ? e : existing;
-      const other = winner === e ? existing : e;
+      const winner = scoreEvent(incoming) >= scoreEvent(existing) ? incoming : existing;
+      const other = winner === incoming ? existing : incoming;
       map.set(key, {
         ...other,
         ...winner,
+        family,
         startDate: winner.startDate || other.startDate,
         endDate: winner.endDate || other.endDate,
         whenLabel: winner.whenLabel || other.whenLabel,
         url: winner.url || other.url,
+        imageUrl: winner.imageUrl || other.imageUrl,
+        venue: winner.venue || other.venue,
+        body: (winner.body?.length || 0) >= (other.body?.length || 0) ? winner.body : other.body,
+        bodyFr: winner.bodyFr || other.bodyFr,
+        bodyEn: winner.bodyEn || other.bodyEn,
         summary:
           (winner.summary?.length || 0) >= (other.summary?.length || 0)
             ? winner.summary
             : other.summary,
+        summaryFr: winner.summaryFr || other.summaryFr,
+        summaryEn: winner.summaryEn || other.summaryEn,
       });
     }
   }
 
-  // Drop generic curated Écrans Noirs if we have a dated official / IciCiné edition
-  const datedEcrans = [...map.values()].filter(
-    (e) =>
-      e.id !== 'curated-ecrans-noirs' &&
-      /écrans?\s*noirs/i.test(e.title) &&
-      Boolean(e.startDate),
+  // Drop generic curated seeds when a richer dated edition exists for same family
+  for (const [k, e] of [...map.entries()]) {
+    if (!e.id.startsWith('curated-') || !e.family) continue;
+    const richer = [...map.values()].some(
+      (o) =>
+        o.id !== e.id &&
+        o.family === e.family &&
+        (Boolean(o.startDate) || (o.body?.length || 0) > 80 || Boolean(o.imageUrl)),
+    );
+    if (richer) map.delete(k);
+  }
+
+  // Pin on-site brand covers + keep the richest curated detail text for key festivals.
+  const curatedByFamily = new Map(
+    CURATED_CINEMA_EVENTS.filter((c) => c.family).map((c) => [c.family!, c]),
   );
-  if (datedEcrans.length) {
-    for (const [k, e] of map) {
-      if (e.id === 'curated-ecrans-noirs') map.delete(k);
-    }
-    // Keep a single dated Écrans Noirs (prefer official site over IciCiné news)
-    if (datedEcrans.length > 1) {
-      const prefer =
-        datedEcrans.find((e) => e.provider === 'official') ||
-        datedEcrans.find((e) => e.id.startsWith('official-')) ||
-        datedEcrans[0];
-      for (const [k, e] of map) {
-        if (/écrans?\s*noirs/i.test(e.title) && e.id !== prefer.id && e.startDate) {
-          map.delete(k);
-        }
-      }
-    }
+  for (const [k, e] of map.entries()) {
+    const family = e.family || '';
+    const brand = FESTIVAL_BRAND_IMAGES[family];
+    const seed = curatedByFamily.get(family);
+    if (!brand && !seed) continue;
+    map.set(k, {
+      ...e,
+      imageUrl: brand || e.imageUrl,
+      body:
+        (e.body?.length || 0) >= (seed?.body?.length || 0) ? e.body : seed?.body,
+      bodyFr:
+        (e.bodyFr?.length || 0) >= (seed?.bodyFr?.length || 0)
+          ? e.bodyFr
+          : seed?.bodyFr,
+      bodyEn:
+        (e.bodyEn?.length || 0) >= (seed?.bodyEn?.length || 0)
+          ? e.bodyEn
+          : seed?.bodyEn,
+      summaryFr: e.summaryFr || seed?.summaryFr,
+      summaryEn: e.summaryEn || seed?.summaryEn,
+      venue: e.venue || seed?.venue || null,
+      url: e.url || seed?.url || null,
+    });
   }
 
   return sortEvents([...map.values()].filter(isOrganisedInCameroon));
@@ -179,7 +214,7 @@ async function fetchSearchEvents(): Promise<{
   }
 
   const results = await Promise.all(
-    CINEMA_EVENT_QUERIES.map((query) => searchWeb({ query, maxResults: 5 })),
+    CINEMA_EVENT_QUERIES.map((query) => searchWeb({ query, maxResults: 4 })),
   );
 
   const providers = new Set(
@@ -209,19 +244,49 @@ async function fetchSearchEvents(): Promise<{
   return { events, provider, queryCount: CINEMA_EVENT_QUERIES.length };
 }
 
-export async function getCinemaEvents(opts?: {
-  force?: boolean;
-}): Promise<CinemaEventsResponse> {
-  if (!opts?.force && cache && Date.now() - cache.at < CACHE_TTL_MS) {
-    return cache.payload;
-  }
+function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  fallback: T,
+): Promise<T> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(fallback), ms);
+    promise
+      .then((value) => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch(() => {
+        clearTimeout(timer);
+        resolve(fallback);
+      });
+  });
+}
 
+async function loadFresh(opts?: { forceSearch?: boolean }): Promise<CinemaEventsResponse> {
   try {
-    const [official, icicine, search] = await Promise.all([
-      fetchOfficialCinemaEvents(),
-      fetchIcicineFestivalEvents(),
-      fetchSearchEvents(),
+    // Cap primary scrape so a slow upstream never blocks the page.
+    const [official, icicine] = await Promise.all([
+      withTimeout(fetchOfficialCinemaEvents(), 9_000, {
+        events: [] as CinemaEvent[],
+        provider: 'none' as const,
+      }),
+      withTimeout(fetchIcicineFestivalEvents(), 9_000, {
+        events: [] as CinemaEvent[],
+        fetched: false,
+      }),
     ]);
+
+    const primaryCount = official.events.length + icicine.events.length;
+    // Web search only on explicit refresh, or when both primary sources are empty.
+    const needSearch = Boolean(opts?.forceSearch) || primaryCount === 0;
+    const search = needSearch
+      ? await withTimeout(fetchSearchEvents(), 8_000, {
+          events: [] as CinemaEvent[],
+          provider: 'none' as const,
+          queryCount: 0,
+        })
+      : { events: [] as CinemaEvent[], provider: 'none' as const, queryCount: 0 };
 
     const events = mergeEvents([
       official.events,
@@ -246,7 +311,7 @@ export async function getCinemaEvents(opts?: {
           ? 'mixed'
           : (providers[0] as CinemaEventsResponse['provider']);
 
-    const payload: CinemaEventsResponse = {
+    return {
       events,
       fetchedAt: new Date().toISOString(),
       live,
@@ -259,10 +324,8 @@ export async function getCinemaEvents(opts?: {
         ? undefined
         : 'Live sources unavailable — showing curated festivals.',
     };
-    cache = { at: Date.now(), payload };
-    return payload;
   } catch (err) {
-    const payload: CinemaEventsResponse = {
+    return {
       events: sortEvents(CURATED_CINEMA_EVENTS),
       fetchedAt: new Date().toISOString(),
       live: false,
@@ -273,7 +336,51 @@ export async function getCinemaEvents(opts?: {
           ? `Live fetch failed (${err.message}). Showing curated festivals.`
           : 'Live fetch failed — showing curated festivals.',
     };
+  }
+}
+
+function kickRefresh(forceSearch = false) {
+  if (refreshing) return;
+  refreshing = loadFresh({ forceSearch })
+    .then((payload) => {
+      cache = { at: Date.now(), payload };
+      return payload;
+    })
+    .finally(() => {
+      refreshing = null;
+    });
+}
+
+export async function getCinemaEvents(opts?: {
+  force?: boolean;
+}): Promise<CinemaEventsResponse> {
+  const now = Date.now();
+
+  if (opts?.force) {
+    const payload = await loadFresh({ forceSearch: true });
+    cache = { at: now, payload };
+    return payload;
+  }
+
+  if (cache && now - cache.at < CACHE_TTL_MS) {
+    return cache.payload;
+  }
+
+  // Stale-while-revalidate: answer instantly from cache, refresh in background.
+  if (cache && now - cache.at < STALE_TTL_MS) {
+    kickRefresh(false);
+    return cache.payload;
+  }
+
+  if (refreshing) return refreshing;
+
+  refreshing = loadFresh({ forceSearch: false }).then((payload) => {
     cache = { at: Date.now(), payload };
     return payload;
+  });
+  try {
+    return await refreshing;
+  } finally {
+    refreshing = null;
   }
 }

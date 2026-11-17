@@ -1,0 +1,265 @@
+{
+  "scrapedAt": "2026-11-17T14:54:35.966Z",
+  "byId": {
+    "avis-douala-airport": {
+      "id": "avis-douala-airport",
+      "image": "/film/covers/rentals/avis-douala-airport.jpg",
+      "phone": "+237 695 118 023",
+      "email": null,
+      "whatsapp": null,
+      "address": "Aéroport international de Douala",
+      "city": "Douala",
+      "scrapedAt": "2026-11-17T14:53:25.886Z"
+    },
+    "loxea-cfao-douala": {
+      "id": "loxea-cfao-douala",
+      "image": null,
+      "phone": "+237 686 069 707",
+      "email": null,
+      "whatsapp": null,
+      "address": "35 avenue des Cocotiers (CAMI Équipement)",
+      "city": "Douala",
+      "scrapedAt": "2026-11-17T14:53:37.358Z"
+    },
+    "hertz-douala": {
+      "id": "hertz-douala",
+      "image": null,
+      "phone": "+237 233 439 968",
+      "email": null,
+      "whatsapp": null,
+      "address": "57 Joss Street, Bonanjo",
+      "city": "Douala",
+      "scrapedAt": "2026-11-17T14:53:37.358Z"
+    },
+    "business-cars-douala": {
+      "id": "business-cars-douala",
+      "image": null,
+      "phone": "+237 659 102 663",
+      "email": null,
+      "whatsapp": null,
+      "address": "Face lycée Mongo Joseph, rue Koloko",
+      "city": "Douala",
+      "scrapedAt": "2026-11-17T14:53:48.005Z"
+    },
+    "rental-square-douala": {
+      "id": "rental-square-douala",
+      "image": "/film/covers/rentals/rental-square-douala.jpg",
+      "phone": "+237 696 042 170",
+      "email": null,
+      "whatsapp": null,
+      "address": "Bonapriso, à côté de la pharmacie de Bonadouma",
+      "city": "Douala",
+      "scrapedAt": "2026-11-17T14:53:51.020Z"
+    },
+    "autorent-douala": {
+      "id": "autorent-douala",
+      "image": null,
+      "phone": "+237 699 413 273",
+      "email": null,
+      "whatsapp": null,
+      "address": "Avenue du Général de Gaulle",
+      "city": "Douala",
+      "scrapedAt": "2026-11-17T14:53:51.020Z"
+    },
+    "marxstein-douala": {
+      "id": "marxstein-douala",
+      "image": null,
+      "phone": "+237 651 536 837",
+      "email": null,
+      "whatsapp": null,
+      "address": "Château d’eau, Bonabéri",
+      "city": "Douala",
+      "scrapedAt": "2026-11-17T14:53:52.049Z"
+    },
+    "easyride-yaounde": {
+      "id": "easyride-yaounde",
+      "image": "/film/covers/rentals/easyride-yaounde.png",
+      "phone": "+237 691 143 640",
+      "email": null,
+      "whatsapp": null,
+      "address": "Boulevard de l’URSS, Bastos",
+      "city": "Yaoundé",
+      "scrapedAt": "2026-11-17T14:53:57.497Z"
+    },
+    "amb-yaounde": {
+      "id": "amb-yaounde",
+      "image": null,
+      "phone": "+237 222 207 337",
+      "email": "contact@amb-cm.net",
+      "whatsapp": null,
+      "address": "Carrefour Bastos",
+      "city": "Yaoundé",
+      "scrapedAt": "2026-11-17T14:54:13.813Z"
+    },
+    "ana-lynn-yaounde": {
+      "id": "ana-lynn-yaounde",
+      "image": null,
+      "phone": "+237 698 813 445",
+      "email": null,
+      "whatsapp": null,
+      "address": "Bastos",
+      "city": "Yaoundé",
+      "scrapedAt": "2026-11-17T14:54:13.814Z"
+    },
+    "noun-global-yaounde": {
+      "id": "noun-global-yaounde",
+      "image": null,
+      "phone": "+237 699 148 199",
+      "email": null,
+      "whatsapp": null,
+      "address": "Bastos",
+      "city": "Yaoundé",
+      "scrapedAt": "2026-11-17T14:54:13.814Z"
+    },
+    "macom-mobility-yaounde": {
+      "id": "macom-mobility-yaounde",
+      "image": null,
+      "phone": "+237 699 929 988",
+      "email": null,
+      "whatsapp": null,
+      "address": null,
+      "city": "Yaoundé",
+      "scrapedAt": "2026-11-17T14:54:13.814Z"
+    },
+    "imperial-one-yaounde": {
+      "id": "imperial-one-yaounde",
+      "image": null,
+      "phone": "+237 222 21 96 51 / +237 691 42 59 81",
+      "email": null,
+      "whatsapp": null,
+      "address": "Bastos, BP 1609",
+      "city": "Yaoundé",
+      "scrapedAt": "2026-11-17T14:54:13.814Z"
+    },
+    "watch-auto-medom": {
+      "id": "watch-auto-medom",
+      "image": "/film/covers/rentals/watch-auto-medom.jpg",
+      "phone": "+237 674 41 41 51 / +237 699 95 55 28",
+      "email": "booking@medompalace.com",
+      "whatsapp": null,
+      "address": "À 450 m du carrefour Bastos, après la station Neptune Oil",
+      "city": "Yaoundé",
+      "scrapedAt": "2026-11-17T14:54:17.172Z"
+    },
+    "cameroun-limousine-nsimalen": {
+      "id": "cameroun-limousine-nsimalen",
+      "image": "/film/covers/rentals/cameroun-limousine-nsimalen.jpg",
+      "phone": "+237 671 036 145",
+      "email": null,
+      "whatsapp": null,
+      "address": "Derrière l’aéroport international de Nsimalen",
+      "city": "Nsimalen (Yaoundé)",
+      "scrapedAt": "2026-11-17T14:54:21.603Z"
+    },
+    "faella-studio-douala": {
+      "id": "faella-studio-douala",
+      "image": "/film/covers/studios/faella-studio-douala.png",
+      "phone": "+237 670 397 804 / +237 690 179 683",
+      "email": "studio@faellaict.com",
+      "whatsapp": null,
+      "address": "Ndobo, en face de Petrolex",
+      "city": "Douala",
+      "scrapedAt": "2026-11-17T14:54:21.604Z"
+    },
+    "nice-communication-douala": {
+      "id": "nice-communication-douala",
+      "image": "/film/covers/rentals/nice-communication-douala.png",
+      "phone": "+237 695 558 018",
+      "email": "contact@nicecommunication.net",
+      "whatsapp": null,
+      "address": "345 rue Sylvani, derrière Zepol, Akwa",
+      "city": "Douala",
+      "scrapedAt": "2026-11-17T14:54:22.892Z"
+    },
+    "fahrenheit-pictures-yaounde": {
+      "id": "fahrenheit-pictures-yaounde",
+      "image": "/film/covers/studios/fahrenheit-pictures-yaounde.jpg",
+      "phone": "+237 674 089 565",
+      "email": "hq@fahrenheitpictures.com",
+      "whatsapp": null,
+      "address": "Derrière la pharmacie Xavyo, Olézoa",
+      "city": "Yaoundé",
+      "scrapedAt": "2026-11-17T14:54:22.892Z"
+    },
+    "electro-plomb-douala": {
+      "id": "electro-plomb-douala",
+      "image": null,
+      "phone": "+237 676 822 306 / +237 233 432 901",
+      "email": "info@electro-plomb.com",
+      "whatsapp": null,
+      "address": "Avenue du Dr Jamot, face à l’ancienne porte de Laquintinie",
+      "city": "Douala",
+      "scrapedAt": "2026-11-17T14:54:24.184Z"
+    },
+    "electro-plomb-yaounde": {
+      "id": "electro-plomb-yaounde",
+      "image": null,
+      "phone": "+237 222 22 55 30",
+      "email": "info@electro-plomb.com",
+      "whatsapp": null,
+      "address": "Carrefour Abbia, sous-sol immeuble AXA, face à la direction des impôts",
+      "city": "Yaoundé",
+      "scrapedAt": "2026-11-17T14:54:25.342Z"
+    },
+    "vivaterra-generators": {
+      "id": "vivaterra-generators",
+      "image": "/film/covers/studios/vivaterra-generators.png",
+      "phone": null,
+      "email": "contact@vivaterracameroun.com",
+      "whatsapp": "+237 655 55 00 11",
+      "address": "Fabrique VivaTerra",
+      "city": "Kouoptamo",
+      "scrapedAt": "2026-11-17T14:54:25.342Z"
+    },
+    "adri-solutions-yaounde": {
+      "id": "adri-solutions-yaounde",
+      "image": null,
+      "phone": "+237 695 434 661",
+      "email": "contact@adrisolutions.com",
+      "whatsapp": null,
+      "address": "Immeuble CCA, en face de la pharmacie du Soleil",
+      "city": "Yaoundé",
+      "scrapedAt": "2026-11-17T14:54:26.397Z"
+    },
+    "tikay-events-douala": {
+      "id": "tikay-events-douala",
+      "image": "/film/covers/rentals/tikay-events-douala.jpg",
+      "phone": "+237 691415716",
+      "email": "tikaysbridal@gmail.com",
+      "whatsapp": "+237 691 415 716",
+      "address": "Makepe",
+      "city": "Douala",
+      "scrapedAt": "2026-11-17T14:54:31.144Z"
+    },
+    "canopy-house-yaounde": {
+      "id": "canopy-house-yaounde",
+      "image": null,
+      "phone": "+237 653 28 64 75 / +237 698 80 63 25",
+      "email": null,
+      "whatsapp": "+237 653 28 64 75",
+      "address": "Essomba",
+      "city": "Yaoundé",
+      "scrapedAt": "2026-11-17T14:54:31.145Z"
+    },
+    "kribi-paradise": {
+      "id": "kribi-paradise",
+      "image": "/film/covers/rentals/kribi-paradise.jpg",
+      "phone": "+237 694 795 189 / +237 671 026 530",
+      "email": "kribiparadise@gmail.com",
+      "whatsapp": null,
+      "address": "Ngoyé plage",
+      "city": "Kribi",
+      "scrapedAt": "2026-11-17T14:54:33.893Z"
+    },
+    "kribi-lodge-base-nautique": {
+      "id": "kribi-lodge-base-nautique",
+      "image": "/film/covers/rentals/kribi-lodge-base-nautique.webp",
+      "phone": "+237 695 57 25 96 / +237 656 72 90 67",
+      "email": "reserver@kribi-lodge.com",
+      "whatsapp": null,
+      "address": "Lieu-dit Bwambé, chutes de la Lobé",
+      "city": "Kribi",
+      "scrapedAt": "2026-11-17T14:54:35.965Z"
+    }
+  }
+}

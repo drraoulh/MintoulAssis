@@ -5,13 +5,24 @@
 
 import {
   extractDateHint,
+  festivalFamilyKey,
   isOrganisedInCameroon,
   type CinemaEvent,
   type CinemaEventKind,
 } from '@/lib/film/events';
+import {
+  decodeHtmlEntities,
+  extractArticleBody,
+  extractMetaDescription,
+  extractOgImage,
+  stripHtml,
+} from '@/lib/film/html-meta';
 
 const UA = 'SmartMboaFilmBot/1.0 (+https://smartmboatour.com; cinema-events)';
 const FESTIVAL_PAGE = 'https://icicine.com/posts/category/festival?page=1';
+/** Cap detail fetches — keeps research fast. */
+const MAX_DETAIL_FETCHES = 5;
+const DETAIL_TIMEOUT_MS = 6_000;
 
 const MONTHS: Record<string, number> = {
   janvier: 1,
@@ -31,30 +42,11 @@ const MONTHS: Record<string, number> = {
   décembre: 12,
 };
 
-function decodeEntities(input: string): string {
-  return input
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
-    .replace(/&amp;/g, '&')
-    .replace(/&#8211;/g, '–')
-    .replace(/&#8217;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&rsquo;/g, "'")
-    .replace(/&hellip;/g, '…')
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/<[^>\s]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-async function fetchText(url: string): Promise<string | null> {
+async function fetchText(url: string, timeoutMs = 8_000): Promise<string | null> {
   try {
     const res = await fetch(url, {
       headers: { 'User-Agent': UA, Accept: 'text/html' },
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(timeoutMs),
       cache: 'no-store',
     });
     if (!res.ok) return null;
@@ -62,16 +54,6 @@ async function fetchText(url: string): Promise<string | null> {
   } catch {
     return null;
   }
-}
-
-function slugId(input: string): string {
-  return input
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 56);
 }
 
 function iso(y: number, m: number, d: number): string {
@@ -96,9 +78,7 @@ function parseFrenchRange(
   const year = m[4] ? Number(m[4]) : fallbackYear;
   const startDay = Number(m[1]);
   const endDay = Number(m[2]);
-  const whenLabel = m[4]
-    ? `${m[1]}–${m[2]} ${m[3]} ${year}`
-    : `${m[1]}–${m[2]} ${m[3]} ${year}`;
+  const whenLabel = `${m[1]}–${m[2]} ${m[3]} ${year}`;
   return {
     startDate: iso(year, month, startDay),
     endDate: iso(year, month, endDay),
@@ -151,7 +131,7 @@ function canonicalTitle(title: string, year: number): string {
   if (/ateliers?\s*de\s*touma[ïi]/i.test(t)) return `Ateliers de Toumaï ${year}`;
   if (/semaine du cin/i.test(t)) return `Semaine du Cinéma ${year}`;
   if (/recico/i.test(t)) return `RECICO ${year}`;
-  // Drop "sélection dévoilée" fluff when possible
+  if (/mis\s*me\s*binga/i.test(t)) return `Mis Me Binga ${year}`;
   return t
     .replace(/\s*:\s*la sélection officielle.*$/i, '')
     .replace(/\s+dévoile.*$/i, '')
@@ -162,7 +142,22 @@ type ParsedPost = {
   title: string;
   url: string;
   snippet: string;
+  imageUrl?: string | null;
+  body?: string | null;
 };
+
+function nearbyImage(html: string, aroundIndex: number, baseUrl: string): string | null {
+  const window = html.slice(Math.max(0, aroundIndex - 900), aroundIndex + 400);
+  const img =
+    window.match(/srcset=["']([^"']+\.(?:jpe?g|png|webp)[^"']*)["']/i)?.[1]?.split(/[\s,]/)[0] ||
+    window.match(/src=["']([^"']+\.(?:jpe?g|png|webp)[^"']*)["']/i)?.[1];
+  if (!img) return null;
+  try {
+    return new URL(decodeHtmlEntities(img), baseUrl).href;
+  } catch {
+    return null;
+  }
+}
 
 function parseFestivalPosts(html: string): ParsedPost[] {
   const posts: ParsedPost[] = [];
@@ -174,24 +169,14 @@ function parseFestivalPosts(html: string): ParsedPost[] {
     const url = m[1];
     if (seen.has(url)) continue;
     seen.add(url);
-    const title = decodeEntities(m[3]);
+    const title = stripHtml(m[3]);
     const after = html.slice(m.index! + m[0].length, m.index! + m[0].length + 1800);
-    const snippet = decodeEntities(after).slice(0, 520);
-    posts.push({ title, url, snippet });
+    const snippet = stripHtml(after).slice(0, 520);
+    const imageUrl = nearbyImage(html, m.index!, url);
+    posts.push({ title, url, snippet, imageUrl });
   }
 
-  return posts;
-}
-
-function festivalFamilyKey(title: string): string {
-  const t = title.toLowerCase();
-  if (/semaine du cin/.test(t)) return 'semaine-cinema';
-  if (/écrans?\s*noirs|ecrans?\s*noirs/.test(t)) return 'ecrans-noirs';
-  if (/fescimonka/.test(t)) return 'fescimonka';
-  if (/touma[ïi]/.test(t)) return 'toumai';
-  if (/recico/.test(t)) return 'recico';
-  if (/panafricain.*cannes|cannes.*panafricain/.test(t)) return 'fifp-cannes';
-  return slugId(title).slice(0, 24);
+  return posts.slice(0, 16);
 }
 
 export async function fetchIcicineFestivalEvents(now = new Date()): Promise<{
@@ -202,7 +187,7 @@ export async function fetchIcicineFestivalEvents(now = new Date()): Promise<{
   try {
     const res = await fetch(FESTIVAL_PAGE, {
       headers: { 'User-Agent': UA, Accept: 'text/html' },
-      signal: AbortSignal.timeout(14_000),
+      signal: AbortSignal.timeout(10_000),
       cache: 'no-store',
     });
     if (res.ok) html = await res.text();
@@ -222,35 +207,56 @@ export async function fetchIcicineFestivalEvents(now = new Date()): Promise<{
 
   const today = todayIso(now);
   const yearFallback = now.getFullYear();
-  const byFamily = new Map<string, CinemaEvent>();
 
-  // Enrich cards that look like festivals but lack a clear date range
-  const enriched = await Promise.all(
-    posts.map(async (post) => {
-      const blob = `${post.title} ${post.snippet}`;
-      if (isPostponed(blob) || isPastNewsTitle(post.title)) return post;
-      if (parseFrenchRange(blob, yearFallback)) return post;
-      if (postponedFamilies.has(festivalFamilyKey(post.title))) return post;
-      const article = await fetchText(post.url);
-      if (!article) return post;
-      const body = decodeEntities(article);
-      const rangeInBody = parseFrenchRange(body, yearFallback);
-      if (!rangeInBody) return post;
-      // Keep a short excerpt around the date so summaries stay readable
-      const anchor = body.search(
-        /(?:du\s+)?\d{1,2}\s+au\s+\d{1,2}\s+(?:janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)/i,
-      );
-      const start = anchor >= 0 ? Math.max(0, anchor - 120) : 0;
-      const excerpt = body.slice(start, start + 420);
-      return {
+  // Enrich only a few posts that need dates or images (speed first).
+  const needDetail = posts.filter((post) => {
+    const blob = `${post.title} ${post.snippet}`;
+    if (isPostponed(blob) || isPastNewsTitle(post.title)) return false;
+    if (postponedFamilies.has(festivalFamilyKey(post.title))) return false;
+    const hasRange = Boolean(parseFrenchRange(blob, yearFallback));
+    return !hasRange || !post.imageUrl;
+  }).slice(0, MAX_DETAIL_FETCHES);
+
+  const detailByUrl = new Map<string, ParsedPost>();
+  await Promise.all(
+    needDetail.map(async (post) => {
+      const article = await fetchText(post.url, DETAIL_TIMEOUT_MS);
+      if (!article) {
+        detailByUrl.set(post.url, post);
+        return;
+      }
+      const bodyText =
+        extractArticleBody(article, 1200) ||
+        extractMetaDescription(article) ||
+        stripHtml(article).slice(0, 900);
+      const imageUrl =
+        extractOgImage(article, post.url) || post.imageUrl || null;
+      const rangeInBody = parseFrenchRange(bodyText, yearFallback);
+      let snippet = post.snippet;
+      if (rangeInBody) {
+        const anchor = bodyText.search(
+          /(?:du\s+)?\d{1,2}\s+au\s+\d{1,2}\s+(?:janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)/i,
+        );
+        const start = anchor >= 0 ? Math.max(0, anchor - 80) : 0;
+        snippet = `${post.snippet} ${bodyText.slice(start, start + 360)}`
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 560);
+      }
+      detailByUrl.set(post.url, {
         ...post,
-        snippet: `${post.snippet} ${excerpt}`.replace(/\s+/g, ' ').trim().slice(0, 520),
-      };
+        snippet,
+        imageUrl,
+        body: bodyText,
+      });
     }),
   );
 
+  const enriched = posts.map((p) => detailByUrl.get(p.url) || p);
+  const byFamily = new Map<string, CinemaEvent>();
+
   for (const post of enriched) {
-    const blob = `${post.title} ${post.snippet}`;
+    const blob = `${post.title} ${post.snippet} ${post.body || ''}`;
     if (isPostponed(blob)) continue;
 
     const family = festivalFamilyKey(post.title);
@@ -265,7 +271,6 @@ export async function fetchIcicineFestivalEvents(now = new Date()): Promise<{
     if (!startDate && !endDate) continue;
     if (isPastNewsTitle(post.title) && (!endDate || endDate < today)) continue;
 
-    // Keep only upcoming / still running (endDate or startDate >= today)
     const relevantEnd = endDate || startDate;
     if (!relevantEnd || relevantEnd < today) continue;
 
@@ -274,10 +279,10 @@ export async function fetchIcicineFestivalEvents(now = new Date()): Promise<{
     const kind = inferKind(blob);
     const city = inferCity(blob);
     const summary = post.snippet
-      .replace(/<[^>]*/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
       .slice(0, 360);
+    const body = (post.body || summary).slice(0, 1200);
 
     const event: CinemaEvent = {
       id: `icicine-${family}-${startDate || 'tbd'}`,
@@ -285,14 +290,19 @@ export async function fetchIcicineFestivalEvents(now = new Date()): Promise<{
       titleFr: title,
       summary,
       summaryFr: summary,
+      body,
+      bodyFr: body,
       kind,
       city,
+      venue: city,
+      imageUrl: post.imageUrl || null,
       startDate,
       endDate: endDate || null,
       whenLabel,
       url: post.url,
       source: 'official',
       provider: 'icicine',
+      family,
     };
 
     if (!isOrganisedInCameroon(event)) continue;
@@ -302,9 +312,12 @@ export async function fetchIcicineFestivalEvents(now = new Date()): Promise<{
       byFamily.set(family, event);
       continue;
     }
-    // Prefer the post that names the festival cleanly / has stronger dates
     const score = (e: CinemaEvent) =>
-      (e.endDate ? 2 : 0) + (e.startDate ? 1 : 0) + (e.title.length < 60 ? 1 : 0);
+      (e.imageUrl ? 3 : 0) +
+      (e.body && e.body.length > 200 ? 2 : 0) +
+      (e.endDate ? 2 : 0) +
+      (e.startDate ? 1 : 0) +
+      (e.title.length < 60 ? 1 : 0);
     if (score(event) >= score(existing)) byFamily.set(family, event);
   }
 

@@ -9,11 +9,9 @@ import {
   Building2,
   CalendarDays,
   CarFront,
-  CheckSquare,
   Clapperboard,
   ClipboardList,
   Columns2,
-  GraduationCap,
   Home,
   LayoutGrid,
   MapPin,
@@ -37,16 +35,14 @@ import { useLocale } from '@/lib/i18n';
 
 const FILM_LINKS = [
   { href: '/film', key: 'film.nav.home', icon: Home, exact: true },
+  { href: '/film/directory', key: 'film.nav.directory', icon: Users },
   { href: '/film/locations', key: 'film.nav.locations', icon: MapPin },
   { href: '/film/halls', key: 'film.nav.halls', icon: Theater },
   { href: '/film/events', key: 'film.nav.events', icon: CalendarDays },
   { href: '/film/procedures', key: 'film.nav.procedures', icon: ClipboardList },
-  { href: '/film/directory', key: 'film.nav.directory', icon: Users },
   { href: '/film/equipment', key: 'film.nav.equipment', icon: Wrench },
   { href: '/film/rentals', key: 'film.nav.rentals', icon: CarFront },
-  { href: '/film/planning', key: 'film.nav.planning', icon: CheckSquare },
   { href: '/film/locations/compare', key: 'film.nav.compare', icon: Columns2 },
-  { href: '/film/resources', key: 'film.nav.resources', icon: GraduationCap },
   { href: '/film/profile', key: 'film.nav.profile', icon: UserCircle2 },
 ] as const;
 
@@ -275,14 +271,12 @@ function FilmBottomNav() {
   const moreLinks = useMemo(
     () =>
       [
-        { href: '/film/locations', label: t('film.nav.locations'), icon: MapPin },
         { href: '/film/directory', label: t('film.nav.directory'), icon: Building2 },
+        { href: '/film/locations', label: t('film.nav.locations'), icon: MapPin },
         { href: '/film/procedures', label: t('film.nav.procedures'), icon: ClipboardList },
         { href: '/film/equipment', label: t('film.nav.equipment'), icon: Wrench },
         { href: '/film/rentals', label: t('film.nav.rentals'), icon: CarFront },
-        { href: '/film/planning', label: t('film.nav.planning'), icon: CheckSquare },
         { href: '/film/locations/compare', label: t('film.nav.compare'), icon: Columns2 },
-        { href: '/film/resources', label: t('film.nav.resources'), icon: GraduationCap },
         { href: '/film/profile', label: t('film.nav.profile'), icon: UserCircle2 },
         { href: '/film?change_audience=1', label: t('film.audience.switch'), icon: Clapperboard },
         { href: '/?change_mode=1', label: t('nav.changeMode'), icon: LayoutGrid },

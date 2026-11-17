@@ -6,10 +6,8 @@ import {
   ArrowUpRight,
   CalendarDays,
   CarFront,
-  CheckSquare,
   ClipboardList,
   Columns2,
-  GraduationCap,
   MapPin,
   Theater,
   Users,
@@ -47,6 +45,20 @@ type HubItem = {
 
 const SHARED_HUB: HubItem[] = [
   {
+    href: '/film/directory',
+    icon: Users,
+    titleKey: 'film.hub.directory',
+    bodyKey: 'film.hub.directoryBody',
+    image: '/film/hub/directory.jpg',
+  },
+  {
+    href: '/film/equipment',
+    icon: Wrench,
+    titleKey: 'film.hub.equipment',
+    bodyKey: 'film.hub.equipmentBody',
+    image: '/film/hub/equipment.jpg',
+  },
+  {
     href: '/film/locations',
     icon: MapPin,
     titleKey: 'film.hub.locations',
@@ -75,32 +87,11 @@ const SHARED_HUB: HubItem[] = [
     image: '/film/hub/procedures.jpg',
   },
   {
-    href: '/film/directory',
-    icon: Users,
-    titleKey: 'film.hub.directory',
-    bodyKey: 'film.hub.directoryBody',
-    image: '/film/hub/directory.jpg',
-  },
-  {
-    href: '/film/equipment',
-    icon: Wrench,
-    titleKey: 'film.hub.equipment',
-    bodyKey: 'film.hub.equipmentBody',
-    image: '/film/hub/equipment.jpg',
-  },
-  {
     href: '/film/rentals',
     icon: CarFront,
     titleKey: 'film.hub.rentals',
     bodyKey: 'film.hub.rentalsBody',
     image: '/film/hub/rentals.jpg',
-  },
-  {
-    href: '/film/planning',
-    icon: CheckSquare,
-    titleKey: 'film.hub.planning',
-    bodyKey: 'film.hub.planningBody',
-    image: '/film/hub/planning.jpg',
   },
 ];
 
@@ -157,20 +148,16 @@ export default function FilmHomePage() {
   const featured = FILM_LOCATIONS.filter((l) => l.alsoTourism).slice(0, 6);
   const hub: HubItem[] = [
     ...SHARED_HUB,
-    isIntl
-      ? {
-          href: '/film/locations/compare',
-          icon: Columns2,
-          titleKey: 'film.hub.compare',
-          bodyKey: 'film.hub.compareBody',
-        }
-      : {
-          href: '/film/resources',
-          icon: GraduationCap,
-          titleKey: 'film.hub.resources',
-          bodyKey: 'film.hub.resourcesBody',
-          image: '/film/hub/resources.jpg',
-        },
+    ...(isIntl
+      ? [
+          {
+            href: '/film/locations/compare',
+            icon: Columns2,
+            titleKey: 'film.hub.compare',
+            bodyKey: 'film.hub.compareBody',
+          } satisfies HubItem,
+        ]
+      : []),
   ];
 
   return (
@@ -224,10 +211,10 @@ export default function FilmHomePage() {
                 {t('film.home.ctaProcedures')}
               </Link>
               <Link
-                href={isIntl ? '/film/locations/compare' : '/film/resources'}
+                href={isIntl ? '/film/locations/compare' : '/film/directory'}
                 className="cine-btn-ghost"
               >
-                {isIntl ? t('film.home.ctaCompare') : t('film.home.ctaResources')}
+                {isIntl ? t('film.home.ctaCompare') : t('film.home.ctaDirectory')}
               </Link>
             </div>
             <button

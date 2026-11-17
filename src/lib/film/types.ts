@@ -86,6 +86,8 @@ export interface RentalShop extends PlaceContact {
   description?: string;
   descriptionFr?: string;
   descriptionEn?: string;
+  /** Cover image under /film/covers/… or absolute URL. */
+  image?: string | null;
   /** Position resolved from the neighbourhood / street, not the exact door. */
   approximate?: boolean;
   /** Where the details were verified (not shown in the UI). */
@@ -145,7 +147,12 @@ export interface FilmDirectoryEntry {
   specialtyFr: string;
   specialtyEn: string;
   contact?: string;
+  phone?: string;
+  email?: string;
   website?: string;
+  address?: string;
+  /** Cover path under /film/covers/… or absolute URL. */
+  image?: string | null;
 }
 
 export interface FilmEquipmentItem {
@@ -157,6 +164,11 @@ export interface FilmEquipmentItem {
   cityEn: string;
   notesFr: string;
   notesEn: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  address?: string;
+  image?: string | null;
 }
 
 export interface FilmAuthority {
@@ -178,6 +190,27 @@ export interface FilmProcedureStep {
   titleEn: string;
   bodyFr: string;
   bodyEn: string;
+}
+
+/** One block inside a Guide de l’usager dropdown card. */
+export interface FilmGuideBlock {
+  titleFr?: string;
+  titleEn?: string;
+  paragraphsFr?: string[];
+  paragraphsEn?: string[];
+  bulletsFr?: string[];
+  bulletsEn?: string[];
+}
+
+/** DCPA / MINAC “Guide de l’usager” accordion card (full official text). */
+export interface FilmGuideCard {
+  id: string;
+  order: number;
+  headlineFr: string;
+  headlineEn: string;
+  kickerFr?: string;
+  kickerEn?: string;
+  blocks: FilmGuideBlock[];
 }
 
 export interface FilmChecklistItem {

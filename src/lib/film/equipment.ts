@@ -1,82 +1,54 @@
+import studiosData from '@/lib/film/data/studios-materiel.json';
 import type { FilmEquipmentItem } from '@/lib/film/types';
 
-export const FILM_EQUIPMENT: FilmEquipmentItem[] = [
-  {
-    id: 'cam-cinema-dla',
-    nameFr: 'Kit caméra cinéma (Douala)',
-    nameEn: 'Cinema camera kit (Douala)',
-    kind: 'camera',
-    cityFr: 'Douala',
-    cityEn: 'Douala',
-    notesFr: 'Boîtiers plein format / Super 35, optiques cinéma, moniteurs.',
-    notesEn: 'Full-frame / Super 35 bodies, cinema glass, monitors.',
-  },
-  {
-    id: 'led-pkg',
-    nameFr: 'Parc LED & HMI léger',
-    nameEn: 'LED & light HMI package',
-    kind: 'lighting',
-    cityFr: 'Douala',
-    cityEn: 'Douala',
-    notesFr: 'Batteries V-mount, softboxes, stands — adapté extérieurs.',
-    notesEn: 'V-mount batteries, softboxes, stands — outdoor ready.',
-  },
-  {
-    id: 'grip-mobile',
-    nameFr: 'Grip mobile & slider',
-    nameEn: 'Mobile grip & slider',
-    kind: 'grip',
-    cityFr: 'Yaoundé',
-    cityEn: 'Yaoundé',
-    notesFr: 'Slider, trépieds bowl, sandbags, flags.',
-    notesEn: 'Slider, bowl tripods, sandbags, flags.',
-  },
-  {
-    id: 'sound-kit',
-    nameFr: 'Kit son HF + boom',
-    nameEn: 'Wireless + boom sound kit',
-    kind: 'sound',
-    cityFr: 'Yaoundé',
-    cityEn: 'Yaoundé',
-    notesFr: 'Enregistreur multipiste, micros canon, lavaliers.',
-    notesEn: 'Multitrack recorder, shotgun mics, lavs.',
-  },
-  {
-    id: 'drone-cert',
-    nameFr: 'Drone certifié + pilote',
-    nameEn: 'Certified drone + pilot',
-    kind: 'drone',
-    cityFr: 'Douala',
-    cityEn: 'Douala',
-    notesFr: 'Autorisations aériennes selon zone — vérifier NOTAM / locales.',
-    notesEn: 'Airspace permits by zone — check NOTAMs / local rules.',
-  },
-  {
-    id: 'studio-mfoundi',
-    nameFr: 'Studio cyclorama Mfoundi',
-    nameEn: 'Mfoundi cyclorama studio',
-    kind: 'studio',
-    cityFr: 'Yaoundé',
-    cityEn: 'Yaoundé',
-    notesFr: 'Plateau climatisée, régie, parking équipe.',
-    notesEn: 'Climate-controlled stage, control room, crew parking.',
-  },
-  {
-    id: 'crew-unit',
-    nameFr: 'Unité technique freelance',
-    nameEn: 'Freelance technical unit',
-    kind: 'crew',
-    cityFr: 'Douala',
-    cityEn: 'Douala',
-    notesFr: '1er assistant, gaffer, data wrangler à la journée.',
-    notesEn: '1st AC, gaffer, data wrangler day rates.',
-  },
-];
+const BAD_IMAGE = /whatsapp|globe\.png|favicon|icon|logo-only|1x1|pixel/i;
+
+function cleanImage(src: string | null | undefined): string | null {
+  if (!src) return null;
+  if (BAD_IMAGE.test(src)) return null;
+  return src;
+}
+
+type Scraped = {
+  id: string;
+  name: string;
+  kind: FilmEquipmentItem['kind'];
+  cityFr: string;
+  cityEn: string;
+  specialtyFr: string;
+  specialtyEn: string;
+  notesFr?: string;
+  notesEn?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  address?: string;
+  image?: string | null;
+};
+
+/** Live studios & matériel scraped from their websites. */
+export const FILM_EQUIPMENT: FilmEquipmentItem[] = (studiosData.items as Scraped[]).map(
+  (item) => ({
+    id: item.id,
+    nameFr: item.name,
+    nameEn: item.name,
+    kind: item.kind,
+    cityFr: item.cityFr,
+    cityEn: item.cityEn,
+    notesFr: item.specialtyFr || item.notesFr || '',
+    notesEn: item.specialtyEn || item.notesEn || '',
+    phone: item.phone,
+    email: item.email,
+    website: item.website,
+    address: item.address,
+    image: cleanImage(item.image),
+  }),
+);
 
 export const EQUIPMENT_KINDS = [
   { id: 'camera' as const, fr: 'Caméra', en: 'Camera' },
   { id: 'lighting' as const, fr: 'Lumière', en: 'Lighting' },
-  { id: 'grip' as const, fr: 'Grip', en: 'Grip' },
+  { id: 'grip' as const, fr: 'Grip / engins', en: 'Grip / plant' },
   { id: 'sound' as const, fr: 'Son', en: 'Sound' },
   { id: 'drone' as const, fr: 'Drone', en: 'Drone' },
   { id: 'studio' as const, fr: 'Studio', en: 'Studio' },

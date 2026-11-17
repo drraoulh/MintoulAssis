@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -20,6 +21,7 @@ import {
 
 import { PlaceContactCard } from '@/components/film/PlaceContactCard';
 import { TourismMap } from '@/components/maps/TourismMap';
+import { resolveFilmCoverUrl } from '@/lib/film/cover-url';
 import { OSM_ATTRIBUTION } from '@/lib/film/osm-locations';
 import { RENTAL_CATEGORIES, RENTAL_SHOPS, filterRentals } from '@/lib/film/rentals';
 import type { RentalCategory, RentalShop } from '@/lib/film/types';
@@ -35,9 +37,15 @@ const CATEGORY_ICONS: Record<RentalCategory, LucideIcon> = {
   event: PartyPopper,
 };
 
+const FALLBACK = '/film/hub/rentals.jpg';
+
 function regionLabel(id: string | undefined, fr: boolean) {
   const r = REGIONS.find((x) => x.id === id);
   return r ? (fr ? r.nameFr : r.nameEn) : '';
+}
+
+function shopCover(shop: RentalShop): string {
+  return resolveFilmCoverUrl(shop.image) || FALLBACK;
 }
 
 export default function FilmRentalsPage() {
@@ -55,7 +63,14 @@ export default function FilmRentalsPage() {
     return c;
   }, []);
   const markers: MapMarker[] = useMemo(
-    () => shops.map((s) => ({ id: s.id, name: s.name, latitude: s.lat, longitude: s.lon, category: s.category })),
+    () =>
+      shops.map((s) => ({
+        id: s.id,
+        name: s.name,
+        latitude: s.lat,
+        longitude: s.lon,
+        category: s.category,
+      })),
     [shops],
   );
 
@@ -70,8 +85,8 @@ export default function FilmRentalsPage() {
         </h1>
         <p className="mt-3 text-sm text-white/60 sm:text-base">
           {fr
-            ? 'Voitures, 4x4, motos, bateaux, matériel et équipement événementiel : les boutiques et agences de location au Cameroun, avec leurs coordonnées et leur position exacte.'
-            : 'Cars, 4x4s, motorbikes, boats, gear and event equipment: rental shops and agencies across Cameroon, with contact details and exact location.'}
+            ? 'Voitures, 4x4, bateaux, matériel et événementiel : photos, adresses, téléphones et position GPS — sans quitter SmartMboa.'
+            : 'Cars, 4x4s, boats, gear and events: photos, addresses, phones and GPS — without leaving SmartMboa.'}
         </p>
       </header>
 
@@ -135,37 +150,52 @@ export default function FilmRentalsPage() {
         {fr ? `${shops.length} boutique(s) / agence(s)` : `${shops.length} shop(s) / agency(ies)`}
       </p>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {shops.map((s) => {
           const Icon = CATEGORY_ICONS[s.category];
           const cat = RENTAL_CATEGORIES.find((c) => c.id === s.category);
           const place = [s.city, regionLabel(s.regionId, fr)].filter(Boolean).join(' · ');
+          const cover = shopCover(s);
+          const isRemote = /^https?:\/\//i.test(cover);
           return (
             <button
               key={s.id}
               type="button"
               onClick={() => setSelected(s)}
-              className="group flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition hover:border-[#F5E80C]/40 hover:bg-white/[0.06]"
+              className="group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] text-left transition hover:border-[#F5E80C]/40 hover:bg-white/[0.06]"
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E30D13]/25 text-[#F5E80C]">
-                <Icon className="h-5 w-5" aria-hidden />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-display text-base font-semibold text-[#F8F5ED]">
-                  {s.name}
-                </span>
-                <span className="mt-0.5 block text-xs font-semibold text-[#F5E80C]/85">
+              <div className="relative aspect-[16/10] bg-black/40">
+                <Image
+                  src={cover}
+                  alt=""
+                  fill
+                  sizes="(max-width: 640px) 100vw, 33vw"
+                  className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                  unoptimized={isRemote}
+                />
+                <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/65 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#F5E80C]">
+                  <Icon className="h-3 w-3" aria-hidden />
                   {fr ? cat?.fr : cat?.en}
                 </span>
-                <span className="mt-1 block truncate text-xs text-white/50">{place || '—'}</span>
-                {s.phone ? (
-                  <span className="mt-2 inline-flex items-center gap-1 text-[11px] text-white/60">
-                    <Phone className="h-3 w-3" aria-hidden />
-                    {s.phone}
+              </div>
+              <span className="flex items-start gap-2 px-4 py-3">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-display text-base font-semibold text-[#F8F5ED]">
+                    {s.name}
                   </span>
-                ) : null}
+                  <span className="mt-1 block truncate text-xs text-white/50">{place || '—'}</span>
+                  {s.address ? (
+                    <span className="mt-0.5 block truncate text-[11px] text-white/35">{s.address}</span>
+                  ) : null}
+                  {s.phone ? (
+                    <span className="mt-2 inline-flex items-center gap-1 text-[11px] text-white/65">
+                      <Phone className="h-3 w-3 text-[#F5E80C]" aria-hidden />
+                      {s.phone}
+                    </span>
+                  ) : null}
+                </span>
+                <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-white/30 group-hover:text-[#F5E80C]" aria-hidden />
               </span>
-              <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-white/30 group-hover:text-[#F5E80C]" aria-hidden />
             </button>
           );
         })}
@@ -223,8 +253,8 @@ export default function FilmRentalsPage() {
 
       <p className="mt-6 text-center text-[11px] text-white/35">
         {fr
-          ? `Annuaire SmartMboa (coordonnées vérifiées en ligne, oct. 2026) et ${OSM_ATTRIBUTION}`
-          : `SmartMboa directory (details verified online, Oct 2026) and ${OSM_ATTRIBUTION}`}
+          ? `Annuaire SmartMboa (coordonnées vérifiées en ligne) et ${OSM_ATTRIBUTION}`
+          : `SmartMboa directory (details verified online) and ${OSM_ATTRIBUTION}`}
       </p>
 
       {selected ? <RentalModal shop={selected} fr={fr} onClose={() => setSelected(null)} /> : null}
@@ -237,6 +267,8 @@ function RentalModal({ shop, fr, onClose }: { shop: RentalShop; fr: boolean; onC
   const cat = RENTAL_CATEGORIES.find((c) => c.id === shop.category);
   const region = regionLabel(shop.regionId, fr);
   const description = (fr ? shop.descriptionFr : shop.descriptionEn) ?? shop.description;
+  const cover = shopCover(shop);
+  const isRemote = /^https?:\/\//i.test(cover);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -250,9 +282,38 @@ function RentalModal({ shop, fr, onClose }: { shop: RentalShop; fr: boolean; onC
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-end justify-center sm:items-center" role="dialog" aria-modal aria-labelledby="rental-title">
-      <button type="button" className="absolute inset-0 bg-black/75" aria-label={fr ? 'Fermer' : 'Close'} onClick={onClose} />
+    <div
+      className="fixed inset-0 z-[10000] flex items-end justify-center sm:items-center"
+      role="dialog"
+      aria-modal
+      aria-labelledby="rental-title"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/75"
+        aria-label={fr ? 'Fermer' : 'Close'}
+        onClick={onClose}
+      />
       <div className="relative flex max-h-[92svh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-[#111] shadow-2xl sm:rounded-3xl">
+        <div className="relative aspect-[16/9] w-full bg-black/50">
+          <Image
+            src={cover}
+            alt=""
+            fill
+            sizes="512px"
+            className="object-cover"
+            unoptimized={isRemote}
+          />
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-3 top-3 rounded-full bg-black/60 p-2 text-white/80 hover:text-white"
+            aria-label={fr ? 'Fermer' : 'Close'}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
         <div className="flex items-start gap-3 border-b border-white/10 px-5 py-4">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E30D13]/25 text-[#F5E80C]">
             <Icon className="h-5 w-5" aria-hidden />
@@ -269,14 +330,6 @@ function RentalModal({ shop, fr, onClose }: { shop: RentalShop; fr: boolean; onC
               {[shop.city, region, fr ? 'Cameroun' : 'Cameroon'].filter(Boolean).join(' · ')}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full p-2 text-white/60 hover:bg-white/5 hover:text-white"
-            aria-label={fr ? 'Fermer' : 'Close'}
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
         <div className="space-y-4 overflow-y-auto px-5 py-4">
@@ -287,7 +340,13 @@ function RentalModal({ shop, fr, onClose }: { shop: RentalShop; fr: boolean; onC
             />
           </div>
           {description ? <p className="text-sm leading-relaxed text-white/75">{description}</p> : null}
-          <PlaceContactCard contact={shop} city={shop.city} latitude={shop.lat} longitude={shop.lon} />
+          <PlaceContactCard
+            contact={shop}
+            city={shop.city}
+            latitude={shop.lat}
+            longitude={shop.lon}
+            hideWebLinks
+          />
           {shop.approximate ? (
             <p className="text-[11px] text-[#F5E80C]/70">
               {fr

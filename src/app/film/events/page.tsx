@@ -1,8 +1,11 @@
 'use client';
 
+import Image from 'next/image';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   CalendarDays,
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
   Loader2,
   MapPin,
@@ -27,6 +30,8 @@ const KIND_ORDER: CinemaEventKind[] = [
   'other',
 ];
 
+const FALLBACK_COVER = '/film/hub/events.jpg';
+
 export default function FilmEventsPage() {
   const { t, locale } = useLocale();
   const [data, setData] = useState<CinemaEventsResponse | null>(null);
@@ -34,6 +39,7 @@ export default function FilmEventsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [kind, setKind] = useState<CinemaEventKind | 'all'>('all');
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const load = useCallback(async (force = false) => {
     if (force) setRefreshing(true);
@@ -147,9 +153,18 @@ export default function FilmEventsPage() {
       ) : events.length === 0 ? (
         <p className="mt-12 text-center text-sm text-white/50">{t('film.events.empty')}</p>
       ) : (
-        <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+        <ul className="mt-8 grid gap-4 sm:grid-cols-2">
           {events.map((event) => (
-            <EventCard key={event.id} event={event} locale={locale} t={t} />
+            <EventCard
+              key={event.id}
+              event={event}
+              locale={locale}
+              t={t}
+              open={openId === event.id}
+              onToggle={() =>
+                setOpenId((prev) => (prev === event.id ? null : event.id))
+              }
+            />
           ))}
         </ul>
       )}
@@ -161,12 +176,16 @@ function EventCard({
   event,
   locale,
   t,
+  open,
+  onToggle,
 }: {
   event: CinemaEvent;
   locale: 'fr' | 'en';
   t: (key: string, vars?: Record<string, string | number>) => string;
+  open: boolean;
+  onToggle: () => void;
 }) {
-  const { title, summary } = localizeEvent(event, locale);
+  const { title, summary, body } = localizeEvent(event, locale);
   const when =
     event.whenLabel ||
     (event.startDate
@@ -176,62 +195,126 @@ function EventCard({
           day: 'numeric',
         })
       : t('film.events.dateTbd'));
+  const cover = event.imageUrl || FALLBACK_COVER;
+  const isRemote = /^https?:\/\//i.test(cover);
+  const isBrandLogo = cover.startsWith('/film/events/');
+  const detail = body && body.trim().length > 0 ? body : summary;
+  const dateRange =
+    event.endDate && event.startDate && event.endDate !== event.startDate
+      ? ` → ${new Date(event.endDate).toLocaleDateString(
+          locale === 'fr' ? 'fr-FR' : 'en-GB',
+          { month: 'short', day: 'numeric', year: 'numeric' },
+        )}`
+      : null;
 
   return (
-    <li className="flex flex-col rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-5">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-[#E30D13]/25 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#F5E80C]">
-          {t(`film.events.kind.${event.kind}`)}
-        </span>
-        <span
-          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-            event.source === 'official'
-              ? 'bg-[#079941]/35 text-[#F5E80C]'
-              : event.source === 'web'
-                ? 'bg-[#079941]/25 text-white/80'
-                : 'bg-white/5 text-white/45'
-          }`}
-        >
-          {event.provider === 'icicine'
-            ? t('film.events.badgeIcicine')
-            : event.source === 'official'
-              ? t('film.events.badgeOfficial')
-              : event.source === 'web'
-                ? t('film.events.badgeLive')
-                : t('film.events.badgeCurated')}
-        </span>
-        {event.recurring ? (
-          <span className="text-[10px] font-medium text-white/35">
-            {t('film.events.recurring')}
-          </span>
+    <li className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
+      <div
+        className={`relative aspect-[16/9] w-full ${
+          isBrandLogo ? 'bg-[#F8F5ED]' : 'bg-black/40'
+        }`}
+      >
+        <Image
+          src={cover}
+          alt={title}
+          fill
+          sizes="(max-width: 640px) 100vw, 50vw"
+          className={isBrandLogo ? 'object-contain p-4' : 'object-cover'}
+          unoptimized={isRemote}
+        />
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent p-3 pt-10">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-[#E30D13]/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+              {t(`film.events.kind.${event.kind}`)}
+            </span>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                event.source === 'official'
+                  ? 'bg-[#079941]/90 text-[#F5E80C]'
+                  : event.source === 'web'
+                    ? 'bg-black/55 text-white/85'
+                    : 'bg-black/55 text-white/55'
+              }`}
+            >
+              {event.provider === 'icicine'
+                ? t('film.events.badgeIcicine')
+                : event.source === 'official'
+                  ? t('film.events.badgeOfficial')
+                  : event.source === 'web'
+                    ? t('film.events.badgeLive')
+                    : t('film.events.badgeCurated')}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col px-5 py-4">
+        <h2 className="font-display text-lg font-semibold text-[#F8F5ED]">{title}</h2>
+        {!open ? (
+          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-white/65">
+            {summary}
+          </p>
+        ) : (
+          <div className="mt-3 space-y-3 rounded-xl border border-white/10 bg-black/25 px-4 py-3">
+            <div className="flex flex-wrap gap-3 text-xs text-white/70">
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays className="h-3.5 w-3.5 text-[#F5E80C]" aria-hidden />
+                <span>
+                  {when}
+                  {dateRange}
+                </span>
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-[#F5E80C]" aria-hidden />
+                {event.venue ? `${event.venue} · ${event.city}` : event.city}
+              </span>
+            </div>
+            <div className="whitespace-pre-line text-sm leading-relaxed text-white/80">
+              {detail}
+            </div>
+          </div>
+        )}
+
+        {!open ? (
+          <div className="mt-4 flex flex-wrap gap-3 text-xs text-white/45">
+            <span className="inline-flex items-center gap-1.5">
+              <CalendarDays className="h-3.5 w-3.5 text-[#F5E80C]" aria-hidden />
+              {when}
+              {dateRange}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5 text-[#F5E80C]" aria-hidden />
+              {event.venue ? `${event.venue} · ${event.city}` : event.city}
+            </span>
+          </div>
         ) : null}
+
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={onToggle}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#F5E80C] hover:underline"
+          >
+            {open ? t('film.events.readLess') : t('film.events.readMore')}
+            {open ? (
+              <ChevronUp className="h-3.5 w-3.5" aria-hidden />
+            ) : (
+              <ChevronDown className="h-3.5 w-3.5" aria-hidden />
+            )}
+          </button>
+          {event.url ? (
+            <a
+              href={event.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-white/40 hover:text-white/70"
+            >
+              {t('film.events.openSource')}
+              <ExternalLink className="h-3 w-3" aria-hidden />
+            </a>
+          ) : null}
+        </div>
       </div>
-
-      <h2 className="mt-3 font-display text-lg font-semibold text-[#F8F5ED]">{title}</h2>
-      <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-white/65">{summary}</p>
-
-      <div className="mt-4 flex flex-wrap gap-3 text-xs text-white/45">
-        <span className="inline-flex items-center gap-1.5">
-          <CalendarDays className="h-3.5 w-3.5 text-[#F5E80C]" aria-hidden />
-          {when}
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <MapPin className="h-3.5 w-3.5 text-[#F5E80C]" aria-hidden />
-          {event.city}
-        </span>
-      </div>
-
-      {event.url ? (
-        <a
-          href={event.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#F5E80C] hover:underline"
-        >
-          {t('film.events.openSource')}
-          <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-        </a>
-      ) : null}
     </li>
   );
 }

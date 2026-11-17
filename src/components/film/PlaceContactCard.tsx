@@ -66,17 +66,27 @@ export function PlaceContactCard({
   city,
   latitude,
   longitude,
+  hideWebLinks = false,
 }: {
   contact?: PlaceContact;
   city?: string;
   latitude: number;
   longitude: number;
+  /** Hide website / Facebook rows (e.g. rentals directory). */
+  hideWebLinks?: boolean;
 }) {
   const { locale } = useLocale();
   const fr = locale === 'fr';
   const c = contact ?? {};
   const address = [c.address, city].filter(Boolean).join(', ');
-  const hasDetails = Boolean(c.phone || c.whatsapp || c.email || c.website || c.facebook || c.openingHours);
+  const showWeb = !hideWebLinks;
+  const hasDetails = Boolean(
+    c.phone ||
+      c.whatsapp ||
+      c.email ||
+      c.openingHours ||
+      (showWeb && (c.website || c.facebook)),
+  );
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-3">
@@ -90,7 +100,7 @@ export function PlaceContactCard({
       {c.phone ? <Row icon={Phone} label={fr ? 'Téléphone' : 'Phone'} value={c.phone} href={telHref(c.phone)} /> : null}
       {c.whatsapp ? <Row icon={MessageCircle} label="WhatsApp" value={c.whatsapp} href={waHref(c.whatsapp)} /> : null}
       {c.email ? <Row icon={Mail} label="Email" value={c.email} href={`mailto:${c.email}`} /> : null}
-      {c.website ? (
+      {showWeb && c.website ? (
         <Row
           icon={Globe}
           label={fr ? 'Site web' : 'Website'}
@@ -98,7 +108,9 @@ export function PlaceContactCard({
           href={siteHref(c.website)}
         />
       ) : null}
-      {c.facebook ? <Row icon={Globe} label="Facebook" value="Facebook" href={siteHref(c.facebook)} /> : null}
+      {showWeb && c.facebook ? (
+        <Row icon={Globe} label="Facebook" value="Facebook" href={siteHref(c.facebook)} />
+      ) : null}
       {c.openingHours ? (
         <Row icon={Clock} label={fr ? 'Horaires' : 'Opening hours'} value={c.openingHours} />
       ) : null}

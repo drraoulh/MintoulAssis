@@ -1,3 +1,4 @@
+import studiosData from '@/lib/film/data/studios-materiel.json';
 import type { DirectoryCategory, FilmDirectoryEntry } from '@/lib/film/types';
 
 export const DIRECTORY_CATEGORIES: {
@@ -5,6 +6,8 @@ export const DIRECTORY_CATEGORIES: {
   fr: string;
   en: string;
 }[] = [
+  { id: 'studio', fr: 'Studios', en: 'Studios' },
+  { id: 'equipment-rental', fr: 'Location matériel', en: 'Equipment rental' },
   { id: 'production-company', fr: 'Sociétés de production', en: 'Production companies' },
   { id: 'producer', fr: 'Producteurs', en: 'Producers' },
   { id: 'director', fr: 'Réalisateurs', en: 'Directors' },
@@ -12,36 +15,54 @@ export const DIRECTORY_CATEGORIES: {
   { id: 'sound', fr: 'Son', en: 'Sound' },
   { id: 'location-scout', fr: 'Repérage', en: 'Location scouts' },
   { id: 'fixer', fr: 'Fixers', en: 'Fixers' },
-  { id: 'equipment-rental', fr: 'Location matériel', en: 'Equipment rental' },
-  { id: 'studio', fr: 'Studios', en: 'Studios' },
   { id: 'post', fr: 'Post-production', en: 'Post-production' },
   { id: 'casting', fr: 'Casting', en: 'Casting' },
   { id: 'transport', fr: 'Transport / logistique', en: 'Transport / logistics' },
 ];
 
-/** Curated starter directory — verify contacts before production use. */
-export const FILM_DIRECTORY: FilmDirectoryEntry[] = [
-  {
-    id: 'prod-douala-atlas',
-    name: 'Atlas Screen Cameroun',
-    category: 'production-company',
-    cityFr: 'Douala',
-    cityEn: 'Douala',
-    regionId: 'littoral',
-    specialtyFr: 'Fiction, pubs, coordination multi-régions.',
-    specialtyEn: 'Fiction, commercials, multi-region coordination.',
-    contact: 'production@example.cm',
-  },
-  {
-    id: 'prod-yaounde-baobab',
-    name: 'Baobab Films Yaoundé',
-    category: 'production-company',
-    cityFr: 'Yaoundé',
-    cityEn: 'Yaoundé',
-    regionId: 'centre',
-    specialtyFr: 'Documentaire, institutionnel, partenariats publics.',
-    specialtyEn: 'Documentary, institutional, public partnerships.',
-  },
+const BAD_IMAGE = /whatsapp|globe\.png|favicon|icon|logo-only|1x1|pixel/i;
+
+function cleanImage(src: string | null | undefined): string | null {
+  if (!src) return null;
+  if (BAD_IMAGE.test(src)) return null;
+  return src;
+}
+
+/** Real studios & matériel first (scraped), then complementary contacts. */
+const STUDIOS_DIRECTORY: FilmDirectoryEntry[] = (
+  studiosData.items as Array<{
+    id: string;
+    name: string;
+    category: DirectoryCategory;
+    cityFr: string;
+    cityEn: string;
+    regionId: string;
+    specialtyFr: string;
+    specialtyEn: string;
+    phone?: string;
+    email?: string;
+    website?: string;
+    address?: string;
+    image?: string | null;
+  }>
+).map((item) => ({
+  id: item.id,
+  name: item.name,
+  category: item.category,
+  cityFr: item.cityFr,
+  cityEn: item.cityEn,
+  regionId: item.regionId,
+  specialtyFr: item.specialtyFr,
+  specialtyEn: item.specialtyEn,
+  phone: item.phone,
+  email: item.email,
+  website: item.website,
+  address: item.address,
+  contact: item.phone || item.email,
+  image: cleanImage(item.image),
+}));
+
+const EXTRA_DIRECTORY: FilmDirectoryEntry[] = [
   {
     id: 'fixer-kribi',
     name: 'Kribi Coast Fixers',
@@ -63,26 +84,6 @@ export const FILM_DIRECTORY: FilmDirectoryEntry[] = [
     specialtyEn: 'Chiefdoms, highlands, Bamoun / Bamileke heritage.',
   },
   {
-    id: 'rental-douala',
-    name: 'Gulf Cam Rental',
-    category: 'equipment-rental',
-    cityFr: 'Douala',
-    cityEn: 'Douala',
-    regionId: 'littoral',
-    specialtyFr: 'Caméras cinéma, optiques, LED, grip léger.',
-    specialtyEn: 'Cinema cameras, glass, LED, light grip.',
-  },
-  {
-    id: 'studio-yaounde',
-    name: 'Studio Mfoundi',
-    category: 'studio',
-    cityFr: 'Yaoundé',
-    cityEn: 'Yaoundé',
-    regionId: 'centre',
-    specialtyFr: 'Plateau cyclorama, salle VO, régie lumière.',
-    specialtyEn: 'Cyclorama stage, VO booth, lighting desk.',
-  },
-  {
     id: 'post-douala',
     name: 'Bonanjo Post Lab',
     category: 'post',
@@ -102,46 +103,11 @@ export const FILM_DIRECTORY: FilmDirectoryEntry[] = [
     specialtyFr: 'Figurants, comédiens FR/EN, doublure.',
     specialtyEn: 'Extras, FR/EN talent, doubles.',
   },
-  {
-    id: 'transport-nord',
-    name: 'Sahel Unit Logistics',
-    category: 'transport',
-    cityFr: 'Maroua',
-    cityEn: 'Maroua',
-    regionId: 'extreme-nord',
-    specialtyFr: '4×4, portage, convois parc Waza / Rhumsiki.',
-    specialtyEn: '4×4, porters, Waza / Rhumsiki convoys.',
-  },
-  {
-    id: 'dop-freelance',
-    name: 'Lens & Laterite Collective',
-    category: 'dop',
-    cityFr: 'Douala',
-    cityEn: 'Douala',
-    regionId: 'littoral',
-    specialtyFr: 'Image fiction / doc, drones certifiés.',
-    specialtyEn: 'Fiction/doc image, certified drones.',
-  },
-  {
-    id: 'sound-field',
-    name: 'Écho Brousse',
-    category: 'sound',
-    cityFr: 'Yaoundé',
-    cityEn: 'Yaoundé',
-    regionId: 'centre',
-    specialtyFr: 'Prise de son nature et tournage mobile.',
-    specialtyEn: 'Nature location sound and mobile units.',
-  },
-  {
-    id: 'director-indie',
-    name: 'Réseau Réalisateurs Mintoul',
-    category: 'director',
-    cityFr: 'Yaoundé',
-    cityEn: 'Yaoundé',
-    regionId: 'centre',
-    specialtyFr: 'Mise en relation réalisateurs FR/EN locaux.',
-    specialtyEn: 'Matchmaking for local FR/EN directors.',
-  },
+];
+
+export const FILM_DIRECTORY: FilmDirectoryEntry[] = [
+  ...STUDIOS_DIRECTORY,
+  ...EXTRA_DIRECTORY,
 ];
 
 export function filterDirectory(opts: {
@@ -154,7 +120,8 @@ export function filterDirectory(opts: {
     if (opts.category && opts.category !== 'all' && e.category !== opts.category) return false;
     if (opts.regionId && opts.regionId !== 'all' && e.regionId !== opts.regionId) return false;
     if (q) {
-      const hay = `${e.name} ${e.specialtyFr} ${e.specialtyEn} ${e.cityFr}`.toLowerCase();
+      const hay =
+        `${e.name} ${e.specialtyFr} ${e.specialtyEn} ${e.cityFr} ${e.address || ''}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
