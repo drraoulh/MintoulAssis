@@ -4,14 +4,23 @@
  * Local paths look like `/film/covers/ayilaa/123.jpg`.
  * When NEXT_PUBLIC_FILM_COVERS_BASE_URL is set (e.g. Supabase public bucket URL),
  * they become `${BASE}/ayilaa/123.jpg`.
+ *
+ * Covers are gitignored — production MUST rewrite to Storage or images 404.
  */
 
 const LOCAL_PREFIX = '/film/covers';
 
+/** Public film-covers bucket (fallback when deploy env forgot NEXT_PUBLIC_FILM_COVERS_BASE_URL). */
+const DEFAULT_FILM_COVERS_BASE =
+  'https://zgbccqtnguzbmaptahkf.supabase.co/storage/v1/object/public/film-covers';
+
 export function filmCoversBaseUrl(): string | null {
   const raw = process.env.NEXT_PUBLIC_FILM_COVERS_BASE_URL?.trim();
-  if (!raw) return null;
-  return raw.replace(/\/$/, '');
+  if (raw) return raw.replace(/\/$/, '');
+  // Production covers are not in git — fall back to the public bucket when
+  // the host forgot to set NEXT_PUBLIC_FILM_COVERS_BASE_URL at build time.
+  if (process.env.NODE_ENV === 'production') return DEFAULT_FILM_COVERS_BASE;
+  return null;
 }
 
 /** Turn a stored cover path into a URL usable by next/image. */
@@ -22,20 +31,9 @@ export function resolveFilmCoverUrl(src: string | null | undefined): string | nu
 
   if (trimmed.startsWith(`${LOCAL_PREFIX}/`) || trimmed === LOCAL_PREFIX) {
     const base = filmCoversBaseUrl();
-    // When Storage base is configured (prod / staging), always rewrite so
-    // redeploys without gitignored public/film/covers/ still resolve.
-    // Local-only paths are kept when the env var is unset (pure offline dev).
     if (base) {
       const rest = trimmed.slice(LOCAL_PREFIX.length); // keeps leading /
       return `${base}${rest}`;
-    }
-    if (
-      process.env.NODE_ENV === 'production' &&
-      typeof console !== 'undefined'
-    ) {
-      console.warn(
-        '[film-covers] NEXT_PUBLIC_FILM_COVERS_BASE_URL is unset — local /film/covers paths will 404 after redeploy.',
-      );
     }
     return trimmed;
   }
